@@ -137,7 +137,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
                   PNG Raster Image
                 </Label>
                 <p className="text-[11px] text-slate-500">
-                  Standard raster image files with transparent background.
+                  Standard raster image files with a white background.
                 </p>
 
                 {/* PNG Resolution Select */}
