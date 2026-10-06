@@ -1,0 +1,149 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{width:1640px;height:1110px;background:#E9EEF4;font-family:Poppins,sans-serif;color:#0F3056;position:relative}
+  .head{position:absolute;left:64px;top:44px}
+  .head h1{font-family:Anton,sans-serif;font-weight:400;font-size:52px;margin:0;letter-spacing:1px}
+  .head h1 span{color:#018BCE}
+  .head p{margin:4px 0 0;font-size:17px;color:#0F548D}
+
+  .phone{position:absolute;top:180px;width:390px;height:844px;background:#fff;border-radius:46px;
+    box-shadow:0 0 0 10px #1b1f24,0 30px 60px rgba(15,48,86,.25);overflow:hidden;font-family:Roboto,sans-serif;color:#1f1f1f}
+  .p1{left:74px}.p2{left:540px}
+  .status{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 26px;font-size:14px;font-weight:500}
+  .appbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;font-size:22px;color:#444}
+  .appbar .t{font-size:17px;flex:1;margin-left:18px;color:#1f1f1f}
+
+  .card{margin:6px 16px 0;background:#0F3056;border-radius:22px;overflow:hidden;color:#fff}
+  .card .in{padding:18px 20px 16px}
+  .row1{display:flex;align-items:center;gap:12px}
+  .lg{width:40px;height:40px;border-radius:50%;background:#0F3056;border:1px solid rgba(255,255,255,.25);
+    display:flex;align-items:center;justify-content:center;overflow:hidden}
+  .lg img{height:22px}
+  .ctitle{font-size:15px;font-weight:500}
+  .sub{margin-top:18px;font-size:12px;letter-spacing:.6px;opacity:.8;text-transform:uppercase}
+  .hdr{font-size:28px;margin-top:2px}
+  .fields{display:flex;justify-content:space-between;margin-top:16px}
+  .f .l{font-size:11px;opacity:.75;letter-spacing:.4px;text-transform:uppercase}
+  .f .v{font-size:15px;margin-top:2px}
+  .f.r{text-align:right}
+  .qrwrap{margin:18px auto 0;width:200px;background:#fff;border-radius:16px;padding:14px 14px 10px;text-align:center;color:#3c4043}
+  .qr{width:172px;height:172px;margin:0 auto}
+  .qr img,.qr canvas{width:172px!important;height:172px!important}
+  .alt{font-size:12px;margin-top:6px;letter-spacing:.5px}
+  .rot{font-size:11px;opacity:.8;text-align:center;margin-top:10px}
+  .hero{display:block;width:100%}
+
+  .below{padding:18px 20px;font-size:14px}
+  .btn{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid #eee}
+  .btn .ic{width:28px;height:28px;border-radius:50%;background:#E6F2FA;color:#0F548D;display:flex;align-items:center;justify-content:center;font-size:14px}
+
+  .det{padding:6px 20px}
+  .dsec{padding:14px 0;border-bottom:1px solid #eee}
+  .dsec .l{font-size:12px;color:#5f6368}
+  .dsec .v{font-size:15px;margin-top:4px;line-height:1.45}
+  .dsec a{color:#0F548D;text-decoration:none;font-weight:500}
+
+  .cap{position:absolute;top:1046px;font-size:14px;color:#0F548D;font-weight:500;width:390px;text-align:center}
+  .c1{left:74px}.c2{left:540px}
+
+  .spec{position:absolute;left:1010px;top:180px;width:570px}
+  .spec h2{font-family:Anton,sans-serif;font-weight:400;font-size:24px;letter-spacing:.5px;margin:0 0 10px}
+  table{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:12px;overflow:hidden}
+  td{padding:7px 12px;border-bottom:1px solid #EDF1F5;vertical-align:top}
+  td:first-child{font-family:Consolas,monospace;font-size:12px;color:#0F548D;width:44%}
+  .sw{display:flex;gap:14px;margin:18px 0 8px}
+  .s{flex:1;background:#fff;border-radius:12px;padding:8px;font-size:12px;text-align:center}
+  .s i{display:block;height:34px;border-radius:8px;margin-bottom:6px}
+  .note{font-size:12.5px;background:#fff;border-left:4px solid #018BCE;padding:10px 12px;border-radius:8px;margin-top:14px;line-height:1.5}
+  .assets{display:flex;gap:14px;align-items:flex-end;margin-top:14px}
+  .assets div{font-size:12px;text-align:center}
+  .assets img{display:block;border-radius:8px;margin-bottom:4px}
+</style></head>
+<body>
+<div class="head">
+  <h1>SU <span>CARD</span> — GOOGLE WALLET PASS</h1>
+  <p>Generic pass design · Nile University Student Union</p>
+</div>
+
+<!-- Phone 1: pass -->
+<div class="phone p1">
+  <div class="status"><span>9:41</span><span>▂▄▆ ◔ ▮</span></div>
+  <div class="appbar"><span>←</span><span class="t"></span><span>⋮</span></div>
+  <div class="card">
+    <div class="in">
+      <div class="row1">
+        <div class="lg"><img src="../../assets/brand/su-icon-white@hd.png" alt=""></div>
+        <div class="ctitle">Nile University Student Union</div>
+      </div>
+      <div class="sub">SU Card Member</div>
+      <div class="hdr">Ahmed Wesam</div>
+      <div class="fields">
+        <div class="f"><div class="l">University ID</div><div class="v">231000452</div></div>
+        <div class="f r"><div class="l">Member since</div><div class="v">Oct 2026</div></div>
+      </div>
+      <div class="qrwrap"><div class="qr" id="qr"></div></div>
+      <div class="rot">Same QR as your physical SU Card</div>
+    </div>
+    <img class="hero" src="hero.png" alt="">
+  </div>
+  <div class="below">
+    <div class="btn"><span class="ic">i</span>Details</div>
+    <div class="btn"><span class="ic">%</span>Browse deals</div>
+  </div>
+</div>
+<div class="cap c1">Pass (front) — shown at the cashier</div>
+
+<!-- Phone 2: details -->
+<div class="phone p2">
+  <div class="status"><span>9:41</span><span>▂▄▆ ◔ ▮</span></div>
+  <div class="appbar"><span>←</span><span class="t">Pass details</span><span>⋮</span></div>
+  <div class="det">
+    <div class="dsec"><div class="l">How to use</div><div class="v">Show this QR to the cashier <b>before paying</b>. They scan it and apply your discount.</div></div>
+    <div class="dsec"><div class="l">Deals</div><div class="v"><a>Browse all partner deals →</a></div></div>
+    <div class="dsec"><div class="l">My card</div><div class="v"><a>Open SU Card portal →</a></div></div>
+    <div class="dsec"><div class="l">Email</div><div class="v">a.wesam2300@nu.edu.eg</div></div>
+    <div class="dsec"><div class="l">Rules</div><div class="v">Personal and non-transferable. Linked permanently to your account. Each offer has its own usage limit.</div></div>
+    <div class="dsec"><div class="l">Support</div><div class="v"><a>su@nu.edu.eg</a></div></div>
+    <div class="dsec"><div class="l">Issued by</div><div class="v">Nile University Student Union</div></div>
+  </div>
+</div>
+<div class="cap c2">Pass details — tap "Details"</div>
+
+<!-- Spec -->
+<div class="spec">
+  <h2>GENERIC PASS FIELDS</h2>
+  <table>
+    <tr><td>hexBackgroundColor</td><td>#0F3056 (Navy)</td></tr>
+    <tr><td>logo</td><td>logo.png — 660×660, white icon on navy (Google crops to a circle)</td></tr>
+    <tr><td>cardTitle</td><td>Nile University Student Union</td></tr>
+    <tr><td>subheader</td><td>SU Card Member</td></tr>
+    <tr><td>header</td><td>Student full name</td></tr>
+    <tr><td>textModulesData (row)</td><td>University ID · Member since</td></tr>
+    <tr><td>barcode</td><td>QR_CODE = same link as the printed card (static), no alternate text</td></tr>
+    <tr><td>heroImage</td><td>hero.png — 1032×336</td></tr>
+    <tr><td>linksModuleData</td><td>Deals list · SU Card portal · support email</td></tr>
+    <tr><td>textModulesData (details)</td><td>How to use · Rules · Email · Issued by</td></tr>
+  </table>
+  <div class="sw">
+    <div class="s"><i style="background:#000"></i>#000000</div>
+    <div class="s"><i style="background:#0F3056"></i>#0F3056</div>
+    <div class="s"><i style="background:#0F548D"></i>#0F548D</div>
+    <div class="s"><i style="background:#018BCE"></i>#018BCE</div>
+  </div>
+  <div class="assets">
+    <div><img src="logo.png" width="110" height="110" style="border-radius:50%">logo.png</div>
+    <div><img src="hero.png" width="338" height="110">hero.png</div>
+  </div>
+  <div class="note"><b>Fonts:</b> Google Wallet draws all pass text in its own font. Anton and Poppins appear only inside the hero image, so the hero carries the SU typography.</div>
+  <div class="note"><b>Sample data:</b> name, university ID and QR are placeholders. The pass is created only after the student links their physical card.</div>
+</div>
+
+<script>
+  new QRCode(document.getElementById("qr"), { text: "https://sucard.example/c/K7Q2X9M4PZ3B8WN5TD6R", width: 344, height: 344, colorDark: "#000000", colorLight: "#ffffff", correctLevel: QRCode.CorrectLevel.M });
+</script>
+</body></html>
