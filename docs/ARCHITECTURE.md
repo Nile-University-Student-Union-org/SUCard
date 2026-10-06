@@ -26,7 +26,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 | Concern | Choice |
 |---|---|
 | Runtime | **Next.js server** (Route Handlers + Server Actions), Node.js LTS |
-| Auth | **Auth.js v5** — Microsoft Entra ID provider (students, NU tenant only); Credentials provider (staff) + **TOTP 2FA** (`otplib`) for admins |
+| Auth | **Better Auth** (successor to Auth.js) with Drizzle adapter — Microsoft provider (students, NU tenant only), email + password (staff, public sign-up disabled), **two-factor plugin** (TOTP) for admins |
 | Passwords | **argon2** hashing |
 | Validation | **Zod** on every input |
 | Card tokens | Random 100+ bit tokens (`node:crypto` `randomBytes` → base32), looked up in the DB |
@@ -76,7 +76,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 │                                                                    │
 │  UI      /me (student)   /scan (cashier)   /vendor   /admin        │
 │  ───────────────────────────────────────────────────────────────── │
-│  API     /api/auth/*        Auth.js                                │
+│  API     /api/auth/*        Better Auth                            │
 │          /api/scan/*        validate, confirm                      │
 │          /api/wallet/*      Apple .pkpass, Google save link        │
 │          /api/apple/v1/*    Apple Wallet web service               │
@@ -107,7 +107,7 @@ Admin: "Generate 1,000 cards, label 'Batch 3'"
 
 **Student sign-up & card activation**
 ```
-"Sign in with Microsoft" → Entra ID (NU tenant) → Auth.js callback
+"Sign in with Microsoft" → Entra ID (NU tenant) → Better Auth callback
   → check tid == NU tenant AND email matches ^[a-z]\.[a-z]+\d{4}@nu\.edu\.eg$
   → first time? profile form (name pre-filled, enter university ID)
   → first sign-up: assign card_flow from settings (in one transaction):
@@ -115,7 +115,7 @@ Admin: "Generate 1,000 cards, label 'Batch 3'"
        issuance_mode = physical → card_flow = physical; if quota set: quota -= 1,
                                   quota hits 0 → issuance_mode = digital (audit-logged)
   → physical flow and no active card? → "Get your SU Card at the SU office" screen
-Student scans card QR (in-page camera, or phone camera opens https://<domain>/c/<token>)
+Student scans card QR (in-page camera; QR content NUSU1:<TOKEN>)
   → POST /api/cards/claim { token }   (camera fails → SU admin links it at the desk)
   → BEGIN; SELECT card … FOR UPDATE
        unknown → ❌ not an SU Card      void → ❌ cancelled
@@ -128,7 +128,7 @@ Student scans card QR (in-page camera, or phone camera opens https://<domain>/c/
 
 **Scan & redeem**
 ```
-Cashier camera (physical card or wallet pass) → extract token from https://<domain>/c/<token>
+Cashier camera (physical card or wallet pass) → parse token from NUSU1:<TOKEN> (or a future /c/<TOKEN> link)
   → POST /api/scan/validate { token }
   1. look up card by token → unknown / unassigned / void?
   2. load student → suspended?
@@ -220,7 +220,7 @@ su-card/
 │  └─ api/                   auth, scan, wallet, apple, mail-feed, cron
 ├─ lib/
 │  ├─ db/                    Drizzle schema, queries
-│  ├─ auth/                  Auth.js config, role guards
+│  ├─ auth/                  Better Auth config, role guards
 │  ├─ cards/                 batch generation, claim/link, print files
 │  ├─ qr-style/              config schema (Zod), SVG renderer, presets, safety checks
 │  ├─ scan/                  token lookup, limit engine

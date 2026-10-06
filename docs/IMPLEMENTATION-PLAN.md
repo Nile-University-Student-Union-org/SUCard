@@ -70,7 +70,7 @@ These have lead times outside your control. Start all of them in week 0.
 
 | # | Task | Done when |
 |---|---|---|
-| 2.1 | Auth.js v5 with **Microsoft Entra ID** provider using NU tenant issuer; `signIn` callback checks `tid` + email regex (from settings) | NU student account logs in; staff-format and non-NU accounts rejected |
+| 2.1 | Better Auth **Microsoft** provider restricted to the NU tenant; sign-in hook checks `tid` + email regex (from settings) | NU student account logs in; staff-format and non-NU accounts rejected |
 | 2.2 | Student record keyed by `ms_oid`; first-login detection | Re-login finds the same student |
 | 2.3 | **Credentials** provider for staff; argon2 hashing; lockout after 5 failures | Cashier/vendor/admin can log in |
 | 2.4 | **TOTP 2FA** for admin roles (enroll with QR, verify, recovery codes) | Admin can't reach `/admin` without 2FA |

@@ -151,7 +151,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 | ID | Requirement |
 |---|---|
 | M4-1 | Each card has a **random, unguessable token** (≥ 100 bits, e.g. 20 characters base32), created when the admin generates the batch. No personal data and no signature: a token is valid only if it exists in the database. |
-| M4-2 | **QR content = a link:** `https://<domain>/c/<token>`. Students can activate with their normal phone camera; the scanners extract the token from the link. Opened by anyone else, the link reveals nothing (just "SU Card — sign in"). ⚠️ **The domain is printed forever, so it must be final before the first print run (Q6).** |
+| M4-2 | **QR content = a plain code:** `NUSU1:<TOKEN>` (20-char Crockford base32, uppercase, so the QR uses compact alphanumeric mode). No domain is printed, so cards never depend on a domain. Students activate by scanning **inside the SU Card site**. If a domain is adopted later, new batches may use `https://<domain>/c/<TOKEN>`; scanners accept both forever. Each batch records its payload format. |
 | M4-3 | The QR is **static and permanent**: the same QR is on the physical card and the wallet pass. (Rotating QR is dropped, since the physical card can't rotate.) |
 | M4-4 | Validation (server-side): token exists → card status (`unassigned` → "Card not activated", `void` → "Card cancelled") → student status → vendor active → offer active (dates/days/hours) → offer limit for this student. |
 | M4-5 | **Per-offer limits** (set in M5): max redemptions per **student** per period (physical card and wallet pass share the same count). Period options: per day, per week, per month, per semester, total, or unlimited. |
@@ -289,7 +289,7 @@ Sources: `SU branding.pdf`, `assets/brand/`.
 | ID | Requirement |
 |---|---|
 | M14-1 | **Generate a batch:** admin enters a count (e.g. 1,000) and a label → system creates that many cards with status `unassigned`, each with a random token (M4-1) and a sequential **internal serial** (e.g. `SU-004821`) used only in the admin panel and print files — **never printed on the card**. Generate as many batches as needed. |
-| M14-2 | **Print files per batch:** (a) **CSV** — `serial, qr_url` for print shops doing variable-data printing (serial is for tracking only, not printed); (b) **print-ready PDF** — CR80 card size (85.6 × 54 mm) with the generic design and the QR, plus an imposed A4/SRA3 sheet version. Every download is written to the audit log. |
+| M14-2 | **ZIP export per batch** (for the third-party card supplier): `qr/svg/SU-000001.svg …` (vector, default), optional `qr/png/…` at 600 / 1200 / 2400 px, `manifest.csv` (serial, QR content, file names) and a README. One QR file per card, named by internal serial. Every download is audit-logged. *(Later: print-ready CR80 PDF once the card design is final.)* |
 | M14-3 | Printed per card: **branded QR** rendered by the system in the batch's **QR style** (M15) — default *NUSU Signature*: navy round dots, rounded eyes, NUSU icon in the centre, error correction **H**, ≥ 25 mm on the card with a white margin (prototype: `design/physical-card/styled_qr_demo.py`). **Nothing else is variable on the card** — no serial, no code. |
 | M14-4 | **Generic design:** NUSU logo, "SU CARD", QR, one line: "Activate at <domain> · Show at partner stores". No student name. Same for every card. |
 | M14-5 | **Card types:** `physical` (printed, from a batch) and `digital` (created at sign-up, never printed). **Statuses:** `unassigned` (printed, not yet claimed) → `active` (linked to one student, permanent) → `void` (lost, damaged, misprint, stolen, or replaced by an upgrade). |
@@ -397,7 +397,7 @@ Setting(key, value)   -- issuance_mode (digital|physical), physical_quota_remain
 
 Final stack and system architecture: see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Summary: **Next.js + TypeScript** (frontend and backend in one app) · **PostgreSQL** with **Drizzle ORM** · **Auth.js** (Microsoft Entra ID for students, password + 2FA for staff) · **Tailwind + shadcn/ui** · hosted on a **VPS with Docker Compose** (Caddy, Postgres, Redis) behind Cloudflare · emails via **Power Automate RSS mailer** from `su@nu.edu.eg`.
+Summary: **Next.js + TypeScript** (frontend and backend in one app) · **PostgreSQL** with **Drizzle ORM** · **Better Auth** (Microsoft Entra ID for students, password + 2FA for staff) · **Tailwind + shadcn/ui** · hosted on a **VPS with Docker Compose** (Caddy, Postgres, Redis) behind Cloudflare · emails via **Power Automate RSS mailer** from `su@nu.edu.eg`.
 
 ## 5. Phasing (launch ASAP)
 
