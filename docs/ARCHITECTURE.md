@@ -109,7 +109,7 @@ Admin: "Generate 1,000 cards, label 'Batch 3'"
 ```
 "Sign in with Microsoft" → Entra ID (NU tenant) → Better Auth callback
   → check tid == NU tenant AND email matches ^[a-z]\.[a-z]+\d{4}@nu\.edu\.eg$
-  → first time? profile form (name pre-filled, enter university ID)
+  → first time? save email + full name from Microsoft; student enters university ID (only typed field)
   → first sign-up: assign card_flow from settings (in one transaction):
        issuance_mode = digital  → create digital card (active, linked) → Add to Wallet
        issuance_mode = physical → card_flow = physical; if quota set: quota -= 1,
@@ -175,7 +175,7 @@ Enforced in Next.js middleware (coarse) **and** in every server action / route h
 
 ```
 students        id, ms_oid UNIQUE, email UNIQUE, university_id UNIQUE, full_name,
-                faculty, year, status, suspend_reason, card_flow (digital|physical), registered_at
+                status, suspend_reason, card_flow (digital|physical), registered_at
 card_batches    id, label, count, qr_style_version_id, print_status, created_by, created_at, notes
 qr_styles       id, name, status, is_default, created_by, created_at
 qr_style_versions id, style_id, version, config JSONB, scan_score, published_by, published_at  -- immutable

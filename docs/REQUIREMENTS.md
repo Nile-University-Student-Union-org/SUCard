@@ -43,7 +43,7 @@ SU Card is a free membership card for **every Nile University student**. SU prin
 ```
 Admin generates a batch of cards (e.g. 1,000) ──► downloads print file ──► printer prints generic cards
                                      │
-Student: "Sign in with Microsoft" ──► NU tenant + format check ──► confirms name, enters university ID
+Student: "Sign in with Microsoft" ──► NU tenant + format check ──► name + email saved from Microsoft, student enters university ID
                                      │
           "Collect your SU Card from the SU office" ──► student gets a card at SU
                                      │
@@ -104,7 +104,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 |---|---|
 | M2-1 | **No student list import.** Sign-up is open to any NU account passing the format check (M1-2). Proof of being a student = a successful Microsoft sign-in to the NU tenant. |
 | M2-2 | First sign-in: Microsoft → format check → profile form → the student is assigned a **card flow** based on the issuance mode (M2a): **digital** → card created instantly → Add to Wallet; **physical** → **"Get your SU Card"** screen. |
-| M2-3 | Profile form (first sign-in only): **full name pre-filled from the Microsoft account** (verified by the university directory). University ID and optional faculty/year are typed by the student (**self-reported**). |
+| M2-3 | **Stored per student: email, full name, university ID — nothing else.** Email and full name come from the Microsoft account (OAuth) and are saved automatically (shown read-only, not editable by the student). The only field the student types is the **university ID** (first sign-in only, required, self-reported). |
 | M2-4 | Name and university ID are **locked** after sign-up (they appear on the pass). Changes go through an SU admin. University ID must be unique; a duplicate is flagged for admin review. |
 | M2-5 | **"Get your SU Card" screen** (shown until a card is linked): tells the student to collect their card from the SU office, with location and opening hours (editable by admin in settings), and an **"I have my card — scan it"** button. |
 | M2-6 | **Scan to link:** the student scans the card's QR with the in-page camera, **or** points their phone camera at the card (the QR is a link, M4-2) while signed in. No typed fallback (nothing is printed besides the QR): if the student can't scan, an SU admin links the card at the desk (M14-7). |
@@ -212,7 +212,7 @@ Mobile-first web app (PWA, installable to home screen).
 | M8-6b | **Suspend / reactivate:** one click with a reason. Suspended cards fail at scan immediately ("Card suspended") and the wallet pass updates. A suspended student **cannot** sign up again with the same email. |
 | M8-6c | **Delete:** behind a confirm dialog (type the email to confirm). Removes the student's personal data; their card is **voided** (QR fails as "Card cancelled") and can't be reused. Their past redemptions are **kept anonymized** (counted as "deleted student") so vendor stats don't change. A deleted student's email **can** sign up again as new — use suspend to block someone. |
 | M8-6d | Bulk actions on search results: suspend, reactivate, export CSV. Every suspend/delete is written to the audit log (who, when, reason). |
-| M8-7 | Filters: date range, vendor, category, offer, faculty, year. |
+| M8-7 | Filters: date range, vendor, category, offer. |
 | M8-8 | Export any table to CSV/Excel. |
 
 **Advanced (v2)**
@@ -221,7 +221,7 @@ Mobile-first web app (PWA, installable to home screen).
 |---|---|
 | M8-9 | Day-of-week × hour heatmap. |
 | M8-10 | Category share (coffee vs food vs fitness…). |
-| M8-11 | Student segments by faculty/year; power users vs one-time; adoption funnel (signed up → card linked → added to wallet → first use); time from sign-up to card pickup. |
+| M8-11 | Student segments: power users vs one-time; adoption funnel (signed up → card linked → added to wallet → first use); time from sign-up to card pickup. |
 | M8-12 | Vendor retention: % of students who come back. |
 | M8-13 | Revenue driven per vendor (from optional bill amounts). |
 | M8-14 | Fraud signals: same card at two distant vendors within minutes, cashier with abnormal volume, many failed scans. |
@@ -372,7 +372,7 @@ A visual editor in the admin panel to design how card QR codes look, with live p
 ## 3. Data Model (draft)
 
 ```
-Student(id, ms_oid UNIQUE, email UNIQUE, university_id UNIQUE, full_name, faculty?, year?, status, suspend_reason?,
+Student(id, ms_oid UNIQUE, email UNIQUE, university_id UNIQUE, full_name, status, suspend_reason?,
         card_flow (digital|physical), registered_at)
 CardBatch(id, label, count, qr_style_version_id, print_status, created_by, created_at, notes)
 QrStyle(id, name, status (draft|published|archived), is_default, created_by, created_at)

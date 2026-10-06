@@ -94,7 +94,7 @@ These have lead times outside your control. Start all of them in week 0.
 | 3.4 | **Print files**: CSV (`serial, qr_url`); CR80 PDF (one card per page, bleed + crop marks); imposed A4/SRA3 sheet; **test sheet** (20/25/30/35 mm). Downloads audit-logged | Printer accepts the files |
 | 3.5 | Inventory page: counts by status/batch, search by serial, batch print status, void card / void batch | Admin can void a lost box |
 | 3.6 | **Issuance mode settings**: digital / physical, physical quota (auto-switch back at 0), digital→physical upgrade toggle, stock warning | Quota decrements and auto-switches (test) |
-| 3.7 | Student onboarding: profile form (name pre-filled, university ID, uniqueness check) → assign `card_flow` | New student lands in correct flow |
+| 3.7 | Student onboarding: save email + full name from Microsoft, student enters university ID (uniqueness check) → assign `card_flow` | New student lands in correct flow |
 | 3.8 | **Digital flow**: create digital card instantly → card page | Digital student sees QR immediately |
 | 3.9 | **Physical flow**: "Get your SU Card" screen (office hours from settings), in-page camera scanner, `/c/[token]` landing with "Link card to your account?" confirm, **claim transaction** (`FOR UPDATE`, first wins), all error states, upgrade from digital | Two parallel claims → exactly one wins (test) |
 | 3.10 | Admin **manual link** at the desk (scan card with admin scanner → pick student) + "scan any card" lookup | Desk flow works on a phone |
