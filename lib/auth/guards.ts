@@ -3,10 +3,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "./server";
 
-// CONTRACT used by admin pages and API routes. The backend task replaces the body
-// with a real Better Auth session check; keep the signatures unchanged.
+import type { StaffRole } from "@/lib/staff/types";
 
-export type StaffRole = "super_admin" | "admin";
+// CONTRACT used by admin pages and API routes; keep the signatures unchanged.
+
+export type { StaffRole };
 
 export interface StaffUser {
   id: string;
@@ -30,6 +31,19 @@ export async function requireAdminPage(): Promise<StaffUser> {
 export async function getAdminFromRequest(request: Request): Promise<StaffUser | null> {
   return readAdmin(request.headers);
 }
+
+/**
+ * For super-admin-only pages: returns the signed-in super admin; a signed-in admin is
+ * redirected to /admin, anyone else to /login.
+ */
+export async function requireSuperAdminPage(): Promise<StaffUser> {
+  const admin = await requireAdminPage();
+  if (admin.role !== "super_admin") redirect("/admin");
+  return admin;
+}
+
+// Super-admin-only API routes: call getAdminFromRequest(); respond 401 if null and
+// 403 { error } if role !== "super_admin".
 
 async function readAdmin(requestHeaders: Headers): Promise<StaffUser | null> {
   const session = await auth.api.getSession({ headers: requestHeaders });
