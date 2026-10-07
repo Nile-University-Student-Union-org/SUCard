@@ -55,3 +55,4 @@ Fonts: **Anton** (display/headings), **Poppins** (body/UI). Logos in `public/bra
 - Never cache scan/claim/auth decisions.
 - Don't commit; the orchestrator reviews and commits.
 - Never use the "sparkles" icon (lucide Sparkles / Sparkle / WandSparkles / stars, or any similar AI-sparkle glyph) in any UI, in any project. Pick a meaningful icon or none.
+- UI work: before designing or restyling, read and follow C:\Users\Ahmed\.claude\plugins\cache\taste-skill\taste-skill\1.0.0\skills\taste-skill\SKILL.md (and redesign-skill\SKILL.md when reworking an existing screen), within this project's brand rules.
