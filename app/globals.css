@@ -493,3 +493,21 @@ html[data-theme-transition="active"]::view-transition-new(root) {
     transform: translateX(100%);
   }
 }
+
+/* Landing card skeleton: gentle pendulum sway, diagonal sheen, soft breathing placeholders */
+@keyframes lanyard-sway {
+  0%, 100% { transform: rotate(-2.2deg); }
+  50% { transform: rotate(2.2deg); }
+}
+@keyframes lanyard-shadow {
+  0%, 100% { transform: translateX(-6%) scaleX(0.94); }
+  50% { transform: translateX(6%) scaleX(0.94); }
+}
+@keyframes card-sheen {
+  0% { transform: translateX(-160%) skewX(-18deg); }
+  60%, 100% { transform: translateX(260%) skewX(-18deg); }
+}
+@keyframes skeleton-breathe {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 1; }
+}
