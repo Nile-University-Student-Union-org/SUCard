@@ -35,7 +35,9 @@ const CARD_SPIN_DRAG = 2.2;
 const STRAP_MASS = 0.05;
 const CARD_CORNER_MASS = 1;
 /** Compliances (inverse stiffness). 0 = rigid. */
-const STRAP_BEND_COMPLIANCE = 4e-3; // strap resists sharp kinks
+const STRAP_BEND_COMPLIANCE = 1.5e-3; // strap resists sharp kinks
+/** Half-thickness kept between the strap and the card faces. */
+const STRAP_CLEARANCE = 0.05;
 const CLAMP_COMPLIANCE = 6e-4; // strap leaves the crimp roughly straight
 const FACING_COMPLIANCE = 0.6; // card drifts back to face the viewer
 const HOLD_COMPLIANCE = 1.5e-4; // how firmly the held card follows the hand
@@ -253,6 +255,7 @@ export class LanyardSim {
     for (const [i, j, len] of this.cardEdges) this.solveDistance(i, j, len, 0);
     // The crimp clamps the strap end, so the strap leaves the card along the card's "up".
     this.solveClamp(CLAMP_COMPLIANCE * a);
+    this.collideStrapWithCard();
     if (!this.grab) this.solveFacing(FACING_COMPLIANCE * a);
   }
 
@@ -332,6 +335,30 @@ export class LanyardSim {
   private solveClamp(alpha: number) {
     const w = this.cardWeights(0, this.dims.hangY + this.seg);
     this.solvePoint([this.hang, this.bl, this.br], w, [0, 0, 0], alpha, this.hang - 1);
+  }
+
+  /** Keeps the strap from passing through the card: strap points inside the card's slab are pushed back out of the face they came from. */
+  private collideStrapWithCard() {
+    const { pos, prev } = this;
+    const p = (i: number): Vec => [pos[i * 3], pos[i * 3 + 1], pos[i * 3 + 2]];
+    const bl = p(this.bl);
+    const br = p(this.br);
+    const x = normalize(sub(br, bl));
+    const mid = scale(add(bl, br), 0.5);
+    const y0 = sub(p(this.hang), mid);
+    const y = normalize(sub(y0, scale(x, dot(y0, x))));
+    const z = cross(x, y);
+    const { cardW: w, cardH: h } = this.dims;
+    const centre = add(mid, scale(y, h / 2));
+    const r = STRAP_CLEARANCE;
+    for (let i = 1; i < this.hang; i++) {
+      const d = sub(p(i), centre);
+      const lz = dot(d, z);
+      if (Math.abs(lz) >= r || Math.abs(dot(d, x)) > w / 2 + r || Math.abs(dot(d, y)) > h / 2 + r) continue;
+      const was = dot(sub([prev[i * 3], prev[i * 3 + 1], prev[i * 3 + 2]], centre), z);
+      const push = (was >= 0 ? r : -r) - lz;
+      for (let c = 0; c < 3; c++) pos[i * 3 + c] += z[c] * push;
+    }
   }
 
   /** Weak twist spring: brings the bottom corners level in depth, so the card ends up facing front. */

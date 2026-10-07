@@ -209,11 +209,9 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       tangent: new THREE.Vector3(),
       side: new THREE.Vector3(),
       normal: new THREE.Vector3(),
-      cardQuat: new THREE.Quaternion(),
-      twist: new THREE.Quaternion(),
-      identity: new THREE.Quaternion(),
       drawn: new Float64Array(sim.count * 3),
       samples: Array.from({ length: RIBBON_SAMPLES }, () => new THREE.Vector3()),
+      tangents: Array.from({ length: RIBBON_SAMPLES }, () => new THREE.Vector3()),
     }),
     [sim],
   );
@@ -285,27 +283,27 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     for (let i = 0; i < SEGMENTS; i++) at(i, curve.points[i]);
     drawnCard.localToWorld(curve.points[SEGMENTS].set(0, CRIMP_TOP - 0.02, 0));
 
-    // Ribbon frame: flat side follows world X at the top and the card's X at the crimp, so it twists.
-    const { point, tangent, side, normal, cardQuat, twist, identity, samples } = tmp;
-    cardQuat.copy(drawnCard.quaternion);
+    // Ribbon frame, carried up from the crimp by parallel transport: the strap starts flat across the card and
+    // twists only as much as its path does, so it never flips however the card is held.
+    const { point, tangent, side, normal, samples, tangents } = tmp;
     const geo = ribbon.current.geometry;
     const pos = geo.attributes.position as THREE.BufferAttribute;
     const nor = geo.attributes.normal as THREE.BufferAttribute;
     const uv = geo.attributes.uv as THREE.BufferAttribute;
     const half = STRAP_W / 2;
-    let length = 0;
-    for (let i = 0; i < RIBBON_SAMPLES; i++) {
-      curve.getPoint(i / (RIBBON_SAMPLES - 1), samples[i]);
-      if (i > 0) length += samples[i].distanceTo(samples[i - 1]);
-    }
-    let along = length;
     for (let i = 0; i < RIBBON_SAMPLES; i++) {
       const u = i / (RIBBON_SAMPLES - 1);
-      if (i > 0) along -= samples[i].distanceTo(samples[i - 1]);
-      curve.getTangent(u, tangent);
-      twist.slerpQuaternions(identity, cardQuat, u * u * (3 - 2 * u));
-      side.set(1, 0, 0).applyQuaternion(twist);
-      side.addScaledVector(tangent, -side.dot(tangent)).normalize();
+      curve.getPoint(u, samples[i]);
+      curve.getTangent(u, tangents[i]);
+    }
+    side.copy(ax); // card's X at the crimp
+    let along = 0;
+    for (let i = RIBBON_SAMPLES - 1; i >= 0; i--) {
+      if (i < RIBBON_SAMPLES - 1) along += samples[i].distanceTo(samples[i + 1]);
+      tangent.copy(tangents[i]);
+      side.addScaledVector(tangent, -side.dot(tangent));
+      if (side.lengthSq() < 1e-8) side.set(1, 0, 0).addScaledVector(tangent, -tangent.x);
+      side.normalize();
       normal.crossVectors(side, tangent).normalize();
       point.copy(samples[i]).addScaledVector(side, -half);
       pos.setXYZ(i * 2, point.x, point.y, point.z);
