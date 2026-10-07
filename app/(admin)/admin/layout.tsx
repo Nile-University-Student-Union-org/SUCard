@@ -15,7 +15,7 @@ export default async function AdminLayout({
   return (
     <div className="min-h-screen flex bg-background">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0">
+      <div className="hidden lg:flex lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen">
         <AdminSidebar />
       </div>
 

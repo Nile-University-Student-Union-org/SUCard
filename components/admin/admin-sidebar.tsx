@@ -11,7 +11,6 @@ import {
   Tag,
   QrCode,
   Settings,
-  Sparkles,
   X,
 } from "lucide-react";
 import { cn } from "cn";
@@ -159,7 +158,7 @@ export function AdminSidebar({ onCloseMobile, isMobile = false }: AdminSidebarPr
       {/* Sidebar Footer info */}
       <div className="p-4 border-t border-[#1D4B80]/60 bg-[#0A223E]/30 text-xs text-white/60 space-y-2">
         <div className="flex items-center gap-2 text-white/80 font-medium">
-          <Sparkles className="size-3.5 text-[#018BCE]" />
+          <Image src="/brand/su-icon-white@hd.png" alt="" width={14} height={17} className="h-4 w-auto" />
           <span>NUSU Admin Hub</span>
         </div>
         <p className="text-[11px] leading-tight text-white/50">
