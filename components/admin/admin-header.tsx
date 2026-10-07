@@ -2,11 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Menu, LogOut, Loader2, ShieldCheck, User } from "lucide-react";
+import { ChevronDown, Menu, LogOut, Loader2, ShieldCheck, User } from "lucide-react";
 import { signOut } from "@/lib/auth/client";
 import { type StaffUser } from "@/lib/auth/guards";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { AdminSidebar } from "./admin-sidebar";
 
 interface AdminHeaderProps {
@@ -30,8 +36,13 @@ export function AdminHeader({ user }: AdminHeaderProps) {
     }
   };
 
-  const roleLabel =
-    user.role === "super_admin" ? "Super Admin" : "Admin";
+  const roleLabel = user.role === "super_admin" ? "Super Admin" : "Admin";
+  const initials = user.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]!.toUpperCase())
+    .join("");
 
   return (
     <>
@@ -60,51 +71,49 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           </div>
         </div>
 
-        {/* Right: User details & Sign out */}
-        <div className="flex items-center gap-3">
-          {/* User info */}
-          <div className="flex items-center gap-2.5 pl-2">
-            <div className="size-8 rounded-full bg-[#0F3056] text-white flex items-center justify-center font-semibold text-xs shadow-xs">
-              {user.name ? (
-                user.name.charAt(0).toUpperCase()
-              ) : (
-                <User className="size-4 text-white" />
-              )}
-            </div>
-            <div className="hidden md:flex flex-col text-left">
-              <span className="text-xs font-semibold text-foreground leading-none">
+        {/* Right: user menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            className="group flex min-h-11 items-center gap-2.5 rounded-xl border border-transparent py-1.5 pl-1.5 pr-2 text-left transition-colors hover:border-border hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#018BCE] data-popup-open:border-border data-popup-open:bg-muted/60"
+            aria-label={`Account menu for ${user.name}`}
+          >
+            <span className="flex size-9 items-center justify-center rounded-full bg-gradient-to-br from-[#0F548D] to-[#0F3056] text-sm font-semibold text-white ring-2 ring-white shadow-sm">
+              {initials || <User className="size-4" />}
+            </span>
+            <span className="hidden min-w-0 flex-col md:flex">
+              <span className="truncate text-sm font-semibold leading-tight text-foreground max-w-[160px]">
                 {user.name}
               </span>
-              <span className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate max-w-[140px]">
-                {user.email}
+              <span className="text-[11px] font-medium leading-tight text-[#018BCE]">{roleLabel}</span>
+            </span>
+            <ChevronDown className="size-4 text-muted-foreground transition-transform group-data-popup-open:rotate-180" />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" sideOffset={8} className="w-64 rounded-xl p-1.5">
+            <div className="flex items-center gap-3 rounded-lg bg-muted/60 p-3">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#0F548D] to-[#0F3056] text-sm font-semibold text-white">
+                {initials || <User className="size-4" />}
+              </span>
+              <span className="flex min-w-0 flex-col">
+                <span className="truncate text-sm font-semibold text-foreground">{user.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{user.email}</span>
+                <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full bg-[#0F3056] px-2 py-0.5 text-[10px] font-semibold text-white">
+                  <ShieldCheck className="size-3" />
+                  {roleLabel}
+                </span>
               </span>
             </div>
-            <Badge
-              variant={user.role === "super_admin" ? "default" : "secondary"}
-              className="hidden sm:inline-flex text-[11px] font-medium h-5 px-2 bg-[#0F3056] text-white"
+            <DropdownMenuSeparator className="my-1.5" />
+            <DropdownMenuItem
+              variant="destructive"
+              disabled={isSigningOut}
+              onClick={handleSignOut}
+              className="min-h-10 gap-2 rounded-lg px-3 text-sm font-medium"
             >
-              {roleLabel}
-            </Badge>
-          </div>
-
-          <div className="h-6 w-px bg-border mx-1" aria-hidden="true" />
-
-          {/* Sign Out button */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleSignOut}
-            disabled={isSigningOut}
-            className="h-8 gap-1.5 text-xs font-medium border-slate-200 text-slate-700 hover:text-red-600 hover:border-red-200 hover:bg-red-50/50 transition-colors"
-          >
-            {isSigningOut ? (
-              <Loader2 className="size-3.5 animate-spin" />
-            ) : (
-              <LogOut className="size-3.5" />
-            )}
-            <span className="hidden sm:inline">{isSigningOut ? "Signing out…" : "Sign out"}</span>
-          </Button>
-        </div>
+              {isSigningOut ? <Loader2 className="size-4 animate-spin" /> : <LogOut className="size-4" />}
+              {isSigningOut ? "Signing out…" : "Sign out"}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
 
       {/* Mobile Sidebar Slide-over Drawer */}
