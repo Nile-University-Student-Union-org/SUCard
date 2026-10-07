@@ -7,6 +7,7 @@ export function errorResponse(error: unknown) {
   if (error instanceof VendorError) return json({ error: error.message, code: error.code }, error.status);
   if (error instanceof ZodError) return json({ error: error.issues[0]?.message ?? "Invalid input" }, 400);
   if (error instanceof SyntaxError) return json({ error: "Invalid JSON" }, 400);
+  if (error instanceof Error && error.message === "Invalid date range") return json({ error: error.message }, 400);
   console.error(error); return json({ error: "Internal server error" }, 500);
 }
 export async function parseBody<T>(request: Request, schema: ZodType<T>): Promise<T> { let body: unknown; try { body = await request.json(); } catch { throw new SyntaxError("Invalid JSON"); } return schema.parse(body); }
