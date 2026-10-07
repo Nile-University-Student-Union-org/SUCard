@@ -7,6 +7,7 @@ import { getSettings } from "@/lib/settings/service";
 import { emailTemplate } from "@/lib/email/templates";
 import { StudentError } from "@/lib/student/service";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
+import { deleteStudentOutbox } from "./delete-student-outbox";
 
 export async function correctStudent(id:string, patch:{name?:string;universityId?:string},actorId:string){
   await db.transaction(async tx=>{
@@ -47,6 +48,7 @@ export async function deleteStudent(id:string,confirmEmail:string,actorId:string
     const hash=createHash("sha256").update(person.email).digest("hex");
     await tx.update(cards).set({status:"void",voidReason:"student_deleted",voidedAt:new Date(),voidedBy:actorId,studentId:null}).where(eq(cards.studentId,id));
     await tx.update(scanEvents).set({studentId:null,studentDeleted:true}).where(eq(scanEvents.studentId,id));
+    await deleteStudentOutbox(tx, person.email);
     await tx.execute(sql`update audit_log set entity_id=${hash}, data='{"redacted":true}'::jsonb
       where entity_id=${id} or data::text like ${`%${id}%`} or data::text like ${`%${person.email}%`}`);
     await tx.delete(user).where(eq(user.id,id));

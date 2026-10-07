@@ -71,6 +71,13 @@
       "when": 1791344716320,
       "tag": "0009_brainy_dreaming_celestial",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791345789660,
+      "tag": "0010_clammy_whistler",
+      "breakpoints": true
     }
   ]
 }

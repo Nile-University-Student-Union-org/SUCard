@@ -27,6 +27,10 @@ export const twoFactor = pgTable("two_factor", {
 export const rateLimit = pgTable("rate_limit", {
   id: text("id").primaryKey(), key: text("key"), count: integer("count"), lastRequest: bigint("last_request", { mode: "number" }),
 }, (t) => [uniqueIndex("rate_limit_key_idx").on(t.key)]);
+export const authFailedAttempts = pgTable("auth_failed_attempts", {
+  emailHash: text("email_hash").primaryKey(), count: integer("count").notNull(),
+  lastFailedAt: timestamp("last_failed_at", { withTimezone: true }).notNull(),
+});
 export const account = pgTable("account", {
   id: text("id").primaryKey(), accountId: text("account_id").notNull(), providerId: text("provider_id").notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
