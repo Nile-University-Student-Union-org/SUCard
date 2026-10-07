@@ -57,7 +57,7 @@ export function MicrosoftSignInButton({
         type="button"
         onClick={handleClick}
         disabled={disabled || isLoading}
-        aria-label="Sign in with Microsoft (NU students and staff)"
+        aria-label="Sign in with Microsoft"
         className={cn(
           "w-full min-h-[48px] px-4 py-3 rounded-xl border-2 border-b-4",
           "border-slate-300 dark:border-zinc-700 active:border-b-2",
@@ -76,9 +76,6 @@ export function MicrosoftSignInButton({
         )}
         <span className="truncate">Sign in with Microsoft</span>
       </button>
-      <p className="text-center text-[11px] font-medium text-ash dark:text-zinc-400">
-        NU students and staff
-      </p>
     </div>
   );
 }
