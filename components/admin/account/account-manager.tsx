@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { copyToClipboard } from "@/lib/clipboard";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
@@ -149,16 +150,17 @@ export function AccountManager({ user }: AccountManagerProps) {
     }
   };
 
-  const handleCopyBackupCodes = () => {
+  const handleCopyBackupCodes = async () => {
     if (!generatedCodes || generatedCodes.length === 0) return;
     const content = `SU Card Admin — Two-Factor Backup Codes\nAccount: ${user.email}\nGenerated: ${new Date().toISOString()}\n\n` +
       generatedCodes.map((code, i) => `${i + 1}. ${code}`).join("\n") +
       `\n\nEach code can only be used once. Store these codes in a secure location.`;
 
-    navigator.clipboard.writeText(content).then(() => {
+    const ok = await copyToClipboard(content);
+    if (ok) {
       setAreCodesCopied(true);
       setTimeout(() => setAreCodesCopied(false), 2500);
-    });
+    }
   };
 
   const handleDownloadBackupCodes = () => {

@@ -390,15 +390,20 @@ export function createCardTextures(maxAnisotropy: number): CardTextures {
   const ready = (async () => {
     const heading = fontFamily("--font-heading", "Impact");
     const sans = fontFamily("--font-sans", "sans-serif");
+    const loadFont = (fontSpec: string) =>
+      typeof document !== "undefined" && document.fonts?.load
+        ? document.fonts.load(fontSpec).catch(() => null)
+        : Promise.resolve(null);
+
     const [logo, icon, frontArt, backArt] = await Promise.all([
       loadImage("/brand/su-logo-white@hd.png"),
       loadImage("/brand/su-icon-white@hd.png"),
       CARD_ART.front ? loadImage(CARD_ART.front) : null,
       CARD_ART.back ? loadImage(CARD_ART.back) : null,
-      document.fonts.load(`400 100px ${heading}`).catch(() => null),
-      document.fonts.load(`600 100px ${sans}`).catch(() => null),
-      document.fonts.load(`700 100px ${sans}`).catch(() => null),
-      document.fonts.load(`500 100px ${sans}`).catch(() => null),
+      loadFont(`400 100px ${heading}`),
+      loadFont(`600 100px ${sans}`),
+      loadFont(`700 100px ${sans}`),
+      loadFont(`500 100px ${sans}`),
     ]);
     if (disposed) return;
     if (frontArt) paintArt(front.ctx, frontArt);

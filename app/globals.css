@@ -245,6 +245,11 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
   /* In-page links (e.g. "How it works") glide to their section; route changes stay instant via data-scroll-behavior. */
   @media (prefers-reduced-motion: no-preference) {
     html {
@@ -254,6 +259,14 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     letter-spacing: -0.011em;
+  }
+  /* Prevent iOS Safari auto-zoom on input focus by guaranteeing 16px minimum font size on mobile */
+  @media screen and (max-width: 639px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]):not([type="reset"]),
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), "Anton", sans-serif;
@@ -310,8 +323,17 @@
   .pt-safe {
     padding-top: max(1rem, env(safe-area-inset-top, 1rem));
   }
+  .pl-safe {
+    padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+  }
+  .pr-safe {
+    padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+  }
   .mb-safe {
     margin-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  .top-safe {
+    top: max(1rem, env(safe-area-inset-top, 1rem));
   }
   .bottom-safe {
     bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
@@ -319,6 +341,17 @@
   .px-safe {
     padding-left: max(1rem, env(safe-area-inset-left, 1rem));
     padding-right: max(1rem, env(safe-area-inset-right, 1rem));
+  }
+
+  /* iOS Safari prefix fallbacks for backdrop filters */
+  @supports (-webkit-backdrop-filter: blur(1px)) {
+    .backdrop-blur-xs { -webkit-backdrop-filter: blur(4px); }
+    .backdrop-blur-sm { -webkit-backdrop-filter: blur(8px); }
+    .backdrop-blur, .backdrop-blur-md { -webkit-backdrop-filter: blur(12px); }
+    .backdrop-blur-lg { -webkit-backdrop-filter: blur(16px); }
+    .backdrop-blur-xl { -webkit-backdrop-filter: blur(24px); }
+    .backdrop-blur-2xl { -webkit-backdrop-filter: blur(40px); }
+    .backdrop-blur-3xl { -webkit-backdrop-filter: blur(64px); }
   }
 
   .touch-pan-x {

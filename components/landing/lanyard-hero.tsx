@@ -105,6 +105,12 @@ export function LanyardHero() {
             }}
             onCreated={({ gl }) => {
               gl.toneMapping = THREE.NeutralToneMapping;
+              const canvas = gl.domElement;
+              const handleContextLost = (event: Event) => {
+                event.preventDefault();
+                setWebGlError(true);
+              };
+              canvas.addEventListener("webglcontextlost", handleContextLost, false);
             }}
             onError={() => setWebGlError(true)}
             aria-hidden="true"

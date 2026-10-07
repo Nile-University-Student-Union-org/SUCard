@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, QrCode, CreditCard, Sparkles, MapPin } from "lucide-react";
+import { ArrowLeft, QrCode, CreditCard, ScanLine, MapPin } from "lucide-react";
 import { CardScanner } from "./card-scanner";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export function ScanPageClient() {
                 <span>Turn your physical SU Card over to see the activation QR code.</span>
               </div>
               <div className="flex items-start gap-2.5">
-                <Sparkles className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
+                <ScanLine className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
                 <span>Point your phone camera to scan and activate instantly.</span>
               </div>
               <div className="flex items-start gap-2.5 text-muted-foreground">

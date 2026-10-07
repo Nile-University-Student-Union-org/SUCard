@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Anton, Poppins } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
@@ -18,16 +19,36 @@ const poppins = Poppins({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F4F7FB" },
+    { media: "(prefers-color-scheme: dark)", color: "#081424" },
+  ],
+};
+
 export const metadata: Metadata = {
   title: "SU Card",
   description: "Nile University Student Union membership card system",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "SU Card",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  await headers();
   return (
     <html
       lang="en"

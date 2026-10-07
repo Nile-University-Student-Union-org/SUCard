@@ -19,6 +19,7 @@ import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 import { createVendorAccount, updateVendorAccount } from "../api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "cn";
 import type {
   VendorAccountDto,
@@ -175,12 +176,10 @@ function VendorAccountForm({
       `Sign-in URL: ${window.location.origin}${createdResult.account.role === "cashier" ? "/scan" : "/vendor"}`,
     ].join("\n");
 
-    try {
-      await navigator.clipboard.writeText(creds);
+    const ok = await copyToClipboard(creds);
+    if (ok) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
-    } catch {
-      // Fallback
     }
   };
 

@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 import { resetVendorAccountPassword } from "../api";
+import { copyToClipboard } from "@/lib/clipboard";
 import { cn } from "cn";
 import type { VendorAccountDto } from "@/lib/vendors/types";
 
@@ -107,12 +108,10 @@ export function VendorAccountResetModal({
       `Sign-in: ${window.location.origin}${account.role === "cashier" ? "/scan" : "/vendor"}`,
     ].join("\n");
 
-    try {
-      await navigator.clipboard.writeText(creds);
+    const ok = await copyToClipboard(creds);
+    if (ok) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
-    } catch {
-      // Fallback
     }
   };
 

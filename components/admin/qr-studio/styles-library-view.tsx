@@ -32,7 +32,7 @@ import {
   Printer,
   Search,
   RotateCcw,
-  Sparkles,
+  Palette,
   Loader2,
 } from "lucide-react";
 import { cn } from "cn";
@@ -278,7 +278,7 @@ export function StylesLibraryView() {
       ) : filteredStyles.length === 0 ? (
         <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 text-center space-y-4">
           <div className="size-16 rounded-2xl bg-brand/10 text-brand flex items-center justify-center mx-auto border border-brand/20">
-            <Sparkles className="size-8" />
+            <Palette className="size-8" />
           </div>
           <div className="max-w-md mx-auto space-y-1">
             <h3 className="text-xl font-heading uppercase text-foreground">

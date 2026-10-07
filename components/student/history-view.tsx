@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Receipt,
   Loader2,
-  Sparkles,
 } from "lucide-react";
 import type { StudentHistoryResponse } from "@/lib/analytics/types";
 import { Button, ButtonLink } from "@/components/ui/button";
@@ -287,7 +286,7 @@ export function HistoryView() {
                             </p>
                           ) : (
                             <p className="text-xs text-muted-foreground italic flex items-center gap-1">
-                              <Sparkles className="size-3 text-ash dark:text-zinc-400 shrink-0" />
+                              <Tag className="size-3 text-ash dark:text-zinc-400 shrink-0" />
                               <span>Standard student discount</span>
                             </p>
                           )}

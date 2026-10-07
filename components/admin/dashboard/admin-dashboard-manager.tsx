@@ -18,7 +18,6 @@ import {
   Filter,
   CheckCircle2,
   Wallet,
-  Sparkles,
   Layers,
   Loader2,
   Clock,
@@ -444,7 +443,7 @@ export function AdminDashboardManager() {
               value={`${data.kpis.cardholderRedemptionPercent}%`}
               accent="violet"
               variant="hero"
-              icon={<Sparkles className="size-5" />}
+              icon={<CreditCard className="size-5" />}
               subText="Used card at least once"
             />
 

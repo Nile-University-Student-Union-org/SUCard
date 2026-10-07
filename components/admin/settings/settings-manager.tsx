@@ -13,7 +13,7 @@ import {
   Layers,
   ArrowRightLeft,
   ShieldAlert,
-  Sparkles,
+  Smartphone,
   Gauge,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -281,7 +281,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                 ? "New signups get web cards immediately"
                 : "New signups await office card collection"
             }
-            icon={<Sparkles className="size-5" />}
+            icon={<Smartphone className="size-5" />}
             accent={currentSavedMode === "digital" ? "brand" : "blue"}
           />
 

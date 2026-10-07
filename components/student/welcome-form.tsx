@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { User, Mail, CreditCard, Sparkles, AlertCircle } from "lucide-react";
+import { User, Mail, CreditCard,  AlertCircle } from "lucide-react";
 import { UNIVERSITY_ID_REGEX } from "@/lib/student/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -82,7 +82,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
       <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden">
         <CardHeader className="p-6 sm:p-8 pb-4 space-y-2 text-center sm:text-left border-b border-slate-100 dark:border-zinc-800/80">
           <div className="w-12 h-12 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto sm:mx-0 shadow-xs">
-            <Sparkles className="size-6" />
+            <CreditCard className="size-6" />
           </div>
           <div>
             <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white leading-tight">

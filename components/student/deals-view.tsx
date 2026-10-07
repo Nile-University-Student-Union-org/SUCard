@@ -9,7 +9,6 @@ import {
   MapPin,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   Utensils,
   Coffee,
   Dumbbell,
@@ -34,7 +33,7 @@ import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { formatCairoDate } from "@/components/ui/analytics-format";
 
 const CATEGORIES = [
-  { id: "all", label: "All Deals", icon: Sparkles },
+  { id: "all", label: "All Deals", icon: Tag },
   { id: "food", label: "Food", icon: Utensils },
   { id: "coffee", label: "Coffee", icon: Coffee },
   { id: "fitness", label: "Fitness", icon: Dumbbell },

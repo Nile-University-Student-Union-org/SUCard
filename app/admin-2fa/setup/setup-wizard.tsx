@@ -23,11 +23,13 @@ import { PinInput } from "@/components/ui/pin-input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
+import { copyToClipboard } from "@/lib/clipboard";
 import { AuthLayout } from "@/components/ui/auth-layout";
 import { cn } from "cn";
 
 interface TwoFactorSetupWizardProps {
   admin: StaffUser;
+  passwordRequired: boolean;
 }
 
 type SetupStep = 1 | 2 | 3;
@@ -45,7 +47,7 @@ function extractSecretKey(totpURI: string): string {
   return match && match[1] ? match[1] : "";
 }
 
-export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
+export function TwoFactorSetupWizard({ admin, passwordRequired }: TwoFactorSetupWizardProps) {
   const [currentStep, setCurrentStep] = useState<SetupStep>(1);
 
   // Step 1 State: Password confirmation
@@ -96,7 +98,7 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
   // Step 1 Submit: Enable 2FA
   const handleEnableSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password) {
+    if (passwordRequired && !password) {
       setEnableError("Please enter your current password");
       return;
     }
@@ -176,26 +178,28 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
   };
 
   // Copy manual entry secret
-  const handleCopySecret = () => {
+  const handleCopySecret = async () => {
     if (!secretKey) return;
-    navigator.clipboard.writeText(secretKey).then(() => {
+    const ok = await copyToClipboard(secretKey);
+    if (ok) {
       setIsSecretCopied(true);
       setTimeout(() => setIsSecretCopied(false), 2500);
-    });
+    }
   };
 
   // Copy backup codes
-  const handleCopyBackupCodes = () => {
+  const handleCopyBackupCodes = async () => {
     if (!backupCodes || backupCodes.length === 0) return;
     const content = `SU Card Admin — Two-Factor Backup Codes\nAccount: ${admin.email}\nGenerated: ${new Date().toISOString()}\n\n` +
       backupCodes.map((code, i) => `${i + 1}. ${code}`).join("\n") +
       `\n\nEach code can only be used once. Store these codes in a secure location.`;
 
-    navigator.clipboard.writeText(content).then(() => {
+    const ok = await copyToClipboard(content);
+    if (ok) {
       setAreCodesCopied(true);
       setIsDownloaded(false);
       setTimeout(() => setAreCodesCopied(false), 3000);
-    });
+    }
   };
 
   // Download backup codes as .txt
@@ -271,6 +275,7 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
             )}
 
             <form onSubmit={handleEnableSubmit} className="space-y-4" noValidate>
+              {passwordRequired && (
               <Input
                 id="setup-current-password"
                 type="password"
@@ -286,6 +291,7 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
                 }}
                 autoFocus
               />
+              )}
 
               <div className="pt-2">
                 <AuthSubmitButton

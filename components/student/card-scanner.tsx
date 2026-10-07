@@ -8,7 +8,7 @@ import {
   FlashlightOff,
   X,
   RotateCcw,
-  Sparkles,
+  CheckCircle2,
   ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -349,7 +349,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
           /* Celebration View */
           <div className="p-8 flex flex-col items-center justify-center text-center space-y-5 min-h-[360px] animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none">
             <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg animate-bounce motion-reduce:animate-none">
-              <Sparkles className="size-10 text-emerald-400" />
+              <CheckCircle2 className="size-10 text-emerald-400" />
             </div>
             <div className="space-y-1.5">
               <h2 className="font-heading text-3xl uppercase tracking-wider text-white">

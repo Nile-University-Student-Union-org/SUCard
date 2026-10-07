@@ -16,7 +16,6 @@ import {
   Download,
   AlertTriangle,
   RotateCcw,
-  Sparkles,
   Info,
   Lock,
   LogOut,
@@ -562,7 +561,7 @@ export function VendorPortalManager() {
                   value={formatCurrency(overview.averageBill)}
                   accent="amber"
                   variant="hero"
-                  icon={<Sparkles className="size-5" />}
+                  icon={<Receipt className="size-5" />}
                   subText="Average bill per redemption"
                 />
               </div>

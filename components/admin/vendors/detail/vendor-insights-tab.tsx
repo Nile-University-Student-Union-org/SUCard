@@ -9,7 +9,6 @@ import {
   Receipt,
   AlertTriangle,
   RotateCcw,
-  Sparkles,
   Loader2,
   Clock,
 } from "lucide-react";
@@ -283,7 +282,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
           value={formatCurrency(data.averageBill)}
           accent="amber"
           variant="hero"
-          icon={<Sparkles className="size-5" />}
+          icon={<Receipt className="size-5" />}
           subText="Average spend per scan"
         />
       </div>

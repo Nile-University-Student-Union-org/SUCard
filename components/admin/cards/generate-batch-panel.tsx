@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Loader2, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon, Sparkles } from "lucide-react";
+import { Plus, Loader2, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon } from "lucide-react";
 import { BATCH_LABEL_MAX, BATCH_COUNT_MAX, type Batch } from "@/lib/cards/types";
 import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { listStyles } from "@/components/admin/qr-studio/api";
@@ -381,7 +381,7 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
         title={`Generate ${pendingValues ? formatNumber(pendingValues.count) : ""} Physical Cards?`}
-        icon={<Sparkles className="size-5 text-brand" />}
+        icon={<Layers className="size-5 text-brand" />}
         maxWidth="md"
         role="alertdialog"
       >

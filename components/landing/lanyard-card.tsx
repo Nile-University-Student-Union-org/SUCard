@@ -2,7 +2,7 @@
 
 import { useState, useSyncExternalStore } from "react";
 import dynamic from "next/dynamic";
-import { Sparkles } from "lucide-react";
+import { Box } from "lucide-react";
 import { StaticCard } from "./static-card";
 import { LanyardSkeleton } from "./lanyard-skeleton";
 
@@ -84,7 +84,7 @@ export function LanyardCard() {
               onClick={() => setMobileOptIn3D(true)}
               className="absolute bottom-2 z-20 inline-flex min-h-[44px] min-w-[44px] items-center gap-1.5 rounded-full bg-white/85 dark:bg-zinc-900/90 px-4 py-2 text-xs font-bold text-charcoal dark:text-white border-2 border-slate-200 dark:border-zinc-700 shadow-md backdrop-blur-md hover:bg-white dark:hover:bg-zinc-800 transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
-              <Sparkles className="size-3.5 text-macaw-blue" />
+              <Box className="size-3.5 text-macaw-blue" />
               <span>Play in 3D</span>
             </button>
           )}

@@ -23,6 +23,7 @@ import {
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { copyToClipboard } from "@/lib/clipboard";
 
 interface AuditDetailModalProps {
   entry: AuditEntry | null;
@@ -40,13 +41,14 @@ export function AuditDetailModal({ entry, isOpen, onClose }: AuditDetailModalPro
   const jsonString = JSON.stringify(entry.data || {}, null, 2);
   const actorDisplayName = entry.actorName || entry.actorEmail || "System";
 
-  const handleCopyJson = (e: React.MouseEvent) => {
+  const handleCopyJson = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    navigator.clipboard.writeText(jsonString).then(() => {
+    const ok = await copyToClipboard(jsonString);
+    if (ok) {
       setIsCopied(true);
       toast.success("JSON payload copied to clipboard");
       setTimeout(() => setIsCopied(false), 2000);
-    });
+    }
   };
 
   return (
