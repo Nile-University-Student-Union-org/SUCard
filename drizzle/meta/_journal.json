@@ -57,6 +57,20 @@
       "when": 1791340389313,
       "tag": "0007_worthless_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791344101666,
+      "tag": "0008_strong_proemial_gods",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791344716320,
+      "tag": "0009_brainy_dreaming_celestial",
+      "breakpoints": true
     }
   ]
 }

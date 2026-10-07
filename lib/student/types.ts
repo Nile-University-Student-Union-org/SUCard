@@ -6,7 +6,7 @@ export type ClaimErrorCode = "not_su_card" | "already_linked" | "cancelled" | "a
 export type Area = { key: "student" | "admin" | "scanner" | "vendor"; label: string; href: string };
 export type IssuanceSetting = { mode: CardFlow; physicalQuotaRemaining: number | null };
 export type OfficeSetting = { location: string; hours: string };
-export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; studentEmailPattern: string; office: OfficeSetting; semesters: { name: string; start: string; end: string }[]; atRisk: { redemptions: number; days: number } };
+export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; emailOnSuspend: boolean; studentEmailPattern: string; office: OfficeSetting; semesters: { name: string; start: string; end: string }[]; atRisk: { redemptions: number; days: number } };
 export type ApiError = { error: string; code?: ClaimErrorCode | string };
 export type CardSummary = { id: string; type: CardFlow; serial: string; status: "unassigned" | "active" | "void"; qr: string; linkedAt: string | null };
 

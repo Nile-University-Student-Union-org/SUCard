@@ -4,6 +4,8 @@ import { and, asc, desc, eq, lt, max, or, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
 import { account, auditLog, branches, offerRevisions, offers, scanEvents, session, user, vendorLogos, vendors } from "@/lib/db/schema";
+import { sendAccountWelcome } from "@/lib/email/welcome";
+import { randomBytes } from "node:crypto";
 import type { z } from "zod";
 import { offerBody, vendorBody, type accountBody, type accountPatch, type branchBody, type branchPatch, type offerPatch, type vendorPatch } from "./validation";
 export class VendorError extends Error {
@@ -193,7 +195,7 @@ export async function createAccount(vendorId: string, input: z.infer<typeof acco
   } else if (input.branchId) throw new VendorError(400, "Vendor manager cannot have a branch");
   const ctx = await auth.$context;
   if (await ctx.internalAdapter.findUserByEmail(input.email)) throw new VendorError(409, "Email already exists");
-  const hash = await ctx.password.hash(input.password);
+  const hash = await ctx.password.hash(randomBytes(32).toString("base64url"));
   let created: {
     id: string;
   };
@@ -236,6 +238,7 @@ export async function createAccount(vendorId: string, input: z.infer<typeof acco
     throw error;
   }
   const [row] = await db.select().from(user).where(eq(user.id, created.id));
+  await sendAccountWelcome(input.email, input.name);
   return accountDto(row);
 }
 export async function updateAccount(id: string, patch: z.infer<typeof accountPatch>, actorId: string) {

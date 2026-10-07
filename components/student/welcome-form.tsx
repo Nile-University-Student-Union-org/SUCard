@@ -18,6 +18,7 @@ const welcomeSchema = z.object({
     .string()
     .trim()
     .regex(UNIVERSITY_ID_REGEX, "University ID must be exactly 9 digits (e.g. 231001000)"),
+  acceptPrivacy: z.literal(true, { error: "Please accept the SU Card privacy notice" }),
 });
 
 type WelcomeFormValues = z.infer<typeof welcomeSchema>;
@@ -40,6 +41,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
     resolver: zodResolver(welcomeSchema),
     defaultValues: {
       universityId: "",
+      acceptPrivacy: undefined,
     },
   });
 
@@ -54,7 +56,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ universityId: values.universityId.trim() }),
+        body: JSON.stringify({ universityId: values.universityId.trim(), acceptPrivacy: values.acceptPrivacy }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -140,6 +142,9 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
             </div>
 
             {/* Permanent Identity Warning Notice */}
+            <div><label className="flex items-start gap-2 text-sm"><input type="checkbox" disabled={isLoading} {...register("acceptPrivacy")} className="mt-1" />
+              <span>I agree to the <a href="/privacy" className="underline">SU Card privacy notice</a>.</span></label>
+              {errors.acceptPrivacy && <p role="alert" className="text-sm text-red-600">{errors.acceptPrivacy.message}</p>}</div>
             <Alert
               variant="info"
               size="sm"

@@ -7,7 +7,7 @@ const name = z.string().trim().min(1).max(STAFF_NAME_MAX);
 const password = z.string().min(STAFF_PASSWORD_MIN).max(STAFF_PASSWORD_MAX);
 
 export const createStaffSchema = z.strictObject({
-  email: z.string().trim().toLowerCase().email(), name, role, password,
+  email: z.string().trim().toLowerCase().email(), name, role, password: password.optional(),
 });
 export const updateStaffSchema = z.strictObject({ name: name.optional(), role: role.optional(), status: status.optional() })
   .refine((value) => Object.keys(value).length > 0, "Provide at least one field");

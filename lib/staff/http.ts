@@ -2,6 +2,7 @@ import "server-only";
 import { ZodError, type ZodType } from "zod";
 import { getAdminFromRequest, type StaffUser } from "@/lib/auth/guards";
 import { StaffError } from "./service";
+import { logError } from "@/lib/log";
 
 const noStore = { "Cache-Control": "no-store" };
 export function json(data: unknown, status = 200): Response {
@@ -12,7 +13,7 @@ export function errorResponse(error: unknown): Response {
   if (error instanceof ZodError) return json({ error: error.issues[0]?.message ?? "Invalid input" }, 400);
   if (error instanceof SyntaxError) return json({ error: "Invalid JSON" }, 400);
   if (error instanceof Error && error.message === "Invalid audit cursor") return json({ error: error.message }, 400);
-  console.error(error);
+  logError("/api/admin/staff", error);
   return json({ error: "Internal server error" }, 500);
 }
 export async function superAdmin(request: Request): Promise<StaffUser | Response> {

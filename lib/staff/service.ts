@@ -8,6 +8,8 @@ import { wouldRemoveLastSuperAdmin } from "./rules";
 import type { AuditEntry, CreateStaffRequest, ListAuditResponse, StaffMember, StaffRole, UpdateStaffRequest } from "./types";
 import type { z } from "zod";
 import type { auditQuerySchema } from "./validation";
+import { sendAccountWelcome } from "@/lib/email/welcome";
+import { randomBytes } from "node:crypto";
 
 export class StaffError extends Error {
   constructor(public status: number, message: string) { super(message); }
@@ -40,7 +42,7 @@ export async function listStaff(selfId: string): Promise<StaffMember[]> {
 export async function createStaff(input: CreateStaffRequest, actorId: string): Promise<StaffMember> {
   const ctx = await auth.$context;
   if (await ctx.internalAdapter.findUserByEmail(input.email)) throw new StaffError(409, "A user with this email already exists");
-  const hash = await ctx.password.hash(input.password);
+  const hash = await ctx.password.hash(randomBytes(32).toString("base64url"));
   let created;
   try {
     created = await ctx.internalAdapter.createUser({ email: input.email, name: input.name, emailVerified: true, role: input.role }, { method: "email-password" });
@@ -57,6 +59,7 @@ export async function createStaff(input: CreateStaffRequest, actorId: string): P
     await ctx.internalAdapter.deleteUser(created.id);
     throw error;
   }
+  await sendAccountWelcome(input.email, input.name);
   return memberById(created.id, actorId);
 }
 

@@ -2,6 +2,7 @@ import "server-only";
 import { ZodError, type ZodType } from "zod";
 import { getAdminFromRequest, getCurrentUser, getStudentFromRequest } from "@/lib/auth/guards";
 import { StudentError } from "./service";
+import { logError } from "@/lib/log";
 
 export const noStore = { "Cache-Control": "no-store" };
 export function json(data: unknown, status = 200) { return Response.json(data, { status, headers: noStore }); }
@@ -11,7 +12,7 @@ export function errorResponse(error: unknown): Response {
   if (error instanceof SyntaxError) return json({ error: "Invalid JSON" }, 400);
   if (error instanceof Error && (error.message === "Invalid date range" || error.message === "Invalid cursor")) return json({ error: error.message }, 400);
   if (error instanceof Error && error.message === "Vendor not found") return json({ error: error.message }, 404);
-  console.error(error);
+  logError("/api/student", error);
   return json({ error: "Internal server error" }, 500);
 }
 export async function parseBody<T>(request: Request, schema: ZodType<T>): Promise<T> {
@@ -20,10 +21,9 @@ export async function parseBody<T>(request: Request, schema: ZodType<T>): Promis
   return schema.parse(input);
 }
 export async function requireAdmin(request: Request, superOnly = false) {
-  const person = await getCurrentUser(request.headers);
-  if (!person) return json({ error: "Unauthorized" }, 401);
   const admin = await getAdminFromRequest(request);
-  if (!admin || superOnly && admin.role !== "super_admin") return json({ error: "Forbidden" }, 403);
+  if (!admin) return json({ error: "Unauthorized" }, 401);
+  if (superOnly && admin.role !== "super_admin") return json({ error: "Forbidden" }, 403);
   return admin;
 }
 export async function requireStudent(request: Request) {
