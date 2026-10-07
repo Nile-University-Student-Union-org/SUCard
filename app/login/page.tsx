@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck } from "lucide-react";
+import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck, Sparkles, QrCode, Wallet, Tag } from "lucide-react";
 import { signIn, authClient } from "@/lib/auth/client";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
@@ -238,61 +238,169 @@ function LoginContent() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
       {/* 1. Left Brand Panel (Desktop Split Layout) */}
-      <div className="hidden lg:flex lg:col-span-5 relative bg-[#0F3056] text-white flex-col justify-between p-12 overflow-hidden border-r border-[#0A2240] shadow-2xl">
-        {/* Decorative subtle ambient background shapes */}
+      <div className="hidden lg:flex lg:col-span-5 relative bg-gradient-to-b from-[#0F3056] via-[#0D2849] to-[#0A1E38] text-white flex-col justify-between p-8 xl:p-10 overflow-hidden border-r border-[#0A2240] shadow-2xl">
+        {/* Background decorative dot-grid texture & ambient glows/rings */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#018BCE]/20 blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-[#0F548D]/40 blur-3xl" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/5" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-white/10" />
+          {/* Dot-grid texture with radial fade mask */}
+          <div className="absolute inset-0 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_80%_70%_at_50%_40%,#000_20%,transparent_75%)]" />
+
+          {/* Ambient soft glows */}
+          <div className="absolute -top-24 -left-24 size-80 rounded-full bg-[#018BCE]/15 blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 size-80 rounded-full bg-[#0F548D]/25 blur-3xl" />
+
+          {/* Subtle concentric rings */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[460px] rounded-full border border-white/[0.04]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 size-[320px] rounded-full border border-white/[0.06]" />
         </div>
 
-        {/* Top: Logo & Back Link */}
-        <div className="relative z-10 flex items-center justify-between">
+        {/* Top: Nile University Student Union Logo */}
+        <div className="relative z-10 flex items-center">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-sky-200 hover:text-white transition-colors group"
+            className="inline-flex items-center focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg"
           >
-            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to home</span>
-          </Link>
-          <span className="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-sky-200 border border-white/15">
-            Official Portal
-          </span>
-        </div>
-
-        {/* Middle: Brand Hero Message */}
-        <div className="relative z-10 space-y-6 my-auto max-w-sm">
-          <div className="w-16 h-16 rounded-2xl bg-white/10 p-3 border border-white/20 backdrop-blur-xs flex items-center justify-center shadow-lg">
             <Image
-              src="/brand/su-icon-white@hd.png"
-              alt="NUSU Icon"
-              width={48}
+              src="/brand/su-logo-white@hd.png"
+              alt="Nile University Student Union"
+              width={160}
               height={48}
-              className="w-full h-full object-contain"
+              className="h-9 w-auto object-contain"
               priority
             />
+          </Link>
+        </div>
+
+        {/* Middle Content */}
+        <div className="relative z-10 flex flex-col items-center my-auto w-full max-w-sm mx-auto space-y-6 xl:space-y-7">
+          {/* Hero SU Card: tilted, softly floating with ambient glow & contact shadow */}
+          <div className="relative w-full max-w-[300px] xl:max-w-[320px] mx-auto select-none pointer-events-none">
+            {/* Ambient Glow behind card */}
+            <div
+              className="absolute -inset-3 bg-gradient-to-r from-sky-400/20 via-brand-soft/25 to-sky-500/20 rounded-[24px] blur-2xl pointer-events-none"
+              aria-hidden="true"
+            />
+
+            {/* Floating Card Container */}
+            <div className="motion-safe:animate-[phone-float_7s_ease-in-out_infinite] relative">
+              {/* The Card */}
+              <div
+                className="relative aspect-[1.585/1] w-full rounded-2xl p-4 sm:p-5 text-white overflow-hidden border border-white/20 shadow-2xl -rotate-6"
+                style={{
+                  background: "linear-gradient(135deg, #081E38 0%, #0F3056 48%, #0F548D 100%)",
+                  boxShadow: "0 20px 40px -12px rgba(8, 26, 48, 0.7), 0 0 30px rgba(1, 139, 206, 0.22)",
+                }}
+              >
+                {/* Holographic vertical strip */}
+                <div
+                  className="absolute top-0 bottom-0 left-5 w-4 opacity-35 bg-gradient-to-b from-sky-400 via-emerald-300 via-amber-300 via-pink-400 to-indigo-400 pointer-events-none"
+                  aria-hidden="true"
+                />
+
+                {/* Ambient internal card glow */}
+                <div
+                  className="absolute -top-8 -right-8 size-28 rounded-full bg-sky-400/25 blur-xl pointer-events-none"
+                  aria-hidden="true"
+                />
+
+                {/* Card Top: Logo & Student Chip */}
+                <div className="relative z-10 flex items-center justify-between">
+                  <Image
+                    src="/brand/su-logo-white@hd.png"
+                    alt="NUSU Logo"
+                    width={110}
+                    height={32}
+                    className="h-5.5 w-auto object-contain"
+                  />
+                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/25 border border-sky-400/40 text-[9px] font-bold text-sky-100 tracking-wider">
+                    <Sparkles className="size-2.5 text-sky-300" />
+                    <span>STUDENT</span>
+                  </div>
+                </div>
+
+                {/* Card Bottom: SU Card Title + QR code block */}
+                <div className="relative z-10 mt-4 sm:mt-5 flex items-end justify-between">
+                  <div>
+                    <h2 className="font-heading text-3xl xl:text-4xl text-white tracking-wider leading-none font-normal drop-shadow-sm">
+                      SU CARD
+                    </h2>
+                    <p className="text-[9px] font-semibold text-sky-200/90 tracking-wider uppercase mt-1">
+                      Nile University Student Union
+                    </p>
+                  </div>
+
+                  {/* QR Placeholder Block */}
+                  <div className="size-12 rounded-xl bg-white p-1 shadow-md flex items-center justify-center shrink-0">
+                    <QrCode className="size-full text-[#0F3056]" />
+                  </div>
+                </div>
+
+                {/* Card Footer strip */}
+                <div className="relative z-10 mt-2.5 pt-1.5 border-t border-white/15 flex items-center justify-between text-[8px] text-sky-200/75 font-medium tracking-wide">
+                  <span>DIGITAL &amp; PHYSICAL CARD</span>
+                  <span className="font-mono text-[7.5px] text-sky-300">SCAN TO VERIFY</span>
+                </div>
+              </div>
+
+              {/* Contact Shadow beneath tilted card */}
+              <div
+                className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-4/5 h-4 bg-black/40 blur-lg rounded-full pointer-events-none"
+                aria-hidden="true"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <h1 className="font-heading text-4xl xl:text-5xl uppercase tracking-wider text-white leading-tight font-normal">
-              SU CARD
+          {/* Hero Copy: Eyebrow + Gradient Headline + Subtitle */}
+          <div className="w-full space-y-2 text-left">
+            <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.22em] uppercase text-macaw-blue">
+              <span aria-hidden="true" className="h-px w-5 bg-current" />
+              <span>Nile University Student Union</span>
+            </p>
+            <h1 className="font-heading text-2xl xl:text-3xl uppercase tracking-wider text-white font-normal leading-tight">
+              Your student card,{" "}
+              <span className="bg-gradient-to-r from-brand-soft to-macaw-blue bg-clip-text text-transparent">
+                one tap away
+              </span>
             </h1>
-            <p className="text-sm xl:text-base text-sky-100/90 leading-relaxed font-normal">
-              Digital &amp; physical membership for Nile University Student Union.
+            <p className="text-xs xl:text-sm text-sky-100/85 leading-relaxed font-normal">
+              Digital &amp; physical membership for campus access and student savings.
             </p>
           </div>
 
-          <div className="pt-2 flex items-center gap-3 text-xs text-sky-200/80">
-            <span className="size-2 rounded-full bg-[#018BCE] animate-pulse" />
-            <span>One identity for campus access, events, and member perks.</span>
+          {/* Feature Rows */}
+          <div className="w-full space-y-2.5 pt-1">
+            <div className="flex items-center gap-3">
+              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
+                <ShieldCheck className="size-4" />
+              </div>
+              <span className="text-xs font-medium text-sky-100/95">
+                Verified with your NU account
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
+                <Wallet className="size-4" />
+              </div>
+              <span className="text-xs font-medium text-sky-100/95">
+                Add to Google Wallet
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
+                <Tag className="size-4" />
+              </div>
+              <span className="text-xs font-medium text-sky-100/95">
+                Discounts at partner stores
+              </span>
+            </div>
           </div>
         </div>
 
         {/* Bottom: Footer Info */}
-        <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-sky-200/60">
-          <span>Nile University Student Union</span>
-          <span>NUSU &copy; {new Date().getFullYear()}</span>
+        <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between text-xs text-sky-200/60">
+          <span>&copy; {new Date().getFullYear()} Nile University Student Union</span>
+          <span className="font-mono text-[10px] text-sky-300/50">NUSU</span>
         </div>
       </div>
 
