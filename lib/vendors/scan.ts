@@ -81,7 +81,10 @@ export async function validateScan(actor: Actor, qr: string, userAgent: string |
     resetsAt: result === "limit_reached" ? resets[0] ?? null : null
   };
 }
-export async function confirmScan(actor: Actor, scanId: string, offerId: string, billAmount?: number): Promise<ConfirmResponse> {
+export async function confirmScan(actor: Actor, scanId: string, offerId: string, billAmount?: number): Promise<{
+  response: ConfirmResponse;
+  notification: { redemptionId: string; userId: string; vendorName: string; discountLabel: string; offerTitle: string; at: Date } | null;
+}> {
   return db.transaction(async tx => {
     const [scan] = await tx.select().from(scanEvents).where(eq(scanEvents.id, scanId)).for("update");
     if (!scan) throw new VendorError(404, "Scan not found");
@@ -89,14 +92,14 @@ export async function confirmScan(actor: Actor, scanId: string, offerId: string,
     if (decision === "forbidden") throw new VendorError(403, "Forbidden");
     if (decision === "existing") {
       if (scan.offerId !== offerId || scan.voided) throw new VendorError(409, "Scan already confirmed for another offer or voided");
-      return {
+      return { response: {
         scanId,
         offerId,
         confirmedAt: scan.confirmedAt!.toISOString(),
         billAmount: scan.billAmount,
         remainingUses: null,
         resetsAt: null
-      };
+      }, notification: null };
     }
     if (decision !== "confirm") throw new VendorError(409, decision === "expired" ? "Scan expired" : "Scan was not valid");
     if (scan.vendorId !== actor.vendor.id || scan.branchId !== actor.branch!.id || !scan.studentId || !scan.cardId) throw new VendorError(403, "Forbidden");
@@ -119,14 +122,21 @@ export async function confirmScan(actor: Actor, scanId: string, offerId: string,
       offerId,
       billAmount: billAmount === undefined ? null : billAmount.toFixed(2)
     }).where(eq(scanEvents.id, scanId)).returning();
-    return {
+    return { response: {
       scanId,
       offerId,
       confirmedAt: confirmed.confirmedAt!.toISOString(),
       billAmount: confirmed.billAmount,
       remainingUses: allowance.remainingUses === null ? null : allowance.remainingUses - 1,
       resetsAt: allowance.resetsAt
-    };
+    }, notification: {
+      redemptionId: confirmed.id,
+      userId: scan.studentId,
+      vendorName: vendor.name,
+      discountLabel: formatDiscount(offer),
+      offerTitle: offer.title,
+      at: confirmed.confirmedAt!
+    } };
   });
 }
 export async function today(actor: Actor): Promise<TodayResponse> {

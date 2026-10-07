@@ -172,6 +172,58 @@ export function buildSaveUrl(config: Config, id: string) {
   return `https://pay.google.com/gp/v/save/${jwt}`;
 }
 
+type RedemptionNotification = {
+  redemptionId: string;
+  userId: string;
+  vendorName: string;
+  discountLabel: string;
+  offerTitle: string;
+  at: Date;
+};
+
+function shorten(value: string, limit: number) {
+  const characters = Array.from(value.trim());
+  return characters.length <= limit ? characters.join("") : `${characters.slice(0, limit - 1).join("")}…`;
+}
+
+export function buildRedemptionMessage({ redemptionId, vendorName, discountLabel, offerTitle, at }: Omit<RedemptionNotification, "userId">) {
+  const time = new Intl.DateTimeFormat("en-US", { timeZone: "Africa/Cairo", hour: "numeric", minute: "2-digit", hour12: true }).format(at);
+  const prefix = `${shorten(discountLabel, 35)}: `;
+  const suffix = ` · ${time} Cairo`;
+  return {
+    message: {
+      id: `redemption_${redemptionId}`,
+      header: `Used at ${shorten(vendorName, 32)}`,
+      body: `${prefix}${shorten(offerTitle, 120 - Array.from(prefix + suffix).length)}${suffix}`,
+      messageType: "TEXT_AND_NOTIFY",
+      displayInterval: {
+        start: { date: at.toISOString() },
+        end: { date: new Date(at.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString() },
+      },
+    },
+  };
+}
+
+export async function notifyRedemption({ userId, ...redemption }: RedemptionNotification): Promise<void> {
+  try {
+    const config = await getGoogleWalletConfig();
+    if (!config) return;
+    const { db } = await import("@/lib/db");
+    const { walletPasses } = await import("@/lib/db/schema");
+    const { and, eq } = await import("drizzle-orm");
+    const [pass] = await db.select({ objectId: walletPasses.objectId }).from(walletPasses)
+      .where(and(eq(walletPasses.studentId, userId), eq(walletPasses.platform, "google")));
+    if (!pass) return;
+    await request(config, "POST", `genericObject/${encodeURIComponent(pass.objectId)}/addMessage`, buildRedemptionMessage(redemption));
+  } catch (error) {
+    console.error("Google Wallet redemption notification failed", {
+      redemptionId: redemption.redemptionId,
+      userId,
+      status: error instanceof GoogleWalletError ? error.status : undefined,
+    });
+  }
+}
+
 export async function syncGoogleWalletForStudent(userId: string): Promise<void> {
   try {
     const config = await getGoogleWalletConfig();

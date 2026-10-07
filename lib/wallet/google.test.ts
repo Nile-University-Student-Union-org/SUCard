@@ -1,6 +1,6 @@
 import { generateKeyPairSync, createVerify } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { buildGenericClass, buildGenericObject, buildSaveUrl, objectId, signJwt } from "./google";
+import { buildGenericClass, buildGenericObject, buildRedemptionMessage, buildSaveUrl, objectId, signJwt } from "./google";
 
 const { privateKey, publicKey } = generateKeyPairSync("rsa", { modulusLength: 2048 });
 const key = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
@@ -48,5 +48,39 @@ describe("Google Wallet", () => {
   it("leaves the logo out when the app has no public https address", () => {
     expect(buildGenericObject({ ...config, baseUrl: "http://localhost:3000" }, student, card)).not.toHaveProperty("logo");
     expect(buildGenericObject({ ...config, baseUrl: "http://localhost:3000" }, student, card)).not.toHaveProperty("heroImage");
+  });
+
+  it("builds a notifying redemption message with Cairo time and a 30-day interval", () => {
+    const at = new Date("2026-01-01T12:05:00.000Z");
+    expect(buildRedemptionMessage({ redemptionId: "scan-1", vendorName: "Breadfast", discountLabel: "20% off", offerTitle: "Breakfast box", at })).toEqual({
+      message: {
+        id: "redemption_scan-1",
+        header: "Used at Breadfast",
+        body: "20% off: Breakfast box · 2:05 PM Cairo",
+        messageType: "TEXT_AND_NOTIFY",
+        displayInterval: {
+          start: { date: "2026-01-01T12:05:00.000Z" },
+          end: { date: "2026-01-31T12:05:00.000Z" },
+        },
+      },
+    });
+  });
+
+  it("keeps long names and offer copy within Wallet message limits", () => {
+    const { message } = buildRedemptionMessage({
+      redemptionId: "scan-2",
+      vendorName: "Vendor 🎉 ".repeat(20),
+      discountLabel: "A very long discount ".repeat(10),
+      offerTitle: "Fresh bread 🥖 ".repeat(30),
+      at: new Date("2026-01-01T12:05:00.000Z"),
+    });
+    expect(Array.from(message.header).length).toBeLessThanOrEqual(40);
+    expect(Array.from(message.body).length).toBeLessThanOrEqual(120);
+    expect(message.body).toMatch(/ · 2:05 PM Cairo$/);
+  });
+
+  it("uses Cairo daylight saving time in summer", () => {
+    const { message } = buildRedemptionMessage({ redemptionId: "scan-3", vendorName: "Breadfast", discountLabel: "20% off", offerTitle: "Breakfast box", at: new Date("2026-07-01T12:05:00.000Z") });
+    expect(message.body).toBe("20% off: Breakfast box · 3:05 PM Cairo");
   });
 });
