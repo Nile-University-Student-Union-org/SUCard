@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  CheckCircle2,
   Utensils,
   Laptop,
   Trophy,
@@ -103,17 +102,6 @@ export default function HomePage() {
               </ButtonLink>
             </div>
 
-            {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6 text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                <span>Instant NU verification</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                <span>Google Wallet ready</span>
-              </div>
-            </div>
           </div>
 
           {/* Right Column: 3D Interactive Lanyard Hero */}
@@ -222,7 +210,7 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-border/60 text-xs text-ash dark:text-zinc-500">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex items-center justify-center">
           <div className="flex items-center gap-2">
             <Image
               src="/brand/su-icon-color.png"
@@ -241,20 +229,6 @@ export default function HomePage() {
             <p>
               &copy; {new Date().getFullYear()} Nile University Student Union (NUSU). All rights reserved.
             </p>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link
-              href="/privacy"
-              className="hover:text-brand dark:hover:text-brand-soft transition-colors font-medium underline underline-offset-4"
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              href="/login"
-              className="hover:text-brand dark:hover:text-brand-soft transition-colors font-medium"
-            >
-              Sign in
-            </Link>
           </div>
         </div>
       </footer>
