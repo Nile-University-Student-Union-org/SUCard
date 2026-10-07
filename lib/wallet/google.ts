@@ -12,7 +12,7 @@ const configSchema = z.object({
   // The service-account key: a JSON file on disk (VPS), or its JSON base64-encoded in an env var (Vercel and other hosts without files).
   keyFile: z.string().min(1).optional(),
   keyJson: z.string().min(1).optional(),
-  // Only used for the pass logo, which Google must be able to fetch; on http (local dev) the logo is left out.
+  // Only used for the pass images, which Google must be able to fetch; on http (local dev) they are left out.
   baseUrl: z.url(),
 });
 const keySchema = z.object({ private_key: z.string().min(1), client_email: z.email() });
@@ -59,7 +59,10 @@ export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">,
     classId: `${config.issuerId}.su_card_v1`,
     hexBackgroundColor: "#0F3056",
     ...(config.baseUrl.startsWith("https://")
-      ? { logo: { sourceUri: { uri: `${config.baseUrl.replace(/\/$/, "")}/brand/su-icon-white@hd.png` }, contentDescription: localized("NUSU") } }
+      ? {
+          logo: { sourceUri: { uri: `${config.baseUrl.replace(/\/$/, "")}/brand/wallet-logo.png` }, contentDescription: localized("NUSU") },
+          heroImage: { sourceUri: { uri: `${config.baseUrl.replace(/\/$/, "")}/brand/wallet-hero.png` }, contentDescription: localized("Nile University Student Union") },
+        }
       : {}),
     cardTitle: localized("SU CARD"),
     header: localized(student.name),

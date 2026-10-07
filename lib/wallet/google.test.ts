@@ -35,7 +35,8 @@ describe("Google Wallet", () => {
     const active = buildGenericObject(config, student, card);
     expect(active).toMatchObject({
       id: "123456.student_student-1", classId: "123456.su_card_v1", hexBackgroundColor: "#0F3056",
-      logo: { sourceUri: { uri: "https://example.com/brand/su-icon-white@hd.png" }, contentDescription: { defaultValue: { value: "NUSU" } } },
+      logo: { sourceUri: { uri: "https://example.com/brand/wallet-logo.png" }, contentDescription: { defaultValue: { value: "NUSU" } } },
+      heroImage: { sourceUri: { uri: "https://example.com/brand/wallet-hero.png" } },
       barcode: { type: "QR_CODE", value: "NUSU1:EXACT_TOKEN", alternateText: "" },
       state: "ACTIVE",
     });
@@ -46,5 +47,6 @@ describe("Google Wallet", () => {
 
   it("leaves the logo out when the app has no public https address", () => {
     expect(buildGenericObject({ ...config, baseUrl: "http://localhost:3000" }, student, card)).not.toHaveProperty("logo");
+    expect(buildGenericObject({ ...config, baseUrl: "http://localhost:3000" }, student, card)).not.toHaveProperty("heroImage");
   });
 });
