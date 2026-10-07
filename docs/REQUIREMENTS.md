@@ -92,6 +92,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 | M1-1b | Student accounts are keyed by the Microsoft account's immutable object ID (`oid`) + tenant, with email stored for search/display. |
 | M1-2 | Only emails matching the **student format** can sign up: one letter, a dot, a word, then 4 digits directly after the word, `@nu.edu.eg` (e.g. `a.wesam2300@nu.edu.eg`). Case-insensitive, stored lowercase. Regex: `^[a-z]\.[a-z]+\d{4}@nu\.edu\.eg$`. Rejected examples: `a.wesam.2300@…`, `ahmed.wesam@…`, `a.wesam23@…`. The pattern is an admin setting so it can be changed without a code deploy. Staff-format emails are rejected. |
 | M1-3 | **Cashiers, vendor managers, admins** log in with email + password. Admins also need 2FA (TOTP app). |
+| M1-3a | **Admins can also sign in with Microsoft.** A super admin can promote an existing student account (NU Microsoft login) to admin; that person then reaches the admin panel through "Sign in with Microsoft" with no separate password. The staff login page shows both options: email + password and "Sign in with Microsoft". Demoting returns the account to student. Every role change is audit-logged. |
 | M1-4 | Roles: Student, Cashier, Vendor Manager, SU Admin, Super Admin (role-based access on every API). |
 | M1-5 | A cashier belongs to one vendor (optionally one branch) and can only scan for that vendor. A vendor manager only sees their own vendor's data. |
 | M1-6 | Cashier sessions are long-lived on the shop device (30 days), revocable by admin or vendor manager. |
