@@ -31,13 +31,13 @@ describe("Google Wallet", () => {
   });
 
   it("builds the class and object with the exact QR and inactive state", () => {
-    expect(buildGenericClass("123456")).toEqual({ id: "123456.su_card_v1", reviewStatus: "UNDER_REVIEW", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" });
+    expect(buildGenericClass("123456")).toMatchObject({ id: "123456.su_card_v1", reviewStatus: "UNDER_REVIEW", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" });
     const active = buildGenericObject(config, student, card);
     expect(active).toMatchObject({
       id: "123456.student_student-1", classId: "123456.su_card_v1", hexBackgroundColor: "#0F3056",
       logo: { sourceUri: { uri: "https://example.com/brand/wallet-logo.png" }, contentDescription: { defaultValue: { value: "NUSU" } } },
       heroImage: { sourceUri: { uri: "https://example.com/brand/wallet-hero.png" } },
-      barcode: { type: "QR_CODE", value: "NUSU1:EXACT_TOKEN", alternateText: "" },
+      barcode: { type: "QR_CODE", value: "NUSU1:EXACT_TOKEN", alternateText: "ID 231001001" },
       state: "ACTIVE",
     });
     expect(active.textModulesData[0]).toMatchObject({ header: "University ID", body: "231001001" });

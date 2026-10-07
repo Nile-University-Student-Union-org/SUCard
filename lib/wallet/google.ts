@@ -51,7 +51,17 @@ export function objectId(issuerId: string, userId: string) {
 
 const localized = (value: string) => ({ defaultValue: { language: "en-US", value } });
 export function buildGenericClass(issuerId: string) {
-  return { id: `${issuerId}.su_card_v1`, reviewStatus: "UNDER_REVIEW", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" };
+  return {
+    id: `${issuerId}.su_card_v1`,
+    reviewStatus: "UNDER_REVIEW",
+    multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES",
+    // Show the university ID on the front of the pass, under the student's name.
+    classTemplateInfo: {
+      cardTemplateOverride: {
+        cardRowTemplateInfos: [{ oneItem: { item: { firstValue: { fields: [{ fieldPath: "object.textModulesData['university_id']" }] } } } }],
+      },
+    },
+  };
 }
 export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">, student: Pick<StudentHomeResponse, "profile" | "name">, card: Pick<CardSummary, "qr"> | null) {
   return {
@@ -66,12 +76,12 @@ export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">,
       : {}),
     cardTitle: localized("SU CARD"),
     header: localized(student.name),
-    subheader: localized("Nile University Student Union"),
+    subheader: localized("Student member"),
     textModulesData: [
       { id: "university_id", header: "University ID", body: student.profile.universityId },
       { id: "how_to_use", header: "How to use", body: "Show this QR code at participating vendors. A suspended or void card cannot be redeemed." },
     ],
-    ...(card ? { barcode: { type: "QR_CODE", value: card.qr, alternateText: "" } } : {}),
+    ...(card ? { barcode: { type: "QR_CODE", value: card.qr, alternateText: `ID ${student.profile.universityId}` } } : {}),
     state: student.profile.status === "suspended" || !card ? "INACTIVE" : "ACTIVE",
   };
 }
@@ -139,8 +149,15 @@ export async function ensureClass(config: Config) {
   const value = buildGenericClass(config.issuerId);
   const status = await request(config, "GET", `genericClass/${encodeURIComponent(value.id)}`);
   if (status === 404) return { get: status, insert: await request(config, "POST", "genericClass", value) };
+  // Push class layout changes to an existing class once per server instance.
+  if (!classSynced) {
+    const patch = await request(config, "PATCH", `genericClass/${encodeURIComponent(value.id)}`, value);
+    classSynced = true;
+    return { get: status, patch };
+  }
   return { get: status };
 }
+let classSynced = false;
 
 export async function upsertObject(config: Config, student: Pick<StudentHomeResponse, "profile" | "name">, card: Pick<CardSummary, "qr">) {
   const value = buildGenericObject(config, student, card);
