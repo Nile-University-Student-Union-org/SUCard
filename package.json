@@ -14,6 +14,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:seed": "tsx scripts/seed.ts",
+    "db:seed:qr-styles": "tsx scripts/seed-qr-styles.ts",
     "db:seed:students": "tsx scripts/seed-dev-students.ts",
     "db:seed:vendors": "tsx scripts/seed-dev-vendors.ts"
   },
