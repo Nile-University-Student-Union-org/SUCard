@@ -7,7 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck, Sparkles, QrCode, Wallet, Tag } from "lucide-react";
+import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck, Sparkles, QrCode } from "lucide-react";
 import { signIn, authClient } from "@/lib/auth/client";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
@@ -364,36 +364,6 @@ function LoginContent() {
             <p className="text-xs xl:text-sm text-sky-100/85 leading-relaxed font-normal">
               Digital &amp; physical membership for campus access and student savings.
             </p>
-          </div>
-
-          {/* Feature Rows */}
-          <div className="w-full space-y-2.5 pt-1">
-            <div className="flex items-center gap-3">
-              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
-                <ShieldCheck className="size-4" />
-              </div>
-              <span className="text-xs font-medium text-sky-100/95">
-                Verified with your NU account
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
-                <Wallet className="size-4" />
-              </div>
-              <span className="text-xs font-medium text-sky-100/95">
-                Add to Google Wallet
-              </span>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div className="size-7 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-sky-300 shrink-0">
-                <Tag className="size-4" />
-              </div>
-              <span className="text-xs font-medium text-sky-100/95">
-                Discounts at partner stores
-              </span>
-            </div>
           </div>
         </div>
 
