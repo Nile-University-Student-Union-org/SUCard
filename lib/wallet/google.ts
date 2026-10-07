@@ -9,7 +9,9 @@ const scope = "https://www.googleapis.com/auth/wallet_object.issuer";
 const configSchema = z.object({
   issuerId: z.string().regex(/^\d+$/),
   email: z.email(),
-  keyFile: z.string().min(1),
+  // The service-account key: a JSON file on disk (VPS), or its JSON base64-encoded in an env var (Vercel and other hosts without files).
+  keyFile: z.string().min(1).optional(),
+  keyJson: z.string().min(1).optional(),
   // Only used for the pass logo, which Google must be able to fetch; on http (local dev) the logo is left out.
   baseUrl: z.url(),
 });
@@ -26,13 +28,16 @@ export async function getGoogleWalletConfig(): Promise<Config | null> {
   const parsed = configSchema.safeParse({
     issuerId: process.env.GOOGLE_WALLET_ISSUER_ID,
     email: process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL,
-    keyFile: process.env.GOOGLE_WALLET_KEY_FILE,
+    keyFile: process.env.GOOGLE_WALLET_KEY_FILE || undefined,
+    keyJson: process.env.GOOGLE_WALLET_KEY_JSON || undefined,
     baseUrl: process.env.PUBLIC_BASE_URL || process.env.BETTER_AUTH_URL,
   });
-  if (!parsed.success) return null;
+  if (!parsed.success || (!parsed.data.keyJson && !parsed.data.keyFile)) return null;
   try {
-    const file = path.resolve(/* turbopackIgnore: true */ process.cwd(), parsed.data.keyFile);
-    const key = keySchema.safeParse(JSON.parse(await readFile(file, "utf8")));
+    const raw = parsed.data.keyJson
+      ? Buffer.from(parsed.data.keyJson, "base64").toString("utf8")
+      : await readFile(path.resolve(/* turbopackIgnore: true */ process.cwd(), parsed.data.keyFile!), "utf8");
+    const key = keySchema.safeParse(JSON.parse(raw));
     if (!key.success || key.data.client_email !== parsed.data.email) return null;
     createPrivateKey(key.data.private_key);
     return { ...parsed.data, privateKey: key.data.private_key };
