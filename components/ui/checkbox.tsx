@@ -1,11 +1,11 @@
 "use client";
 
-import React, { forwardRef, useEffect, useRef } from "react";
+import React, { forwardRef, useCallback, useEffect, useRef, useState } from "react";
 import { Check, Minus } from "lucide-react";
 import { cn } from "cn";
 
 export interface CheckboxProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "onChange"> {
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size"> {
   checked?: boolean;
   defaultChecked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
@@ -48,21 +48,31 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
       error,
       size = "md",
       id,
+      onChange,
       ...props
     },
     ref
   ) => {
-    const internalRef = useRef<HTMLInputElement>(null);
-    const resolvedRef = (ref || internalRef) as React.RefObject<HTMLInputElement>;
+    const internalRef = useRef<HTMLInputElement | null>(null);
+    const setRefs = useCallback(
+      (node: HTMLInputElement | null) => {
+        internalRef.current = node;
+        if (typeof ref === "function") ref(node);
+        else if (ref) ref.current = node;
+      },
+      [ref]
+    );
+    // Uncontrolled use (e.g. react-hook-form `register`) passes no `checked`, so mirror the input here.
+    const [uncontrolledChecked, setUncontrolledChecked] = useState(defaultChecked ?? false);
     const generatedId = id || (label ? `checkbox-${String(label).slice(0, 20).toLowerCase().replace(/\s+/g, "-")}` : undefined);
 
     useEffect(() => {
-      if (resolvedRef.current) {
-        resolvedRef.current.indeterminate = indeterminate;
+      if (internalRef.current) {
+        internalRef.current.indeterminate = indeterminate;
       }
-    }, [indeterminate, resolvedRef]);
+    }, [indeterminate]);
 
-    const isChecked = checked ?? defaultChecked ?? false;
+    const isChecked = checked ?? uncontrolledChecked;
     const currentSize = sizeClasses[size];
 
     return (
@@ -79,14 +89,18 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             {/* Native Screen-Reader Accessible Hidden Checkbox */}
             <input
               id={generatedId}
-              ref={resolvedRef}
+              ref={setRefs}
               type="checkbox"
               checked={checked}
               defaultChecked={defaultChecked}
               disabled={disabled}
-              onChange={(e) => onCheckedChange?.(e.target.checked)}
               className="peer sr-only"
               {...props}
+              onChange={(e) => {
+                setUncontrolledChecked(e.target.checked);
+                onCheckedChange?.(e.target.checked);
+                onChange?.(e);
+              }}
             />
 
             {/* Custom Visual Checkbox Box */}
