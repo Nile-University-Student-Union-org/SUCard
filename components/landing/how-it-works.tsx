@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { Check, ScanLine } from "lucide-react";
+import { Check, ScanLine, Store } from "lucide-react";
 import { cn } from "cn";
 import { GoogleWalletLogo } from "@/components/student/student-card-view";
 
@@ -28,7 +28,11 @@ const STEPS = [
  */
 export function HowItWorks() {
   const sectionRef = useRef<HTMLElement>(null);
+  const railRef = useRef<HTMLDivElement>(null);
+  const titleRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const [progress, setProgress] = useState(0);
+  /** Rail marker position (px from the top of the list), gliding from one step title to the next. */
+  const [dotY, setDotY] = useState(0);
 
   useEffect(() => {
     let raf = 0;
@@ -38,7 +42,19 @@ export function HowItWorks() {
       if (!el) return;
       const rect = el.getBoundingClientRect();
       const total = rect.height - window.innerHeight;
-      setProgress(total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0);
+      const p = total > 0 ? Math.min(1, Math.max(0, -rect.top / total)) : 0;
+      setProgress(p);
+
+      const rail = railRef.current;
+      if (!rail) return;
+      const top = rail.getBoundingClientRect().top;
+      const centres = titleRefs.current.map((t) => {
+        const r = t?.getBoundingClientRect();
+        return r ? r.top + r.height / 2 - top : 0;
+      });
+      const f = Math.min(STEPS.length - 1, Math.max(0, p * STEPS.length - 0.5));
+      const i = Math.min(STEPS.length - 2, Math.floor(f));
+      setDotY(centres[i] + (centres[i + 1] - centres[i]) * (f - i));
     };
     const schedule = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -46,7 +62,11 @@ export function HowItWorks() {
     schedule();
     window.addEventListener("scroll", schedule, { passive: true });
     window.addEventListener("resize", schedule);
+    // The active step expands, which moves the titles below it: keep the marker on them.
+    const observer = new ResizeObserver(schedule);
+    if (railRef.current) observer.observe(railRef.current);
     return () => {
+      observer.disconnect();
       cancelAnimationFrame(raf);
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
@@ -75,10 +95,10 @@ export function HowItWorks() {
         {/* Glow behind the phone */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute right-[8%] top-1/2 -translate-y-1/2 size-[36rem] max-md:left-1/2 max-md:right-auto max-md:top-[68%] max-md:-translate-x-1/2 rounded-full bg-macaw-blue/10 dark:bg-macaw-blue/15 blur-[110px]"
+          className="pointer-events-none absolute right-[16%] top-1/2 -translate-y-1/2 size-[36rem] max-md:left-1/2 max-md:right-auto max-md:top-[68%] max-md:-translate-x-1/2 rounded-full bg-macaw-blue/10 dark:bg-macaw-blue/15 blur-[110px]"
         />
 
-        <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 px-5 sm:px-8 md:grid-cols-[minmax(0,1fr)_auto] md:gap-20">
+        <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-6 px-5 sm:px-8 md:grid-cols-[minmax(0,34rem)_auto] md:justify-center md:gap-16 lg:gap-28">
           {/* Copy */}
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-macaw-blue">How it works</p>
@@ -91,15 +111,12 @@ export function HowItWorks() {
             </h2>
 
             {/* Desktop: step list with a progress rail; the active step expands */}
-            <div className="relative mt-10 hidden pl-8 md:block">
+            <div ref={railRef} className="relative mt-10 hidden pl-8 md:block">
               <div aria-hidden="true" className="absolute inset-y-0 left-1 w-px bg-border">
-                <span
-                  className="absolute inset-x-0 top-0 h-full origin-top bg-brand dark:bg-brand-soft"
-                  style={{ transform: `scaleY(${progress})` }}
-                />
+                <span className="absolute inset-x-0 top-0 bg-brand dark:bg-brand-soft" style={{ height: dotY }} />
                 <span
                   className="absolute -left-[4.5px] size-2.5 -translate-y-1/2 rounded-full bg-brand dark:bg-brand-soft ring-4 ring-brand/15 dark:ring-brand-soft/20"
-                  style={{ top: `${progress * 100}%` }}
+                  style={{ top: dotY }}
                 />
               </div>
               <ol>
@@ -113,7 +130,12 @@ export function HowItWorks() {
                         aria-current={on ? "step" : undefined}
                         className="group w-full py-5 text-left"
                       >
-                        <span className="flex items-baseline gap-4">
+                        <span
+                          ref={(node) => {
+                            titleRefs.current[i] = node;
+                          }}
+                          className="flex items-baseline gap-4"
+                        >
                           <span
                             className={cn(
                               "font-heading text-sm tabular-nums transition-colors duration-300",
@@ -275,12 +297,23 @@ function MicrosoftLogo({ className }: { className?: string }) {
 
 function SignInScreen({ on }: { on: boolean }) {
   return (
-    <div className="flex h-full flex-col items-center px-[9cqw] pt-[24cqw] text-center">
-      <Image src="/brand/su-icon-white@hd.png" alt="" width={96} height={96} className="w-[22cqw] h-auto" />
-      <p className="mt-[6cqw] font-heading text-[12cqw] uppercase leading-none tracking-wide">SU Card</p>
-      <p className="mt-[2.5cqw] text-[3.6cqw] text-white/55">Nile University Student Union</p>
+    <div className="flex h-full flex-col items-center justify-center px-[9cqw] pb-[14cqw] text-center">
+      {/* The card you are about to get, floating */}
+      <div className="relative w-[70cqw]">
+        <div className="absolute inset-[8%] rounded-full bg-macaw-blue/50 blur-[10cqw]" />
+        <div
+          className={cn(
+            "relative transition-transform duration-[1200ms] ease-[cubic-bezier(0.22,1,0.36,1)]",
+            on ? "-rotate-[7deg] translate-y-0" : "-rotate-[2deg] translate-y-[4cqw]",
+          )}
+        >
+          <MiniCard />
+        </div>
+      </div>
+      <p className="mt-[11cqw] font-heading text-[8cqw] uppercase leading-none tracking-wide">Welcome</p>
+      <p className="mt-[2.5cqw] text-[3.6cqw] leading-snug text-white/55">Sign in to get your student card</p>
 
-      <div className="relative mt-auto mb-[26cqw] w-full">
+      <div className="relative mt-[16cqw] w-full">
         <span
           className={cn(
             "absolute -inset-[1.4cqw] rounded-[4.5cqw] bg-macaw-blue/40 blur-[3cqw]",
@@ -291,7 +324,7 @@ function SignInScreen({ on }: { on: boolean }) {
           <MicrosoftLogo className="w-[4.2cqw]" />
           Sign in with Microsoft
         </div>
-        <p className="mt-[3.5cqw] text-[3.2cqw] text-white/45">Use your NU email</p>
+        <p className="mt-[3.5cqw] text-[3.2cqw] text-white/55">Use your NU email</p>
       </div>
     </div>
   );
@@ -346,13 +379,13 @@ function CardScreen() {
       <div className="mt-[5cqw]">
         <MiniCard />
       </div>
-      <div className="mt-[6cqw] flex flex-col items-center">
+      <div className="flex flex-1 flex-col items-center justify-center">
         <div className="rounded-[4cqw] bg-white p-[3cqw] shadow-[0_4cqw_10cqw_-4cqw_rgb(0_0_0/0.6)]">
           <DemoQr className="block w-[44cqw]" />
         </div>
         <p className="mt-[3cqw] text-[3.2cqw] text-white/55">Show this at partner stores</p>
       </div>
-      <div className="mt-auto mb-[10cqw] flex items-center justify-center gap-[2.4cqw] rounded-full bg-black py-[3.6cqw] text-[3.6cqw] font-semibold ring-1 ring-white/20">
+      <div className="mb-[10cqw] flex items-center justify-center gap-[2.4cqw] rounded-full bg-black py-[3.6cqw] text-[3.6cqw] font-semibold ring-1 ring-white/20">
         <GoogleWalletLogo className="w-[5cqw] h-auto" />
         Add to Google Wallet
       </div>
@@ -366,30 +399,44 @@ function ScanScreen({ on }: { on: boolean }) {
       <p className="self-start font-heading text-[6.4cqw] uppercase tracking-wide">Checkout</p>
       <p className="self-start mt-[1cqw] text-[3.2cqw] text-white/55">Hold your phone up to the cashier</p>
 
-      {/* QR with a scanning beam */}
-      <div className="relative mt-[9cqw] rounded-[5cqw] bg-white p-[4cqw] shadow-[0_0_0_1.6cqw_rgb(1_139_206/0.25),0_6cqw_14cqw_-6cqw_rgb(0_0_0/0.7)]">
-        <DemoQr className="block w-[56cqw]" />
-        <div className="absolute inset-[4cqw] overflow-hidden">
-          <div
-            className={cn(
-              "absolute inset-x-0 h-[14cqw] bg-gradient-to-b from-transparent via-macaw-blue/35 to-macaw-blue/0 border-b-2 border-macaw-blue",
-              on ? "motion-safe:animate-[scan-beam_1.6s_ease-in-out_infinite]" : "opacity-0",
-            )}
-          />
+      {/* Where you are */}
+      <div className="mt-[5cqw] flex w-full items-center gap-[3cqw] rounded-[4cqw] bg-white/[0.06] p-[3cqw] ring-1 ring-inset ring-white/10">
+        <span className="flex size-[10cqw] shrink-0 items-center justify-center rounded-[3cqw] bg-macaw-blue/20 text-macaw-blue">
+          <Store className="size-[5cqw]" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[3.6cqw] font-semibold leading-tight">Partner store</p>
+          <p className="text-[3cqw] text-white/50">Student offer available</p>
         </div>
-        {/* Viewfinder corners */}
-        {["left-0 top-0 border-l-2 border-t-2 rounded-tl-[3cqw]", "right-0 top-0 border-r-2 border-t-2 rounded-tr-[3cqw]", "left-0 bottom-0 border-l-2 border-b-2 rounded-bl-[3cqw]", "right-0 bottom-0 border-r-2 border-b-2 rounded-br-[3cqw]"].map((c) => (
-          <span key={c} className={cn("absolute -m-[3cqw] size-[8cqw] border-macaw-blue", c)} />
-        ))}
+        <span className="rounded-full bg-macaw-blue px-[2.6cqw] py-[1cqw] text-[2.6cqw] font-bold tracking-wider">NUSU</span>
       </div>
-      <p
-        className={cn(
-          "mt-[6cqw] flex items-center gap-[1.6cqw] text-[3.4cqw] text-white/60 transition-opacity duration-300",
-          on && "opacity-0 delay-[1200ms]",
-        )}
-      >
-        <ScanLine className="size-[4cqw]" /> Scanning…
-      </p>
+
+      {/* QR with a scanning beam, centred in the space above the result sheet */}
+      <div className="flex w-full flex-1 flex-col items-center justify-center pb-[26cqw]">
+        <div className="relative rounded-[5cqw] bg-white p-[4cqw] shadow-[0_0_0_1.6cqw_rgb(1_139_206/0.25),0_6cqw_14cqw_-6cqw_rgb(0_0_0/0.7)]">
+          <DemoQr className="block w-[56cqw]" />
+          <div className="absolute inset-[4cqw] overflow-hidden">
+            <div
+              className={cn(
+                "absolute inset-x-0 h-[14cqw] bg-gradient-to-b from-transparent via-macaw-blue/35 to-macaw-blue/0 border-b-2 border-macaw-blue",
+                on ? "motion-safe:animate-[scan-beam_1.6s_ease-in-out_infinite]" : "opacity-0",
+              )}
+            />
+          </div>
+          {/* Viewfinder corners */}
+          {["left-0 top-0 border-l-2 border-t-2 rounded-tl-[3cqw]", "right-0 top-0 border-r-2 border-t-2 rounded-tr-[3cqw]", "left-0 bottom-0 border-l-2 border-b-2 rounded-bl-[3cqw]", "right-0 bottom-0 border-r-2 border-b-2 rounded-br-[3cqw]"].map((c) => (
+            <span key={c} className={cn("absolute -m-[3cqw] size-[8cqw] border-macaw-blue", c)} />
+          ))}
+        </div>
+        <p
+          className={cn(
+            "mt-[6cqw] flex items-center gap-[1.6cqw] text-[3.4cqw] text-white/60 transition-opacity duration-300",
+            on && "opacity-0 delay-[1200ms]",
+          )}
+        >
+          <ScanLine className="size-[4cqw]" /> Scanning…
+        </p>
+      </div>
 
       {/* Success sheet slides up once the scan "lands" */}
       <div
