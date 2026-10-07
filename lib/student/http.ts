@@ -9,6 +9,8 @@ export function errorResponse(error: unknown): Response {
   if (error instanceof StudentError) return json({ error: error.message, ...(error.code ? { code: error.code } : {}) }, error.status);
   if (error instanceof ZodError) return json({ error: error.issues[0]?.message ?? "Invalid input" }, 400);
   if (error instanceof SyntaxError) return json({ error: "Invalid JSON" }, 400);
+  if (error instanceof Error && (error.message === "Invalid date range" || error.message === "Invalid cursor")) return json({ error: error.message }, 400);
+  if (error instanceof Error && error.message === "Vendor not found") return json({ error: error.message }, 404);
   console.error(error);
   return json({ error: "Internal server error" }, 500);
 }
