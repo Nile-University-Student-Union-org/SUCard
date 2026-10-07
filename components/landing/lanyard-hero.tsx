@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
+import React, { useCallback, useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { Hand, Sparkles } from "lucide-react";
 import { CAMERA_FOV, LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
+import { LanyardSkeleton } from "./lanyard-skeleton";
 
 /** Fades the 3D area into the page: strap comes in from the top, card swings out at the sides and bottom. */
 const CANVAS_FADE =
@@ -52,6 +53,8 @@ function useIsTabVisible() {
 export function LanyardHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [sceneReady, setSceneReady] = useState(false);
+  const handleReady = useCallback(() => setSceneReady(true), []);
   const [inView, setInView] = useState(true);
 
   const prefersReducedMotion = usePrefersReducedMotion();
@@ -105,7 +108,7 @@ export function LanyardHero() {
               gl.toneMapping = THREE.NeutralToneMapping;
             }}
             aria-hidden="true"
-            className="w-full h-full"
+            className={`w-full h-full transition-opacity duration-500 ${sceneReady ? "opacity-100" : "opacity-0"}`}
             style={{
               pointerEvents: "auto",
               maskImage: CANVAS_FADE,
@@ -114,8 +117,13 @@ export function LanyardHero() {
               WebkitMaskComposite: "source-in",
             }}
           >
-            <LanyardScene onCardGrab={() => setHasInteracted(true)} />
+            <LanyardScene onCardGrab={() => setHasInteracted(true)} onReady={handleReady} />
           </Canvas>
+
+          <LanyardSkeleton
+            done={sceneReady}
+            className={`transition-opacity duration-500 ${sceneReady ? "opacity-0" : "opacity-100"}`}
+          />
 
           {/* Interactive Tactile Hint Pill */}
           <div

@@ -486,3 +486,10 @@ html[data-theme-transition="active"]::view-transition-new(root) {
     animation: none !important;
   }
 }
+
+/* Skeleton shimmer sweep (used by <Skeleton animate="shimmer">) */
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}

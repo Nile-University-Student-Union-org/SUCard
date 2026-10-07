@@ -130,7 +130,7 @@ const segmentProps: RigidBodyProps = {
   linearDamping: 4,
 };
 
-function Band({ onGrab }: { onGrab?: () => void }) {
+function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }) {
   const { gl } = useThree();
   const fixed = useRef<RapierRigidBody>(null!);
   const j1 = useRef<RapierRigidBody>(null!);
@@ -151,6 +151,17 @@ function Band({ onGrab }: { onGrab?: () => void }) {
 
   const textures = useMemo(() => createCardTextures(gl.capabilities.getMaxAnisotropy()), [gl]);
   useEffect(() => () => textures.dispose(), [textures]);
+
+  // Physics and textures are in: tell the hero after a couple of frames so the first paint is the real card.
+  useEffect(() => {
+    let live = true;
+    void textures.ready.then(() =>
+      requestAnimationFrame(() => requestAnimationFrame(() => live && onReady?.())),
+    );
+    return () => {
+      live = false;
+    };
+  }, [textures, onReady]);
 
   const geometries = useMemo(() => ({ face: faceGeometry(), body: bodyGeometry() }), []);
   useEffect(() => () => {
@@ -428,14 +439,14 @@ function CameraRig() {
   return null;
 }
 
-export function LanyardScene({ onCardGrab }: { onCardGrab?: () => void }) {
+export function LanyardScene({ onCardGrab, onReady }: { onCardGrab?: () => void; onReady?: () => void }) {
   return (
     <>
       <CameraRig />
       <ambientLight intensity={Math.PI * 0.55} />
       <directionalLight position={[3, 5, 6]} intensity={1.2} />
       <Physics gravity={[0, -40, 0]} timeStep={1 / 60} interpolate updatePriority={-50} numSolverIterations={8}>
-        <Band onGrab={onCardGrab} />
+        <Band onGrab={onCardGrab} onReady={onReady} />
       </Physics>
       <Environment resolution={512} frames={1}>
         <Lightformer intensity={2} color="white" position={[0, -1, 5]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />

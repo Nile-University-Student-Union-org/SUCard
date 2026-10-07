@@ -349,6 +349,8 @@ export type CardTextures = {
   front: THREE.CanvasTexture;
   back: THREE.CanvasTexture;
   strap: THREE.CanvasTexture;
+  /** Resolves once fonts, logos and artwork are painted in. */
+  ready: Promise<void>;
   dispose: () => void;
 };
 
@@ -374,7 +376,7 @@ export function createCardTextures(maxAnisotropy: number): CardTextures {
   textures.strap.wrapT = THREE.RepeatWrapping;
 
   let disposed = false;
-  void (async () => {
+  const ready = (async () => {
     const heading = fontFamily("--font-heading", "Impact");
     const sans = fontFamily("--font-sans", "sans-serif");
     const [logo, icon, frontArt, backArt] = await Promise.all([
@@ -400,6 +402,7 @@ export function createCardTextures(maxAnisotropy: number): CardTextures {
 
   return {
     ...textures,
+    ready,
     dispose: () => {
       disposed = true;
       textures.front.dispose();

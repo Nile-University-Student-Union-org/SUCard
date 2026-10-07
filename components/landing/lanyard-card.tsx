@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { StaticCard } from "./static-card";
+import { LanyardSkeleton } from "./lanyard-skeleton";
 
 /**
  * Dynamic client-only import for LanyardHero to prevent SSR WebGL execution
@@ -13,7 +13,7 @@ export const LanyardCard = dynamic(
     ssr: false,
     loading: () => (
       <div className="relative w-full h-[480px] sm:h-[560px] lg:h-[640px] flex items-center justify-center">
-        <StaticCard />
+        <LanyardSkeleton />
       </div>
     ),
   }
