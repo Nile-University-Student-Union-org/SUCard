@@ -15,6 +15,20 @@
       "when": 1791330446956,
       "tag": "0001_giant_wallflower",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791333906965,
+      "tag": "0002_cynical_leech",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791334135399,
+      "tag": "0003_smiling_newton_destine",
+      "breakpoints": true
     }
   ]
 }

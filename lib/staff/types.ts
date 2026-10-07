@@ -75,6 +75,8 @@ export const AUDIT_ACTIONS = {
   "staff.created": "Staff added",
   "staff.updated": "Staff updated",
   "staff.password_reset": "Password reset",
+  "staff.promoted": "Student promoted",
+  "staff.role_revoked": "Staff role revoked",
 } as const;
 
 export const STAFF_NAME_MAX = 80;

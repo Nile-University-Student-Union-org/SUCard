@@ -1,10 +1,12 @@
 import "server-only";
 import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "./server";
 import { db } from "@/lib/db";
-import { user } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { account, studentProfiles, user } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
+import { getSettings } from "@/lib/settings/service";
+import { matchesStudentEmail } from "@/lib/student/rules";
 
 import type { StaffRole } from "@/lib/staff/types";
 
@@ -50,8 +52,40 @@ export async function requireSuperAdminPage(): Promise<StaffUser> {
 
 async function readAdmin(requestHeaders: Headers): Promise<StaffUser | null> {
   const session = await auth.api.getSession({ headers: requestHeaders });
-  if (!session || (session.user.role !== "super_admin" && session.user.role !== "admin")) return null;
+  if (!session) return null;
   const [current] = await db.select({ role: user.role, disabledAt: user.disabledAt, email: user.email, name: user.name }).from(user).where(eq(user.id, session.user.id));
   if (!current || current.disabledAt || (current.role !== "super_admin" && current.role !== "admin")) return null;
   return { id: session.user.id, email: current.email, name: current.name, role: current.role };
+}
+
+export async function getCurrentUser(requestHeaders: Headers) {
+  const currentSession = await auth.api.getSession({ headers: requestHeaders });
+  if (!currentSession) return null;
+  const [person] = await db.select().from(user).where(eq(user.id, currentSession.user.id));
+  return person ?? null;
+}
+export async function getStudentFromRequest(request: Request) {
+  const person = await getCurrentUser(request.headers);
+  if (!person || person.disabledAt) return null;
+  const [profile] = await db.select().from(studentProfiles).where(eq(studentProfiles.userId, person.id));
+  return profile ? { user: person, profile } : null;
+}
+export async function requireStudentPage() {
+  const person = await getCurrentUser(await headers());
+  if (!person) redirect("/login");
+  if (person.disabledAt) redirect("/login?error=disabled");
+  const [profile] = await db.select().from(studentProfiles).where(eq(studentProfiles.userId, person.id));
+  if (profile) return { user: person, profile };
+  const [microsoft] = await db.select({ id: account.id }).from(account).where(and(eq(account.userId, person.id), eq(account.providerId, "microsoft")));
+  if (microsoft && matchesStudentEmail(person.email, (await getSettings()).studentEmailPattern)) redirect("/welcome");
+  notFound();
+}
+export async function requireOnboardingPage() {
+  const person = await getCurrentUser(await headers());
+  if (!person) redirect("/login");
+  if (person.disabledAt) redirect("/login?error=disabled");
+  const [profile] = await db.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, person.id));
+  const [microsoft] = await db.select({ id: account.id }).from(account).where(and(eq(account.userId, person.id), eq(account.providerId, "microsoft")));
+  if (!profile && microsoft && matchesStudentEmail(person.email, (await getSettings()).studentEmailPattern)) return person;
+  redirect("/go");
 }
