@@ -337,14 +337,11 @@ function LoginContent() {
 
             {step === "credentials" ? (
               <>
-                {/* Title & Subtitle */}
+                {/* Title */}
                 <div className="space-y-1.5 text-center sm:text-left mb-6">
                   <h2 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white font-normal">
                     SIGN IN
                   </h2>
-                  <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium">
-                    Students, SU staff and partners
-                  </p>
                 </div>
 
                 {/* URL Query Error Alert */}
