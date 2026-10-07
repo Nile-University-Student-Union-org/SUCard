@@ -15,6 +15,8 @@ const microsoftEnv = z.object({ MICROSOFT_TENANT_ID: z.uuid(), MICROSOFT_CLIENT_
 export const auth = betterAuth({
   secret: z.string().min(32).parse(process.env.BETTER_AUTH_SECRET),
   baseURL: z.url().parse(process.env.BETTER_AUTH_URL),
+  // Extra origins allowed to call the auth API (e.g. a dev tunnel), comma-separated.
+  trustedOrigins: (process.env.TRUSTED_ORIGINS ?? "").split(",").map((origin) => origin.trim()).filter(Boolean),
   database: drizzleAdapter(db, { provider: "pg", schema }),
   socialProviders: microsoftEnv.success ? { microsoft: {
     clientId: microsoftEnv.data.MICROSOFT_CLIENT_ID, clientSecret: microsoftEnv.data.MICROSOFT_CLIENT_SECRET,
