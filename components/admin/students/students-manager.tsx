@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
 import {
   Search,
   GraduationCap,
@@ -12,7 +13,11 @@ import {
   Loader2,
   AlertTriangle,
   ArrowRightLeft,
-  X,
+  Download,
+  CheckSquare,
+  Eye,
+  Calendar,
+  CheckCircle2,
 } from "lucide-react";
 import type { StudentSearchItem, StudentSearchResponse, CardFlow } from "@/lib/student/types";
 import { Button } from "@/components/ui/button";
@@ -32,6 +37,13 @@ import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { StatusState } from "@/components/ui/status-state";
 import { Alert } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ToggleChip } from "@/components/ui/toggle-chip";
+import { OverflowScroller } from "@/components/ui/overflow-scroller";
+import {
+  formatCairoDateOnly,
+} from "@/components/ui/analytics-format";
+import { cn } from "cn";
 
 interface StudentsManagerProps {
   role: string;
@@ -40,14 +52,30 @@ interface StudentsManagerProps {
 export function StudentsManager({ role }: StudentsManagerProps) {
   const isSuperAdmin = role === "super_admin";
 
+  // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "suspended">("all");
+  const [signedUpFrom, setSignedUpFrom] = useState("");
+  const [signedUpTo, setSignedUpTo] = useState("");
+  const [isDateFilterOpen, setIsDateFilterOpen] = useState(false);
+
+  // Data state
   const [students, setStudents] = useState<StudentSearchItem[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Link card modal state
+  // Row selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Bulk action modals
+  const [bulkAction, setBulkAction] = useState<"suspend" | "reactivate" | null>(null);
+  const [bulkReason, setBulkReason] = useState("");
+  const [isBulkExecuting, setIsBulkExecuting] = useState(false);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+
+  // Single action modals
   const [linkingStudent, setLinkingStudent] = useState<StudentSearchItem | null>(null);
   const [linkInputMode, setLinkInputMode] = useState<"serial" | "qr">("serial");
   const [serialInput, setSerialInput] = useState("");
@@ -55,54 +83,58 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   const [isLinking, setIsLinking] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
-  // Void card modal state
   const [voidingStudent, setVoidingStudent] = useState<StudentSearchItem | null>(null);
   const [voidReason, setVoidReason] = useState("");
   const [isVoiding, setIsVoiding] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
 
-  // Change flow state
   const [flowStudent, setFlowStudent] = useState<StudentSearchItem | null>(null);
   const [isChangingFlow, setIsChangingFlow] = useState(false);
   const [flowError, setFlowError] = useState<string | null>(null);
 
-  // Promote / Revoke staff role state
   const [promotingStudent, setPromotingStudent] = useState<StudentSearchItem | null>(null);
   const [revokingStudent, setRevokingStudent] = useState<StudentSearchItem | null>(null);
   const [isRoleChanging, setIsRoleChanging] = useState(false);
   const [roleError, setRoleError] = useState<string | null>(null);
 
-  const fetchStudents = useCallback(async (q: string, cursor?: string) => {
-    try {
-      const params = new URLSearchParams();
-      if (q.trim()) params.set("q", q.trim());
-      if (cursor) params.set("cursor", cursor);
+  const fetchStudents = useCallback(
+    async (q: string, status: string, fromDate?: string, toDate?: string, cursor?: string) => {
+      try {
+        const params = new URLSearchParams();
+        if (q.trim()) params.set("q", q.trim());
+        if (status && status !== "all") params.set("status", status);
+        if (fromDate) params.set("signedUpFrom", fromDate);
+        if (toDate) params.set("signedUpTo", toDate);
+        if (cursor) params.set("cursor", cursor);
 
-      const res = await fetch(`/api/admin/students?${params.toString()}`, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-      });
+        const res = await fetch(`/api/admin/students?${params.toString()}`, {
+          method: "GET",
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+        });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = (await res.json()) as StudentSearchResponse;
-      return data;
-    } catch (err) {
-      throw new Error(err instanceof Error ? err.message : "Failed to load students");
-    }
-  }, []);
+        const data = (await res.json()) as StudentSearchResponse;
+        return data;
+      } catch (err) {
+        throw new Error(err instanceof Error ? err.message : "Failed to load students");
+      }
+    },
+    []
+  );
 
-  // Initial load and search query effect
+  // Debounced search & filter effect
   useEffect(() => {
     let active = true;
 
     const timer = setTimeout(() => {
-      fetchStudents(searchQuery)
+      fetchStudents(searchQuery, statusFilter, signedUpFrom, signedUpTo)
         .then((data) => {
           if (active) {
             setStudents(data.students);
             setNextCursor(data.nextCursor);
+            setSelectedIds(new Set());
             setIsLoading(false);
           }
         })
@@ -118,7 +150,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       active = false;
       clearTimeout(timer);
     };
-  }, [searchQuery, fetchStudents]);
+  }, [searchQuery, statusFilter, signedUpFrom, signedUpTo, fetchStudents]);
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value);
@@ -130,7 +162,13 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     if (!nextCursor || isLoadingMore) return;
     setIsLoadingMore(true);
     try {
-      const data = await fetchStudents(searchQuery, nextCursor);
+      const data = await fetchStudents(
+        searchQuery,
+        statusFilter,
+        signedUpFrom,
+        signedUpTo,
+        nextCursor
+      );
       setStudents((prev) => [...prev, ...data.students]);
       setNextCursor(data.nextCursor);
     } catch (err) {
@@ -140,6 +178,86 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     }
   };
 
+  // CSV Export handler
+  const handleExportCsv = () => {
+    const params = new URLSearchParams();
+    if (searchQuery.trim()) params.set("q", searchQuery.trim());
+    if (statusFilter !== "all") params.set("status", statusFilter);
+    if (signedUpFrom) params.set("signedUpFrom", signedUpFrom);
+    if (signedUpTo) params.set("signedUpTo", signedUpTo);
+    window.open(`/api/admin/export/students?${params.toString()}`, "_blank");
+  };
+
+  // Selection handlers
+  const handleToggleSelectAll = () => {
+    if (selectedIds.size === students.length && students.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(students.map((s) => s.profile.userId)));
+    }
+  };
+
+  const handleToggleSelectOne = (userId: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(userId)) next.delete(userId);
+    else next.add(userId);
+    setSelectedIds(next);
+  };
+
+  // Bulk action submission
+  const handleBulkSubmit = async () => {
+    if (!bulkAction || selectedIds.size === 0) return;
+    setIsBulkExecuting(true);
+    setBulkError(null);
+
+    try {
+      const res = await fetch("/api/admin/students/bulk", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          action: bulkAction,
+          ids: Array.from(selectedIds),
+          reason: bulkAction === "suspend" ? bulkReason.trim() : undefined,
+        }),
+      });
+
+      const resData = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setBulkError(resData.error || "Bulk action failed");
+        setIsBulkExecuting(false);
+        return;
+      }
+
+      // Update in memory
+      setStudents((prev) =>
+        prev.map((s) =>
+          selectedIds.has(s.profile.userId)
+            ? {
+                ...s,
+                profile: {
+                  ...s.profile,
+                  status: bulkAction === "suspend" ? "suspended" : "active",
+                  suspendReason: bulkAction === "suspend" ? bulkReason.trim() : null,
+                },
+              }
+            : s
+        )
+      );
+
+      setBulkAction(null);
+      setBulkReason("");
+      setSelectedIds(new Set());
+    } catch {
+      setBulkError("Network error. Please try again.");
+    } finally {
+      setIsBulkExecuting(false);
+    }
+  };
+
+  // Single Link Card
   const handleLinkCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkingStudent) return;
@@ -162,14 +280,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       });
 
       const resData = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setLinkError(resData.error || "Failed to link card");
         setIsLinking(false);
         return;
       }
 
-      // Update student in local state
       setStudents((prev) =>
         prev.map((s) =>
           s.profile.userId === linkingStudent.profile.userId
@@ -188,6 +304,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     }
   };
 
+  // Single Void Card
   const handleVoidCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!voidingStudent || !voidingStudent.card) return;
@@ -205,14 +322,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       });
 
       const resData = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setVoidError(resData.error || "Failed to void card");
         setIsVoiding(false);
         return;
       }
 
-      // Update student in local state
       setStudents((prev) =>
         prev.map((s) =>
           s.profile.userId === voidingStudent.profile.userId
@@ -230,6 +345,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     }
   };
 
+  // Single Change Flow
   const handleChangeFlow = async (targetFlow: CardFlow) => {
     if (!flowStudent) return;
     setIsChangingFlow(true);
@@ -246,7 +362,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       });
 
       const resData = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setFlowError(resData.error || "Failed to update flow");
         setIsChangingFlow(false);
@@ -269,6 +384,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     }
   };
 
+  // Staff promotion / revocation
   const handlePromoteAdmin = async () => {
     if (!promotingStudent) return;
     setIsRoleChanging(true);
@@ -285,7 +401,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       });
 
       const resData = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setRoleError(resData.error || "Failed to promote student");
         setIsRoleChanging(false);
@@ -312,7 +427,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       });
 
       const resData = await res.json().catch(() => ({}));
-
       if (!res.ok) {
         setRoleError(resData.error || "Failed to revoke admin role");
         setIsRoleChanging(false);
@@ -327,50 +441,213 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     }
   };
 
+  const isAllSelected = students.length > 0 && selectedIds.size === students.length;
+  const isIndeterminate = selectedIds.size > 0 && selectedIds.size < students.length;
+
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
             STUDENTS
           </h1>
           <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-            Search registered Nile University students, manage membership cards, and update card flows.
+            Search Nile University students, inspect card status, manage suspensions, and export records.
           </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="surface"
+            size="sm"
+            onClick={handleExportCsv}
+            className="normal-case font-bold h-10 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+          >
+            <Download className="size-3.5 mr-1.5" />
+            Export Students CSV
+          </Button>
         </div>
       </div>
 
-      {/* Search Input Bar */}
-      <div className="relative max-w-md">
-        <Input
-          id="studentSearch"
-          type="text"
-          placeholder="Search by name, email, or 9-digit ID…"
-          leftIcon={<Search className="size-4 text-ash dark:text-zinc-400" />}
-          value={searchQuery}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => handleSearchChange("")}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-ash dark:text-zinc-400 hover:text-foreground cursor-pointer"
-            aria-label="Clear search"
-          >
-            <X className="size-4" />
-          </button>
+      {/* Search & Filter Bar */}
+      <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs space-y-3">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+          {/* Instant Search Bar */}
+          <div className="relative flex-1 max-w-md">
+            <Input
+              id="studentSearch"
+              type="search"
+              placeholder="Search by name, email, or 9-digit ID…"
+              leftIcon={<Search className="size-4 text-ash dark:text-zinc-400" />}
+              value={searchQuery}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="h-11 rounded-xl"
+            />
+          </div>
+
+          {/* Status Filters & Date Picker Toggle */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <OverflowScroller className="max-w-full">
+              <ToggleChip
+                pressed={statusFilter === "all"}
+                onPressedChange={() => {
+                  setStatusFilter("all");
+                  setIsLoading(true);
+                }}
+                size="sm"
+              >
+                <span>All Statuses</span>
+              </ToggleChip>
+              <ToggleChip
+                pressed={statusFilter === "active"}
+                onPressedChange={() => {
+                  setStatusFilter("active");
+                  setIsLoading(true);
+                }}
+                size="sm"
+              >
+                <span>Active</span>
+              </ToggleChip>
+              <ToggleChip
+                pressed={statusFilter === "suspended"}
+                onPressedChange={() => {
+                  setStatusFilter("suspended");
+                  setIsLoading(true);
+                }}
+                size="sm"
+              >
+                <span>Suspended</span>
+              </ToggleChip>
+            </OverflowScroller>
+
+            <Button
+              variant={signedUpFrom || signedUpTo ? "primary" : "surface"}
+              size="sm"
+              onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
+              className="h-9 px-3 text-xs normal-case font-bold"
+            >
+              <Calendar className="size-3.5 mr-1" />
+              Sign-up Date
+            </Button>
+          </div>
+        </div>
+
+        {/* Optional Sign-up Date Range Filter Panel */}
+        {isDateFilterOpen && (
+          <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-border animate-in fade-in-0 duration-150">
+            <div className="flex items-center gap-2 flex-1 min-w-[240px]">
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
+                  Registered From
+                </label>
+                <input
+                  type="date"
+                  value={signedUpFrom}
+                  max={signedUpTo || undefined}
+                  onChange={(e) => {
+                    setSignedUpFrom(e.target.value);
+                    setIsLoading(true);
+                  }}
+                  className="w-full h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                />
+              </div>
+              <span className="text-muted-foreground self-end pb-2">&rarr;</span>
+              <div className="flex-1">
+                <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
+                  Registered To
+                </label>
+                <input
+                  type="date"
+                  value={signedUpTo}
+                  min={signedUpFrom || undefined}
+                  onChange={(e) => {
+                    setSignedUpTo(e.target.value);
+                    setIsLoading(true);
+                  }}
+                  className="w-full h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                />
+              </div>
+            </div>
+
+            {(signedUpFrom || signedUpTo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSignedUpFrom("");
+                  setSignedUpTo("");
+                  setIsLoading(true);
+                }}
+                className="self-end text-xs font-semibold normal-case h-9"
+              >
+                Clear Dates
+              </Button>
+            )}
+          </div>
         )}
       </div>
+
+      {/* Row Selection Floating Toolbar */}
+      {selectedIds.size > 0 && (
+        <div className="p-3.5 rounded-2xl bg-[#0F3056] text-white flex flex-wrap items-center justify-between gap-3 shadow-lg animate-in slide-in-from-top-2 duration-150">
+          <div className="flex items-center gap-3">
+            <CheckSquare className="size-5 text-sky-400 shrink-0" />
+            <span className="text-xs font-bold font-mono">
+              {selectedIds.size} {selectedIds.size === 1 ? "student" : "students"} selected
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setBulkAction("suspend");
+                setBulkReason("");
+                setBulkError(null);
+              }}
+              className="h-8 px-3 text-xs normal-case font-bold"
+            >
+              <Ban className="size-3 mr-1" />
+              Suspend Selected
+            </Button>
+            <Button
+              variant="surface"
+              size="sm"
+              onClick={() => {
+                setBulkAction("reactivate");
+                setBulkReason("");
+                setBulkError(null);
+              }}
+              className="h-8 px-3 text-xs normal-case font-bold text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+            >
+              <CheckCircle2 className="size-3 mr-1" />
+              Reactivate Selected
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedIds(new Set())}
+              className="h-8 px-2.5 text-xs text-white/70 hover:text-white normal-case"
+            >
+              Clear
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Students Data Display */}
       <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
         <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
-          <CardTitle className="text-xl sm:text-2xl text-foreground">
-            STUDENT DIRECTORY
-          </CardTitle>
-          <Badge variant="brand" className="text-xs font-bold">
-            {students.length} {students.length === 1 ? "Student" : "Students"}
+          <div className="flex items-center gap-3">
+            <CardTitle className="text-xl sm:text-2xl text-foreground">
+              STUDENT DIRECTORY
+            </CardTitle>
+          </div>
+          <Badge variant="brand" className="text-xs font-bold font-mono">
+            {students.length} Loaded
           </Badge>
         </CardHeader>
 
@@ -389,7 +666,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                     size="sm"
                     onClick={() => {
                       setIsLoading(true);
-                      fetchStudents(searchQuery)
+                      fetchStudents(searchQuery, statusFilter, signedUpFrom, signedUpTo)
                         .then((data) => {
                           setStudents(data.students);
                           setNextCursor(data.nextCursor);
@@ -410,7 +687,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             </div>
           ) : isLoading ? (
             <div className="p-6 space-y-4">
-              {Array.from({ length: 4 }).map((_, i) => (
+              {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between gap-4 p-3 border-b border-border/50 last:border-0">
                   <div className="flex items-center gap-3">
                     <div className="size-9 rounded-xl bg-muted animate-pulse" />
@@ -431,8 +708,8 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 title={searchQuery ? "No matching students" : "No students found"}
                 description={
                   searchQuery
-                    ? `No students matching "${searchQuery}". Try a different name, email, or ID.`
-                    : "No students have registered their cards yet."
+                    ? `No students matching "${searchQuery}". Try a different name, email, or university ID.`
+                    : "No students registered for this filter selection."
                 }
               />
             </div>
@@ -443,285 +720,314 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="w-12 pl-4">
+                        <Checkbox
+                          checked={isAllSelected}
+                          indeterminate={isIndeterminate}
+                          onCheckedChange={handleToggleSelectAll}
+                          aria-label="Select all students"
+                          size="sm"
+                        />
+                      </TableHead>
                       <TableHead className="min-w-48">Student</TableHead>
-                      <TableHead className="w-32">University ID</TableHead>
-                      <TableHead className="w-28">Flow</TableHead>
-                      <TableHead className="w-28">Status</TableHead>
-                      <TableHead className="min-w-40">Active Card</TableHead>
+                      <TableHead className="w-28">University ID</TableHead>
+                      <TableHead className="w-24">Status</TableHead>
+                      <TableHead className="w-28">Signed Up</TableHead>
+                      <TableHead className="w-28">Last Scan</TableHead>
+                      <TableHead className="min-w-36">Active Card</TableHead>
                       <TableHead className="text-right pr-6 min-w-44">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {students.map((student) => (
-                      <TableRow key={student.profile.userId}>
-                        {/* Student Name & Email */}
-                        <TableCell className="py-3.5">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <UserAvatar name={student.name} size={36} shape="rounded" />
-                            <div className="min-w-0">
-                              <p className="font-bold text-xs text-foreground truncate">
-                                {student.name}
-                              </p>
-                              <p className="text-[11px] text-muted-foreground font-mono truncate">
-                                {student.email}
-                              </p>
+                    {students.map((student) => {
+                      const isSelected = selectedIds.has(student.profile.userId);
+                      return (
+                        <TableRow
+                          key={student.profile.userId}
+                          className={isSelected ? "bg-brand/5 dark:bg-brand/10" : undefined}
+                        >
+                          {/* Selection Checkbox */}
+                          <TableCell className="pl-4 py-3.5">
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => handleToggleSelectOne(student.profile.userId)}
+                              aria-label={`Select ${student.name}`}
+                              size="sm"
+                            />
+                          </TableCell>
+
+                          {/* Student Name & Email -> Link to Detail */}
+                          <TableCell className="py-3.5">
+                            <div className="flex items-center gap-3 min-w-0">
+                              <UserAvatar name={student.name} size={36} shape="rounded" />
+                              <div className="min-w-0">
+                                <Link
+                                  href={`/admin/students/${student.profile.userId}`}
+                                  className="font-bold text-xs text-foreground hover:text-brand dark:hover:text-brand-soft truncate block"
+                                >
+                                  {student.name}
+                                </Link>
+                                <p className="text-[11px] text-muted-foreground font-mono truncate">
+                                  {student.email}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </TableCell>
+                          </TableCell>
 
-                        {/* University ID */}
-                        <TableCell className="font-mono text-xs font-bold py-3.5">
-                          {student.profile.universityId}
-                        </TableCell>
+                          {/* University ID */}
+                          <TableCell className="font-mono text-xs font-bold py-3.5">
+                            {student.profile.universityId}
+                          </TableCell>
 
-                        {/* Flow Badge */}
-                        <TableCell className="py-3.5">
-                          <Badge
-                            variant={student.profile.cardFlow === "digital" ? "brand" : "secondary"}
-                            className="text-[10px] uppercase font-bold"
-                          >
-                            {student.profile.cardFlow}
-                          </Badge>
-                        </TableCell>
-
-                        {/* Status Badge */}
-                        <TableCell className="py-3.5">
-                          <span
-                            className={
-                              student.profile.status === "active"
-                                ? "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
-                                : "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
-                            }
-                          >
-                            {student.profile.status}
-                          </span>
-                        </TableCell>
-
-                        {/* Active Card */}
-                        <TableCell className="py-3.5 text-xs font-mono">
-                          {student.card ? (
-                            <div className="space-y-0.5">
-                              <span className="font-bold text-foreground">
-                                {student.card.serial}
-                              </span>
-                              <span className="block text-[10px] text-muted-foreground uppercase font-sans">
-                                {student.card.type}
-                              </span>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground text-xs font-sans font-medium">
-                              No card
+                          {/* Status Badge */}
+                          <TableCell className="py-3.5">
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                student.profile.status === "active"
+                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                                  : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
+                              )}
+                            >
+                              {student.profile.status}
                             </span>
-                          )}
-                        </TableCell>
+                          </TableCell>
 
-                        {/* Actions */}
-                        <TableCell className="text-right py-3.5 pr-6 whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-1.5">
-                            {/* Change Flow */}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setFlowStudent(student)}
-                              className="h-8 px-2 text-xs font-semibold normal-case text-muted-foreground hover:text-foreground"
-                              title="Change Flow"
-                            >
-                              <ArrowRightLeft className="size-3.5 mr-1" />
-                              Flow
-                            </Button>
+                          {/* Signed up date */}
+                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground">
+                            {formatCairoDateOnly(student.registeredAt || student.profile.registeredAt)}
+                          </TableCell>
 
-                            {/* Link Card */}
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setLinkingStudent(student);
-                                setSerialInput("");
-                                setQrInput("");
-                                setLinkError(null);
-                              }}
-                              className="h-8 px-2.5 text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 normal-case"
-                            >
-                              <LinkIcon className="size-3.5 mr-1" />
-                              Link
-                            </Button>
+                          {/* Last redemption */}
+                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground">
+                            {student.lastRedemptionAt
+                              ? formatCairoDateOnly(student.lastRedemptionAt)
+                              : "—"}
+                          </TableCell>
 
-                            {/* Void Card (if active card) */}
-                            {student.card && (
+                          {/* Active Card */}
+                          <TableCell className="py-3.5 text-xs font-mono">
+                            {student.card ? (
+                              <div className="space-y-0.5">
+                                <span className="font-bold text-foreground">
+                                  {student.card.serial}
+                                </span>
+                                <span className="block text-[10px] text-muted-foreground uppercase font-sans">
+                                  {student.card.type}
+                                </span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground text-xs font-sans font-medium">
+                                No card
+                              </span>
+                            )}
+                          </TableCell>
+
+                          {/* Actions */}
+                          <TableCell className="text-right py-3.5 pr-6 whitespace-nowrap">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {/* View detail page */}
+                              <Link
+                                href={`/admin/students/${student.profile.userId}`}
+                                className="inline-flex items-center h-8 px-2 text-xs font-bold text-brand dark:text-brand-soft hover:bg-brand/10 rounded-lg transition-colors"
+                              >
+                                <Eye className="size-3.5 mr-1" />
+                                View
+                              </Link>
+
+                              {/* Change Flow */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => setFlowStudent(student)}
+                                className="h-8 px-2 text-xs font-semibold normal-case text-muted-foreground hover:text-foreground"
+                                title="Change Flow"
+                              >
+                                <ArrowRightLeft className="size-3.5 mr-1" />
+                                Flow
+                              </Button>
+
+                              {/* Link Card */}
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
-                                  setVoidingStudent(student);
-                                  setVoidReason("");
-                                  setVoidError(null);
+                                  setLinkingStudent(student);
+                                  setSerialInput("");
+                                  setQrInput("");
+                                  setLinkError(null);
                                 }}
-                                className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10 normal-case"
+                                className="h-8 px-2.5 text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 normal-case"
                               >
-                                <Ban className="size-3.5 mr-1" />
-                                Void
+                                <LinkIcon className="size-3.5 mr-1" />
+                                Link
                               </Button>
-                            )}
 
-                            {/* Super Admin Staff Role Actions */}
-                            {isSuperAdmin && (
-                              <div className="flex items-center gap-1">
+                              {/* Void Card */}
+                              {student.card && (
                                 <Button
-                                  variant="ghost"
+                                  variant="outline"
                                   size="sm"
                                   onClick={() => {
-                                    setPromotingStudent(student);
-                                    setRoleError(null);
+                                    setVoidingStudent(student);
+                                    setVoidReason("");
+                                    setVoidError(null);
                                   }}
-                                  className="h-8 px-2 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 normal-case"
-                                  title="Make admin"
+                                  className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10 normal-case"
                                 >
-                                  <ShieldCheck className="size-3.5 mr-1" />
-                                  Make Admin
+                                  <Ban className="size-3.5 mr-1" />
+                                  Void
                                 </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setRevokingStudent(student);
-                                    setRoleError(null);
-                                  }}
-                                  className="h-8 px-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 normal-case"
-                                  title="Remove admin"
-                                >
-                                  <ShieldAlert className="size-3.5 mr-1" />
-                                  Remove Admin
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                              )}
+
+                              {/* Super Admin Staff Role Actions */}
+                              {isSuperAdmin && (
+                                <div className="flex items-center gap-1">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setPromotingStudent(student);
+                                      setRoleError(null);
+                                    }}
+                                    className="h-8 px-2 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 normal-case"
+                                    title="Make admin"
+                                  >
+                                    <ShieldCheck className="size-3.5 mr-1" />
+                                    Make Admin
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setRevokingStudent(student);
+                                      setRoleError(null);
+                                    }}
+                                    className="h-8 px-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 normal-case"
+                                    title="Remove admin"
+                                  >
+                                    <ShieldAlert className="size-3.5 mr-1" />
+                                    Remove Admin
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
 
               {/* Mobile Cards View (< 1024px) */}
               <div className="lg:hidden divide-y divide-slate-100 dark:divide-zinc-800 p-3 space-y-3">
-                {students.map((student) => (
-                  <div
-                    key={student.profile.userId}
-                    className="p-4 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <UserAvatar name={student.name} size={36} shape="rounded" />
-                        <div className="min-w-0">
-                          <p className="font-bold text-xs text-foreground truncate">
-                            {student.name}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground font-mono truncate">
-                            {student.email}
-                          </p>
+                {students.map((student) => {
+                  const isSelected = selectedIds.has(student.profile.userId);
+                  return (
+                    <div
+                      key={student.profile.userId}
+                      className={cn(
+                        "p-4 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3 transition-colors",
+                        isSelected ? "border-brand dark:border-brand-soft bg-brand/5" : ""
+                      )}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => handleToggleSelectOne(student.profile.userId)}
+                            aria-label={`Select ${student.name}`}
+                            size="sm"
+                          />
+                          <UserAvatar name={student.name} size={36} shape="rounded" />
+                          <div className="min-w-0">
+                            <Link
+                              href={`/admin/students/${student.profile.userId}`}
+                              className="font-bold text-xs text-foreground truncate block hover:underline"
+                            >
+                              {student.name}
+                            </Link>
+                            <p className="text-[11px] text-muted-foreground font-mono truncate">
+                              {student.email}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={cn(
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0",
+                            student.profile.status === "active"
+                              ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
+                              : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
+                          )}
+                        >
+                          {student.profile.status}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs py-1 border-t border-b border-slate-100 dark:border-zinc-800">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                            ID
+                          </span>
+                          <span className="font-mono font-bold text-foreground">
+                            {student.profile.universityId}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                            Card
+                          </span>
+                          <span className="font-mono font-bold text-foreground">
+                            {student.card ? student.card.serial : "No card"}
+                          </span>
                         </div>
                       </div>
-                      <Badge
-                        variant={student.profile.cardFlow === "digital" ? "brand" : "secondary"}
-                        className="text-[10px] uppercase font-bold shrink-0"
-                      >
-                        {student.profile.cardFlow}
-                      </Badge>
-                    </div>
 
-                    <div className="grid grid-cols-2 gap-2 text-xs py-1 border-t border-b border-slate-100 dark:border-zinc-800">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground block">
-                          ID
-                        </span>
-                        <span className="font-mono font-bold text-foreground">
-                          {student.profile.universityId}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-muted-foreground block">
-                          Card
-                        </span>
-                        <span className="font-mono font-bold text-foreground">
-                          {student.card ? student.card.serial : "No card"}
-                        </span>
-                      </div>
-                    </div>
+                      {/* Mobile Row Actions */}
+                      <div className="flex flex-wrap items-center gap-2 pt-1">
+                        <Link
+                          href={`/admin/students/${student.profile.userId}`}
+                          className="flex-1 min-h-[40px] inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-zinc-800 text-xs font-bold text-foreground hover:bg-slate-200"
+                        >
+                          <Eye className="size-3.5 mr-1" />
+                          View Profile
+                        </Link>
 
-                    {/* Mobile Row Actions */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setLinkingStudent(student);
-                          setSerialInput("");
-                          setQrInput("");
-                          setLinkError(null);
-                        }}
-                        className="flex-1 min-h-[40px] text-xs font-bold normal-case text-brand dark:text-brand-soft"
-                      >
-                        <LinkIcon className="size-3.5 mr-1" />
-                        Link Card
-                      </Button>
-
-                      {student.card && (
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
-                            setVoidingStudent(student);
-                            setVoidReason("");
-                            setVoidError(null);
+                            setLinkingStudent(student);
+                            setSerialInput("");
+                            setQrInput("");
+                            setLinkError(null);
                           }}
-                          className="min-h-[40px] text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 normal-case"
+                          className="min-h-[40px] text-xs font-bold normal-case text-brand dark:text-brand-soft"
                         >
-                          <Ban className="size-3.5 mr-1" />
-                          Void
+                          <LinkIcon className="size-3.5 mr-1" />
+                          Link
                         </Button>
-                      )}
 
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFlowStudent(student)}
-                        className="min-h-[40px] text-xs font-semibold normal-case text-muted-foreground"
-                      >
-                        <ArrowRightLeft className="size-3.5 mr-1" />
-                        Flow
-                      </Button>
-
-                      {isSuperAdmin && (
-                        <>
+                        {student.card && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => {
-                              setPromotingStudent(student);
-                              setRoleError(null);
+                              setVoidingStudent(student);
+                              setVoidReason("");
+                              setVoidError(null);
                             }}
-                            className="min-h-[40px] text-xs font-semibold text-sky-600 dark:text-sky-400 normal-case"
+                            className="min-h-[40px] text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 normal-case"
                           >
-                            <ShieldCheck className="size-3.5 mr-1" />
-                            Make Admin
+                            <Ban className="size-3.5 mr-1" />
+                            Void
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setRevokingStudent(student);
-                              setRoleError(null);
-                            }}
-                            className="min-h-[40px] text-xs font-semibold text-amber-600 dark:text-amber-400 normal-case"
-                          >
-                            <ShieldAlert className="size-3.5 mr-1" />
-                            Remove Admin
-                          </Button>
-                        </>
-                      )}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Load More Button */}
@@ -749,6 +1055,68 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         </CardContent>
       </Card>
 
+      {/* Bulk Action Modal (Suspend / Reactivate) */}
+      <Modal
+        isOpen={bulkAction !== null}
+        onClose={() => {
+          if (!isBulkExecuting) setBulkAction(null);
+        }}
+        title={bulkAction === "suspend" ? "Bulk Suspend Students" : "Bulk Reactivate Students"}
+        icon={
+          bulkAction === "suspend" ? (
+            <Ban className="size-5 text-rose-600" />
+          ) : (
+            <CheckCircle2 className="size-5 text-emerald-600" />
+          )
+        }
+        maxWidth="md"
+      >
+        <div className="space-y-4">
+          <ModalBody className="space-y-3">
+            <p className="text-xs text-foreground font-semibold">
+              You are about to {bulkAction} <strong>{selectedIds.size}</strong> selected student accounts.
+            </p>
+
+            {bulkError && (
+              <Alert variant="destructive" size="sm" description={bulkError} />
+            )}
+
+            {bulkAction === "suspend" && (
+              <Input
+                id="bulkReason"
+                label="Suspension Reason (Required)"
+                placeholder="e.g. Terms violation, graduation review, reported abuse"
+                value={bulkReason}
+                onChange={(e) => setBulkReason(e.target.value)}
+                required
+                autoFocus
+              />
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isBulkExecuting}
+              onClick={() => setBulkAction(null)}
+              className="normal-case font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant={bulkAction === "suspend" ? "destructive" : "primary"}
+              disabled={isBulkExecuting || (bulkAction === "suspend" && !bulkReason.trim())}
+              onClick={handleBulkSubmit}
+              className="normal-case font-bold"
+            >
+              {isBulkExecuting ? "Processing…" : `Confirm ${bulkAction}`}
+            </Button>
+          </ModalFooter>
+        </div>
+      </Modal>
+
+      {/* Single Modals: Link, Void, Flow, Admin */}
       {/* 1. Link Card Modal */}
       <Modal
         isOpen={linkingStudent !== null}

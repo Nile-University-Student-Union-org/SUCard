@@ -38,8 +38,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Dashboard",
+        href: "/admin",
         icon: LayoutDashboard,
-        soon: true,
       },
     ],
   },
@@ -78,8 +78,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "QR Studio",
+        href: "/admin/qr-studio",
         icon: QrCode,
-        soon: true,
       },
     ],
   },

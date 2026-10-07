@@ -61,7 +61,7 @@ export const ToggleChip: React.FC<ToggleChipProps> = ({
           )}
         />
       )}
-      <span className="truncate">{children}</span>
+      <span className="inline-flex items-center gap-1.5 truncate">{children}</span>
       {pressed && (
         <span
           className="w-1.5 h-1.5 rounded-full bg-brand dark:bg-brand-soft shrink-0"
