@@ -1,0 +1,211 @@
+"use client";
+
+import React, { useState, useEffect, useCallback, useTransition } from "react";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { Loader2, ArrowDown } from "lucide-react";
+import type { AuditEntry, StaffMember } from "@/lib/staff/types";
+import { AUDIT_PAGE_SIZE_DEFAULT } from "@/lib/staff/types";
+import { type StaffUser } from "@/lib/auth/guards";
+import { listAudit } from "./api";
+import { listStaff } from "../staff/api";
+import { AuditFilterBar } from "./audit-filter-bar";
+import { AuditTimeline } from "./audit-timeline";
+import { AuditDetailModal } from "./audit-detail-modal";
+import { Button } from "@/components/ui/button";
+
+interface AuditManagerProps {
+  currentUser?: StaffUser;
+}
+
+export function AuditManager({}: AuditManagerProps = {}) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [, startTransition] = useTransition();
+
+  const actionParam = searchParams.get("action") || "";
+  const actorIdParam = searchParams.get("actorId") || "";
+
+  const [entries, setEntries] = useState<AuditEntry[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
+  const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
+
+  // Sync state with URL params
+  const updateUrlParams = useCallback(
+    (newAction: string, newActorId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (newAction) {
+        params.set("action", newAction);
+      } else {
+        params.delete("action");
+      }
+
+      if (newActorId) {
+        params.set("actorId", newActorId);
+      } else {
+        params.delete("actorId");
+      }
+
+      params.delete("cursor"); // Reset cursor on filter change
+
+      startTransition(() => {
+        router.push(`${pathname}?${params.toString()}`);
+      });
+    },
+    [pathname, router, searchParams]
+  );
+
+  // Fetch staff list for actor filter
+  useEffect(() => {
+    let active = true;
+    listStaff()
+      .then((res) => {
+        if (active) setStaffList(res.staff || []);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Fetch initial audit entries on filter change
+  const fetchEntries = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await listAudit({
+        action: actionParam || undefined,
+        actorId: actorIdParam || undefined,
+        limit: AUDIT_PAGE_SIZE_DEFAULT,
+      });
+      setEntries(data.entries || []);
+      setNextCursor(data.nextCursor);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load audit logs. Please try again.";
+      setError(message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [actionParam, actorIdParam]);
+
+  useEffect(() => {
+    let active = true;
+    listAudit({
+      action: actionParam || undefined,
+      actorId: actorIdParam || undefined,
+      limit: AUDIT_PAGE_SIZE_DEFAULT,
+    })
+      .then((data) => {
+        if (active) {
+          setEntries(data.entries || []);
+          setNextCursor(data.nextCursor);
+          setIsLoading(false);
+        }
+      })
+      .catch((err) => {
+        if (active) {
+          const message =
+            err instanceof Error ? err.message : "Failed to load audit logs. Please try again.";
+          setError(message);
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [actionParam, actorIdParam]);
+
+  // Load more entries (cursor pagination)
+  const handleLoadMore = async () => {
+    if (!nextCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const data = await listAudit({
+        action: actionParam || undefined,
+        actorId: actorIdParam || undefined,
+        cursor: nextCursor,
+        limit: AUDIT_PAGE_SIZE_DEFAULT,
+      });
+      setEntries((prev) => [...prev, ...(data.entries || [])]);
+      setNextCursor(data.nextCursor);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to load more entries.";
+      setError(message);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header Bar */}
+      <div className="space-y-1">
+        <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
+          AUDIT LOG
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Track sensitive administrative operations and security events.
+        </p>
+      </div>
+
+      {/* Filter Bar */}
+      <AuditFilterBar
+        actionFilter={actionParam}
+        actorFilter={actorIdParam}
+        staffList={staffList}
+        onActionChange={(action) => updateUrlParams(action, actorIdParam)}
+        onActorChange={(actorId) => updateUrlParams(actionParam, actorId)}
+        onClearFilters={() => updateUrlParams("", "")}
+      />
+
+      {/* Timeline List */}
+      <AuditTimeline
+        entries={entries}
+        isLoading={isLoading}
+        error={error}
+        onRetry={fetchEntries}
+        onSelectEntry={(entry) => setSelectedEntry(entry)}
+      />
+
+      {/* Pagination Load More */}
+      {nextCursor && !isLoading && (
+        <div className="flex justify-center pt-4">
+          <Button
+            variant="outline"
+            size="md"
+            onClick={handleLoadMore}
+            disabled={isLoadingMore}
+            className="normal-case font-bold min-h-[44px] px-6"
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                Loading more events…
+              </>
+            ) : (
+              <>
+                <ArrowDown className="size-4 mr-2" />
+                Load older events
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* Event Detail Modal */}
+      <AuditDetailModal
+        entry={selectedEntry}
+        isOpen={!!selectedEntry}
+        onClose={() => setSelectedEntry(null)}
+      />
+    </div>
+  );
+}

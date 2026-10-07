@@ -9,21 +9,12 @@ import { formatBatchNumber, formatNumber } from "./utils";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Dropdown } from "@/components/ui/dropdown";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Modal,
+  ModalBody,
+  ModalFooter,
+} from "@/components/ui/modal";
 
 interface DownloadDialogProps {
   batch: Batch | null;
@@ -36,13 +27,11 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
   const [exportPng, setExportPng] = useState(false);
   const [pngSize, setPngSize] = useState<600 | 1200 | 2400>(1200);
 
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      setExportSvg(true);
-      setExportPng(false);
-      setPngSize(1200);
-    }
-    onOpenChange(nextOpen);
+  const handleClose = () => {
+    setExportSvg(true);
+    setExportPng(false);
+    setPngSize(1200);
+    onOpenChange(false);
   };
 
   if (!batch) return null;
@@ -58,7 +47,6 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
       pngSize,
     });
 
-    // Initiate browser download via virtual link
     const link = document.createElement("a");
     link.href = exportUrl;
     link.setAttribute(
@@ -73,135 +61,124 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
       description: `Generating QR codes for ${formatNumber(batch.count)} cards. Large batches may take a minute.`,
     });
 
-    handleOpenChange(false);
+    handleClose();
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md bg-white">
-        <DialogHeader>
-          <div className="size-10 rounded-full bg-sky-50 border border-sky-200 text-[#018BCE] flex items-center justify-center mb-1">
-            <Download className="size-5" />
-          </div>
-          <DialogTitle className="text-lg font-bold text-[#0F3056]">
-            Export QR Codes — {formatBatchNumber(batch.number)}
-          </DialogTitle>
-          <DialogDescription className="text-xs text-slate-600">
-            Download a ZIP archive containing high-quality QR codes for {formatNumber(batch.count)} physical cards ({batch.firstSerial} → {batch.lastSerial}).
-          </DialogDescription>
-        </DialogHeader>
+    <Modal
+      isOpen={open}
+      onClose={handleClose}
+      title={`Export QR Codes — ${formatBatchNumber(batch.number)}`}
+      icon={<Download className="size-5 text-brand dark:text-brand-soft" />}
+      maxWidth="md"
+    >
+      <ModalBody className="space-y-4">
+        <p className="text-xs text-muted-foreground">
+          Download a ZIP archive containing high-quality QR codes for {formatNumber(batch.count)} physical cards ({batch.firstSerial} &rarr; {batch.lastSerial}).
+        </p>
 
-        <div className="space-y-4 py-2">
-          {/* Format Options */}
-          <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/60 p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">
-              Export Formats
-            </p>
+        {/* Format Options */}
+        <div className="space-y-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-800/40 p-3.5">
+          <p className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+            Export Formats
+          </p>
 
-            {/* SVG Checkbox */}
-            <div className="flex items-start gap-3">
-              <Checkbox
-                id="format-svg"
-                checked={exportSvg}
-                onCheckedChange={(checked) => setExportSvg(Boolean(checked))}
-                className="mt-0.5"
-              />
-              <div className="space-y-0.5 leading-none">
-                <Label
-                  htmlFor="format-svg"
-                  className="text-xs font-semibold text-slate-800 cursor-pointer flex items-center gap-1.5"
-                >
-                  <FileCode className="size-3.5 text-[#0F548D]" />
-                  SVG Vector (Recommended for printing)
-                </Label>
-                <p className="text-[11px] text-slate-500">
-                  Lossless vector format that can be scaled infinitely for card production.
-                </p>
-              </div>
-            </div>
-
-            {/* PNG Checkbox */}
-            <div className="flex items-start gap-3 pt-1 border-t border-slate-200/60">
-              <Checkbox
-                id="format-png"
-                checked={exportPng}
-                onCheckedChange={(checked) => setExportPng(Boolean(checked))}
-                className="mt-0.5"
-              />
-              <div className="space-y-1 leading-none w-full">
-                <Label
-                  htmlFor="format-png"
-                  className="text-xs font-semibold text-slate-800 cursor-pointer flex items-center gap-1.5"
-                >
-                  <ImageIcon className="size-3.5 text-[#018BCE]" />
-                  PNG Raster Image
-                </Label>
-                <p className="text-[11px] text-slate-500">
-                  Standard raster image files with a white background.
-                </p>
-
-                {/* PNG Resolution Select */}
-                {exportPng && (
-                  <div className="pt-2">
-                    <Label htmlFor="png-size" className="text-[11px] font-medium text-slate-600 mb-1 block">
-                      PNG Resolution:
-                    </Label>
-                    <Select
-                      value={String(pngSize)}
-                      onValueChange={(val) => {
-                        if (val) setPngSize(Number(val) as 600 | 1200 | 2400);
-                      }}
-                    >
-                      <SelectTrigger id="png-size" className="h-8 text-xs bg-white border-slate-300">
-                        <SelectValue placeholder="Select size" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="600">600 × 600 px (Compact)</SelectItem>
-                        <SelectItem value="1200">1200 × 1200 px (Standard Print)</SelectItem>
-                        <SelectItem value="2400">2400 × 2400 px (Ultra HD)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {!isFormValid && (
-              <p className="text-xs text-red-600 font-medium pt-1">
-                Please select at least one format (SVG or PNG).
+          {/* SVG Checkbox */}
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="format-svg"
+              checked={exportSvg}
+              onCheckedChange={(checked) => setExportSvg(Boolean(checked))}
+              className="mt-0.5"
+            />
+            <div className="space-y-0.5 leading-none">
+              <Label
+                htmlFor="format-svg"
+                className="text-xs font-bold text-charcoal dark:text-zinc-100 cursor-pointer flex items-center gap-1.5"
+              >
+                <FileCode className="size-3.5 text-brand dark:text-brand-soft" />
+                SVG Vector (Recommended for printing)
+              </Label>
+              <p className="text-[11px] text-ash dark:text-zinc-400">
+                Lossless vector format that can be scaled infinitely for card production.
               </p>
-            )}
+            </div>
           </div>
 
-          {/* Warning Note */}
-          <div className="flex items-start gap-2.5 p-3 rounded-lg bg-sky-50/80 border border-sky-200/70 text-sky-900 text-xs">
-            <Info className="size-4 shrink-0 text-[#018BCE] mt-0.5" />
-            <p className="text-[11px] leading-relaxed">
-              Each card gets its own QR file named by serial number (e.g. <span className="font-mono font-medium">SU-000001.svg</span>). Large batches with PNG can take a minute to pack.
-            </p>
+          {/* PNG Checkbox */}
+          <div className="flex items-start gap-3 pt-2 border-t border-slate-200/60 dark:border-zinc-700/60">
+            <Checkbox
+              id="format-png"
+              checked={exportPng}
+              onCheckedChange={(checked) => setExportPng(Boolean(checked))}
+              className="mt-0.5"
+            />
+            <div className="space-y-2 leading-none w-full">
+              <Label
+                htmlFor="format-png"
+                className="text-xs font-bold text-charcoal dark:text-zinc-100 cursor-pointer flex items-center gap-1.5"
+              >
+                <ImageIcon className="size-3.5 text-sky-600 dark:text-sky-400" />
+                PNG Raster Image
+              </Label>
+              <p className="text-[11px] text-ash dark:text-zinc-400">
+                Standard raster image files with a white background.
+              </p>
+
+              {/* PNG Resolution Dropdown */}
+              {exportPng && (
+                <div className="pt-2">
+                  <Dropdown
+                    label="PNG Resolution"
+                    value={String(pngSize)}
+                    onChange={(val) => setPngSize(Number(val) as 600 | 1200 | 2400)}
+                    options={[
+                      { value: "600", label: "600 × 600 px (Compact)" },
+                      { value: "1200", label: "1200 × 1200 px (Standard Print)" },
+                      { value: "2400", label: "2400 × 2400 px (Ultra HD)" },
+                    ]}
+                  />
+                </div>
+              )}
+            </div>
           </div>
+
+          {!isFormValid && (
+            <p className="text-xs text-rose-600 dark:text-rose-400 font-bold pt-1">
+              Please select at least one format (SVG or PNG).
+            </p>
+          )}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="border-slate-300 text-slate-700"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            disabled={!isFormValid}
-            onClick={handleDownload}
-            className="bg-[#0F3056] text-white hover:bg-[#0F548D] disabled:opacity-50"
-          >
-            <Download className="size-4 mr-1.5" />
-            Download ZIP
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        {/* Warning Note */}
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-sky-50/80 dark:bg-sky-950/40 border border-sky-200/70 dark:border-sky-800 text-sky-900 dark:text-sky-200 text-xs">
+          <Info className="size-4 shrink-0 text-brand dark:text-brand-soft mt-0.5" />
+          <p className="text-[11px] leading-relaxed">
+            Each card gets its own QR file named by serial number (e.g. <span className="font-mono font-bold">SU-000001.svg</span>). Large batches with PNG can take a minute to pack.
+          </p>
+        </div>
+      </ModalBody>
+
+      <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handleClose}
+          className="normal-case"
+        >
+          Cancel
+        </Button>
+        <Button
+          type="button"
+          variant="primary"
+          disabled={!isFormValid}
+          onClick={handleDownload}
+          className="normal-case"
+        >
+          <Download className="size-4 mr-1.5" />
+          Download ZIP
+        </Button>
+      </ModalFooter>
+    </Modal>
   );
 }

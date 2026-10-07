@@ -1,19 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { cn } from "cn"
+import React, { forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
-function Label({ className, ...props }: React.ComponentProps<"label">) {
-  return (
+export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+  required?: boolean;
+}
+
+export const Label = forwardRef<HTMLLabelElement, LabelProps>(
+  ({ className, children, required, ...props }, ref) => (
     <label
-      data-slot="label"
+      ref={ref}
       className={cn(
-        "flex items-center gap-2 text-sm leading-none font-medium select-none group-data-[disabled=true]:pointer-events-none group-data-[disabled=true]:opacity-50 peer-disabled:cursor-not-allowed peer-disabled:opacity-50",
+        "block text-xs font-bold text-slate-700 dark:text-zinc-300 select-none",
         className
       )}
       {...props}
-    />
+    >
+      {children}
+      {required && <span className="text-destructive ml-0.5">*</span>}
+    </label>
   )
-}
-
-export { Label }
+);
+Label.displayName = "Label";

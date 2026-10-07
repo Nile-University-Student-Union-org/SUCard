@@ -1,57 +1,95 @@
-import { Button as ButtonPrimitive } from "@base-ui/react/button"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+import React from "react";
+import Link, { type LinkProps } from "next/link";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
-const buttonVariants = cva(
-  "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+export const buttonVariants = cva(
+  "relative inline-flex min-h-[44px] items-center justify-center gap-2 font-bold rounded-tactile select-none cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 dark:focus-visible:ring-brand-soft dark:focus-visible:ring-offset-zinc-900 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/80",
-        outline:
-          "border-border bg-background hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:border-input dark:bg-input/30 dark:hover:bg-input/50",
+        primary:
+          "text-white bg-brand border-b-4 border-black/25 duration-100 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-[color-mix(in_oklch,var(--secondary),var(--foreground)_5%)] aria-expanded:bg-secondary aria-expanded:text-secondary-foreground",
-        ghost:
-          "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
+          "text-charcoal dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 active:scale-[0.98]",
+        surface:
+          "text-charcoal dark:text-zinc-200 bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs hover:bg-slate-50 dark:hover:bg-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700 active:scale-[0.98]",
         destructive:
-          "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
-        link: "text-primary underline-offset-4 hover:underline",
+          "text-white bg-rose-600 border-b-4 border-black/25 hover:bg-rose-500 active:translate-y-[2px] active:border-b-2",
+        accent:
+          "text-midnight dark:text-white bg-macaw-blue border-b-4 border-black/25 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
+        ghost:
+          "text-charcoal dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-charcoal dark:hover:text-white active:scale-[0.98]",
+        outline:
+          "text-charcoal dark:text-zinc-100 bg-transparent border-2 border-slate-300 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:border-slate-400 dark:hover:border-zinc-500 active:scale-[0.98]",
+        "outline-brand":
+          "text-brand dark:text-brand-soft bg-transparent border-2 border-brand/40 dark:border-brand-soft/40 hover:border-brand dark:hover:border-brand-soft hover:bg-brand/10 dark:hover:bg-brand-soft/15 active:scale-[0.98]",
+        "outline-blue":
+          "text-eel-dark-blue dark:text-sky-300 bg-transparent border-2 border-macaw-blue-dark dark:border-macaw-blue hover:border-macaw-blue hover:bg-macaw-blue/15 active:scale-[0.98]",
+        "outline-inverse":
+          "text-white bg-white/10 border-2 border-white/60 hover:bg-white/20 hover:border-white backdrop-blur-sm active:scale-[0.98] focus-visible:ring-white dark:focus-visible:ring-white focus-visible:ring-offset-0 dark:focus-visible:ring-offset-0",
       },
       size: {
-        default:
-          "h-8 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        xs: "h-6 gap-1 rounded-[min(var(--radius-md),10px)] px-2 text-xs in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3",
-        sm: "h-7 gap-1 rounded-[min(var(--radius-md),12px)] px-2.5 text-[0.8rem] in-data-[slot=button-group]:rounded-lg has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 [&_svg:not([class*='size-'])]:size-3.5",
-        lg: "h-9 gap-1.5 px-2.5 has-data-[icon=inline-end]:pr-2 has-data-[icon=inline-start]:pl-2",
-        icon: "size-8",
-        "icon-xs":
-          "size-6 rounded-[min(var(--radius-md),10px)] in-data-[slot=button-group]:rounded-lg [&_svg:not([class*='size-'])]:size-3",
-        "icon-sm":
-          "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
-        "icon-lg": "size-9",
+        sm: "px-4 py-2 text-xs",
+        md: "px-6 py-2.5 text-sm",
+        lg: "px-8 py-3.5 text-base",
+        icon: "w-11 min-w-[44px] h-11 p-0",
+        "icon-sm": "w-9 min-w-[36px] h-9 p-0",
       },
     },
     defaultVariants: {
-      variant: "default",
-      size: "default",
+      variant: "primary",
+      size: "md",
     },
   }
-)
+);
 
-function Button({
-  className,
-  variant = "default",
-  size = "default",
-  ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return (
-    <ButtonPrimitive
-      data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
-  )
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
+  render?: React.ReactElement;
 }
 
-export { Button, buttonVariants }
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button({
+  variant,
+  size,
+  className,
+  type = "button",
+  render,
+  children,
+  ...props
+}, ref) {
+  const classes = cn(buttonVariants({ variant, size }), className);
+  if (render && React.isValidElement(render)) {
+    return React.cloneElement(render, {
+      className: cn(classes, (render.props as { className?: string }).className),
+      children: (render.props as { children?: React.ReactNode }).children ?? children,
+      ...props,
+    } as React.Attributes & Record<string, unknown>);
+  }
+
+  return (
+    <button
+      ref={ref}
+      type={type}
+      className={classes}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+});
+
+Button.displayName = "Button";
+
+export interface ButtonLinkProps
+  extends LinkProps,
+    Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>,
+    VariantProps<typeof buttonVariants> {}
+
+export const ButtonLink: React.FC<ButtonLinkProps> = ({
+  variant,
+  size,
+  className,
+  ...props
+}) => <Link className={cn(buttonVariants({ variant, size }), className)} {...props} />;

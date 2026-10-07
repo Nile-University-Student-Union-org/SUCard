@@ -1,51 +1,87 @@
-import { mergeProps } from "@base-ui/react/merge-props"
-import { useRender } from "@base-ui/react/use-render"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "cn"
+"use client";
+
+import React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
+import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "group/badge inline-flex h-5 w-fit shrink-0 items-center justify-center gap-1 overflow-hidden rounded-4xl border border-transparent px-2 py-0.5 text-xs font-medium whitespace-nowrap transition-all focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 has-data-[icon=inline-end]:pr-1.5 has-data-[icon=inline-start]:pl-1.5 aria-invalid:border-destructive aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 [&>svg]:pointer-events-none [&>svg]:size-3!",
+  "inline-flex max-w-full items-center gap-1.5 font-bold select-none transition-all duration-150",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground [a]:hover:bg-primary/80",
+        default:
+          "bg-brand text-white shadow-xs",
+        brand:
+          "bg-brand text-white shadow-xs",
         secondary:
-          "bg-secondary text-secondary-foreground [a]:hover:bg-secondary/80",
-        destructive:
-          "bg-destructive/10 text-destructive focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:focus-visible:ring-destructive/40 [a]:hover:bg-destructive/20",
+          "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+        accent:
+          "bg-macaw-blue text-white shadow-xs",
         outline:
-          "border-border text-foreground [a]:hover:bg-muted [a]:hover:text-muted-foreground",
+          "border-2 border-brand/30 text-brand dark:text-brand-soft bg-brand/5 dark:bg-brand/15",
+        success:
+          "bg-emerald-700 text-white dark:bg-emerald-700 shadow-xs",
+        warning:
+          "bg-amber-500 text-midnight dark:bg-amber-500 shadow-xs",
+        destructive:
+          "bg-rose-700 text-white dark:bg-rose-700 shadow-xs",
         ghost:
-          "hover:bg-muted hover:text-muted-foreground dark:hover:bg-muted/50",
-        link: "text-primary underline-offset-4 hover:underline",
+          "bg-slate-100 dark:bg-zinc-800 text-charcoal dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-[10px] tracking-wider uppercase",
+        md: "px-2.5 py-1 text-xs tracking-wider uppercase",
+        lg: "px-3.5 py-1.5 text-sm tracking-wide uppercase",
+      },
+      shape: {
+        rounded: "rounded-[8px]",
+        pill: "rounded-full",
+      },
+      interactive: {
+        true: "min-h-[44px] min-w-[44px] cursor-pointer hover:scale-105 active:scale-95",
+        false: "",
       },
     },
     defaultVariants: {
-      variant: "default",
+      variant: "brand",
+      size: "md",
+      shape: "rounded",
+      interactive: false,
     },
   }
-)
+);
 
-function Badge({
-  className,
-  variant = "default",
-  render,
-  ...props
-}: useRender.ComponentProps<"span"> & VariantProps<typeof badgeVariants>) {
-  return useRender({
-    defaultTagName: "span",
-    props: mergeProps<"span">(
-      {
-        className: cn(badgeVariants({ variant }), className),
-      },
-      props
-    ),
-    render,
-    state: {
-      slot: "badge",
-      variant,
-    },
-  })
+export interface BadgeProps
+  extends React.HTMLAttributes<HTMLSpanElement>,
+    VariantProps<typeof badgeVariants> {
+  icon?: React.ReactNode;
+  pulse?: boolean;
 }
 
-export { Badge, badgeVariants }
+export const Badge: React.FC<BadgeProps> = ({
+  className,
+  variant,
+  size,
+  shape,
+  interactive,
+  icon,
+  pulse = false,
+  children,
+  ...props
+}) => {
+  return (
+    <span
+      className={cn(badgeVariants({ variant, size, shape, interactive }), className)}
+      {...props}
+    >
+      {pulse && (
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75" />
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
+        </span>
+      )}
+      {icon && <span className="shrink-0">{icon}</span>}
+      <span className="min-w-0 [overflow-wrap:anywhere]">{children}</span>
+    </span>
+  );
+};
