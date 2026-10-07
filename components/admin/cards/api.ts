@@ -125,3 +125,34 @@ export async function lookupCard(query: {
   });
   return handleResponse(res);
 }
+
+/**
+ * Update batch print status or restyle version.
+ */
+export async function updateBatch(
+  batchId: string,
+  data: {
+    qrStyleVersionId?: string;
+    printStatus?: "draft" | "sent_to_printer" | "received" | "distributing";
+    printStatusNote?: string;
+  }
+): Promise<{
+  batch: {
+    id: string;
+    qrStyleVersionId: string | null;
+    printStatus: "draft" | "sent_to_printer" | "received" | "distributing";
+    printStatusNote: string | null;
+    printStatusChangedAt: string | null;
+  };
+}> {
+  const res = await fetch(`/api/admin/batches/${encodeURIComponent(batchId)}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+  return handleResponse(res);
+}
+

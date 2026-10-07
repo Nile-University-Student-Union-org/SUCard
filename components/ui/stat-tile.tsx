@@ -67,7 +67,7 @@ export const StatTile: React.FC<StatTileProps> = ({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "font-bold text-ash dark:text-zinc-400 leading-snug break-words",
+              "font-bold text-ash dark:text-zinc-400 leading-snug break-normal hyphens-none",
               isCompact ? "text-xs" : "text-xs uppercase tracking-wider"
             )}
           >

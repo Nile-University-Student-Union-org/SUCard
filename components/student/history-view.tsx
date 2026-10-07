@@ -258,17 +258,17 @@ export function HistoryView() {
                         <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 border border-border shrink-0 mt-0.5">
                           <Store className="h-5 w-5" />
                         </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="font-semibold text-foreground text-sm">
+                        <div className="space-y-1 min-w-0 flex-1">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <span className="font-semibold text-foreground text-sm truncate max-w-[220px] sm:max-w-xs md:max-w-md" title={item.vendorName}>
                               {item.vendorName}
                             </span>
                             <Badge
                               variant="secondary"
-                              className="text-[11px] font-normal py-0 px-1.5 h-5 flex items-center gap-1"
+                              className="text-[11px] font-normal py-0 px-1.5 h-5 flex items-center gap-1 w-fit shrink-0"
                             >
-                              <MapPin className="h-2.5 w-2.5" />
-                              {item.branchName}
+                              <MapPin className="h-2.5 w-2.5 shrink-0" />
+                              <span className="truncate max-w-[150px]">{item.branchName}</span>
                             </Badge>
                           </div>
 
