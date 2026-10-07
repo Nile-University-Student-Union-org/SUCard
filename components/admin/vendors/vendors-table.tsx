@@ -314,33 +314,37 @@ export function VendorsTable({
                 </span>
               </div>
 
-              {/* Extra Details Row */}
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-2 border-t border-border">
-                <div className="flex items-center gap-1 truncate max-w-[180px]">
-                  {vendor.location && (
-                    <>
-                      <MapPin className="size-3 shrink-0" />
-                      <span className="truncate">{vendor.location}</span>
-                    </>
-                  )}
-                </div>
-
-                {contractStatus.expiring || contractStatus.expired ? (
-                  <span
-                    className={cn(
-                      "inline-flex items-center gap-1 font-bold text-[11px]",
-                      contractStatus.expired ? "text-rose-600" : "text-amber-600"
+              {/* Extra Details Row (rendered only when metadata exists) */}
+              {(vendor.location || vendor.contractEnd || contractStatus.expired || contractStatus.expiring) ? (
+                <div className="flex items-center justify-between text-xs text-muted-foreground pt-2.5 border-t border-slate-100 dark:border-zinc-800 gap-2">
+                  <div className="flex items-center gap-1 truncate max-w-[200px]">
+                    {vendor.location ? (
+                      <>
+                        <MapPin className="size-3 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{vendor.location}</span>
+                      </>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">Partner</span>
                     )}
-                  >
-                    <AlertTriangle className="size-3" />
-                    {contractStatus.expired ? "Expired" : `${contractStatus.daysLeft}d left`}
-                  </span>
-                ) : vendor.contractEnd ? (
-                  <span className="font-mono text-[11px]">
-                    Ends: {vendor.contractEnd}
-                  </span>
-                ) : null}
-              </div>
+                  </div>
+
+                  {contractStatus.expiring || contractStatus.expired ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 font-bold text-[11px] shrink-0",
+                        contractStatus.expired ? "text-rose-600" : "text-amber-600"
+                      )}
+                    >
+                      <AlertTriangle className="size-3" />
+                      {contractStatus.expired ? "Expired" : `${contractStatus.daysLeft}d left`}
+                    </span>
+                  ) : vendor.contractEnd ? (
+                    <span className="font-mono text-[11px] shrink-0">
+                      Ends: {vendor.contractEnd}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
             </Link>
           );
         })}

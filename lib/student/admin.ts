@@ -81,7 +81,7 @@ export async function searchStudents(q: string, cursor?: string, filters: {statu
   const students = await Promise.all(page.map(async (row) => {
     const home = await getStudentHome(row.profile.userId);
     const [last] = await db.select({ at: sql<Date | null>`max(${scanEvents.confirmedAt})` }).from(scanEvents).where(and(eq(scanEvents.studentId,row.profile.userId),eq(scanEvents.confirmed,true),eq(scanEvents.voided,false)));
-    return { profile: home.profile, name: row.name, email: row.email, card: home.card, registeredAt: row.profile.registeredAt.toISOString(), lastRedemptionAt: last.at?.toISOString() ?? null };
+    return { profile: home.profile, name: row.name, email: row.email, card: home.card, registeredAt: row.profile.registeredAt instanceof Date ? row.profile.registeredAt.toISOString() : new Date(row.profile.registeredAt).toISOString(), lastRedemptionAt: last?.at ? new Date(last.at).toISOString() : null };
   }));
   const last = page.at(-1);
   return { students, nextCursor: rows.length > 25 && last ? Buffer.from(JSON.stringify({ name: last.name, id: last.profile.userId })).toString("base64url") : null };

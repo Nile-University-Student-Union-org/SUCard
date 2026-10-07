@@ -10,14 +10,17 @@ import {
   Tag,
   Users,
   Settings,
+  TrendingUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TabBar, type TabBarItem } from "@/components/ui/tab-bar";
+import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { Badge } from "@/components/ui/badge";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getVendor } from "../api";
 import { isExpiringSoon } from "../vendors-table";
+import { VendorInsightsTab } from "./vendor-insights-tab";
 import { VendorOverviewTab } from "./vendor-overview-tab";
 import { VendorBranchesTab } from "./vendor-branches-tab";
 import { VendorOffersTab } from "./vendor-offers-tab";
@@ -29,9 +32,14 @@ interface VendorDetailManagerProps {
   vendorId: string;
 }
 
-type TabKey = "overview" | "branches" | "offers" | "accounts";
+type TabKey = "insights" | "overview" | "branches" | "offers" | "accounts";
 
 const TABS: TabBarItem<TabKey>[] = [
+  {
+    id: "insights",
+    label: "Insights",
+    icon: <TrendingUp className="size-4" />,
+  },
   {
     id: "overview",
     label: "Overview",
@@ -67,7 +75,7 @@ export function VendorDetailManager({ vendorId }: VendorDetailManagerProps) {
   const [vendor, setVendor] = useState<VendorDto | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [activeTab, setActiveTab] = useState<TabKey>("insights");
 
   const fetchVendorData = React.useCallback(async () => {
     setIsLoading(true);
@@ -244,18 +252,24 @@ export function VendorDetailManager({ vendorId }: VendorDetailManagerProps) {
         </div>
       </div>
 
-      {/* Navigation Tabs */}
-      <TabBar
-        items={TABS}
-        value={activeTab}
-        onChange={setActiveTab}
-        ariaLabel="Vendor detail sections"
-        fullWidth
-        size="md"
-      />
+      {/* Navigation Tabs with Overflow Scroller for mobile discoverability */}
+      <OverflowScroller className="max-w-full">
+        <TabBar
+          items={TABS}
+          value={activeTab}
+          onChange={setActiveTab}
+          ariaLabel="Vendor detail sections"
+          fullWidth
+          size="md"
+        />
+      </OverflowScroller>
 
       {/* Tab Panels */}
       <div>
+        {activeTab === "insights" && (
+          <VendorInsightsTab vendorId={vendor.id} />
+        )}
+
         {activeTab === "overview" && (
           <VendorOverviewTab
             vendor={vendor}

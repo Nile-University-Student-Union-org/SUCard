@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { CountBadge } from "@/components/ui/count-badge";
+import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { listVendors } from "./api";
 import { VendorsTable } from "./vendors-table";
 import { AddVendorModal } from "./add-vendor-modal";
@@ -135,38 +136,40 @@ export function VendorsManager() {
         </div>
 
         {/* Status Filter Chips */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
-          <ToggleChip
-            pressed={statusFilter === "all"}
-            onPressedChange={() => setStatusFilter("all")}
-          >
-            <span>All</span>
-            <CountBadge count={counts.all} singularLabel="vendor" pluralLabel="vendors" />
-          </ToggleChip>
+        <div className="w-full md:w-auto">
+          <OverflowScroller className="max-w-full">
+            <ToggleChip
+              pressed={statusFilter === "all"}
+              onPressedChange={() => setStatusFilter("all")}
+            >
+              <span>All</span>
+              <CountBadge count={counts.all} singularLabel="vendor" pluralLabel="vendors" />
+            </ToggleChip>
 
-          <ToggleChip
-            pressed={statusFilter === "active"}
-            onPressedChange={() => setStatusFilter("active")}
-          >
-            <span>Active</span>
-            <CountBadge count={counts.active} singularLabel="vendor" pluralLabel="vendors" />
-          </ToggleChip>
+            <ToggleChip
+              pressed={statusFilter === "active"}
+              onPressedChange={() => setStatusFilter("active")}
+            >
+              <span>Active</span>
+              <CountBadge count={counts.active} singularLabel="vendor" pluralLabel="vendors" />
+            </ToggleChip>
 
-          <ToggleChip
-            pressed={statusFilter === "paused"}
-            onPressedChange={() => setStatusFilter("paused")}
-          >
-            <span>Paused</span>
-            <CountBadge count={counts.paused} singularLabel="vendor" pluralLabel="vendors" />
-          </ToggleChip>
+            <ToggleChip
+              pressed={statusFilter === "paused"}
+              onPressedChange={() => setStatusFilter("paused")}
+            >
+              <span>Paused</span>
+              <CountBadge count={counts.paused} singularLabel="vendor" pluralLabel="vendors" />
+            </ToggleChip>
 
-          <ToggleChip
-            pressed={statusFilter === "ended"}
-            onPressedChange={() => setStatusFilter("ended")}
-          >
-            <span>Ended</span>
-            <CountBadge count={counts.ended} singularLabel="vendor" pluralLabel="vendors" />
-          </ToggleChip>
+            <ToggleChip
+              pressed={statusFilter === "ended"}
+              onPressedChange={() => setStatusFilter("ended")}
+            >
+              <span>Ended</span>
+              <CountBadge count={counts.ended} singularLabel="vendor" pluralLabel="vendors" />
+            </ToggleChip>
+          </OverflowScroller>
         </div>
       </div>
 
