@@ -65,7 +65,6 @@ export function AdminHeader({ user }: AdminHeaderProps) {
             </span>
             <span className="hidden sm:inline text-muted-foreground/50">/</span>
             <div className="flex items-center gap-1.5">
-              <ShieldCheck className="size-4 text-[#018BCE]" />
               <span className="text-sm font-semibold text-foreground">SU Card Manager</span>
             </div>
           </div>
