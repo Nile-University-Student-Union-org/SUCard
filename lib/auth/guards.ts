@@ -9,7 +9,8 @@ import { getSettings } from "@/lib/settings/service";
 import { matchesStudentEmail } from "@/lib/student/rules";
 
 import type { StaffRole } from "@/lib/staff/types";
-import { adminDecision } from "./policy";
+import { adminDecision, resolveAdminRole } from "./policy";
+import { hasStudentAdminGrant } from "./student-admin";
 
 // CONTRACT used by admin pages and API routes; keep the signatures unchanged.
 
@@ -66,9 +67,12 @@ async function readAdminDecision(requestHeaders: Headers) {
   if (!session) return { decision: "deny" as const, admin: null };
   const [current] = await db.select({ role: user.role, disabledAt: user.disabledAt, email: user.email, name: user.name,
     twoFactorEnabled: user.twoFactorEnabled }).from(user).where(eq(user.id, session.user.id));
-  if (!current || current.disabledAt || (current.role !== "super_admin" && current.role !== "admin")) return { decision: "deny" as const, admin: null };
-  return { decision: adminDecision(current.role, session.session.loginMethod, current.twoFactorEnabled),
-    admin: { id: session.user.id, email: current.email, name: current.name, role: current.role } };
+  if (!current || current.disabledAt) return { decision: "deny" as const, admin: null };
+  const role = resolveAdminRole(current.role, session.session.loginMethod,
+    current.role === "student" && session.session.loginMethod === "microsoft" && await hasStudentAdminGrant(session.user.id));
+  if (!role) return { decision: "deny" as const, admin: null };
+  return { decision: adminDecision(role, session.session.loginMethod, current.twoFactorEnabled),
+    admin: { id: session.user.id, email: current.email, name: current.name, role } };
 }
 
 export async function getCurrentUser(requestHeaders: Headers) {

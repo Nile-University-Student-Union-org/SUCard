@@ -23,6 +23,7 @@ import { generateSecurePassword } from "./utils";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { copyToClipboard } from "@/lib/clipboard";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 
 const resetPasswordSchema = z.object({
@@ -71,18 +72,19 @@ export function ResetPasswordModal({
   const handleGeneratePassword = () => {
     const pwd = generateSecurePassword(16);
     setValue("password", pwd, { shouldValidate: true });
-    navigator.clipboard.writeText(pwd).catch(() => {});
+    copyToClipboard(pwd).catch(() => {});
     toast.info("Password generated & copied to clipboard");
   };
 
-  const handleCopyCredentials = () => {
+  const handleCopyCredentials = async () => {
     if (!resetSuccessPassword) return;
     const text = `Staff Member: ${staff.name}\nEmail: ${staff.email}\nNew Password: ${resetSuccessPassword}`;
 
-    navigator.clipboard.writeText(text).then(() => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
-    });
+    }
   };
 
   const handleModalClose = () => {

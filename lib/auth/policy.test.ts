@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { adminDecision, sessionExpiry } from "./policy";
+import { adminDecision, resolveAdminRole, sessionExpiry } from "./policy";
 
 describe("admin 2FA policy", () => {
+  it("resolves a Microsoft student grant without promoting other roles", () => {
+    expect(resolveAdminRole("student", "microsoft", true)).toBe("admin");
+    expect(resolveAdminRole("student", "microsoft", false)).toBeNull();
+    expect(resolveAdminRole("student", "password", true)).toBeNull();
+    expect(resolveAdminRole("cashier", "microsoft", true)).toBeNull();
+    expect(resolveAdminRole("super_admin", "password", false)).toBe("super_admin");
+  });
   it("requires password admins to enroll and lets enrolled admins through", () => {
     for (const role of ["admin", "super_admin"]) {
       expect(adminDecision(role, "password", false)).toBe("setup");

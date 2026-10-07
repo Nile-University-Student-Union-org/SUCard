@@ -85,6 +85,12 @@ export const studentProfiles = pgTable("student_profiles", {
   suspendReason: text("suspend_reason"), registeredAt: time("registered_at"),
   privacyAcceptedAt: time("privacy_accepted_at"),
 }, (t) => [check("student_profiles_university_id_format", sql`${t.universityId} ~ '^[0-9]{9}$'`)]);
+export const studentAdminGrants = pgTable("student_admin_grants", {
+  universityId: text("university_id").primaryKey(),
+  grantedBy: text("granted_by").references(() => user.id, { onDelete: "set null" }),
+  createdAt: time("created_at"),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+}, (t) => [check("student_admin_grants_university_id_format", sql`${t.universityId} ~ '^[0-9]{9}$'`)]);
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(), value: jsonb("value").notNull(),
   updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }), updatedAt: time("updated_at"),

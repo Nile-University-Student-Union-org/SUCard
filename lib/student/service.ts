@@ -7,6 +7,7 @@ import { getSettings } from "@/lib/settings/service";
 import { claimDecision, computeAreas, decideFlow, matchesStudentEmail, parseClaimQr } from "./rules";
 import { UNIVERSITY_ID_REGEX, type Area, type CardSummary, type ClaimErrorCode, type StudentProfile } from "./types";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
+import { hasStudentAdminGrant } from "@/lib/auth/student-admin";
 
 export class StudentError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); }
@@ -72,7 +73,8 @@ export async function getAreas(person: { id: string; role: string; email: string
   const [profile] = await db.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, person.id));
   const [microsoft] = await db.select({ id: account.id }).from(account).where(and(eq(account.userId, person.id), eq(account.providerId, "microsoft")));
   const needsProfile = !profile && !!microsoft && matchesStudentEmail(person.email, (await getSettings()).studentEmailPattern);
-  return computeAreas(!!profile, needsProfile, person.role, !!person.disabledAt);
+  const role = person.role === "student" && !!microsoft && await hasStudentAdminGrant(person.id) ? "admin" : person.role;
+  return computeAreas(!!profile, needsProfile, role, !!person.disabledAt);
 }
 export async function claimCard(userId: string, rawQr: string, actorId?: string, serial?: string | number) {
   const result = await db.transaction(async (tx) => {

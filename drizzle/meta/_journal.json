@@ -85,6 +85,13 @@
       "when": 1791409311446,
       "tag": "0011_exotic_vivisector",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791460000000,
+      "tag": "0012_student_admin_grants",
+      "breakpoints": true
     }
   ]
 }

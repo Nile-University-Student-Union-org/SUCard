@@ -77,6 +77,8 @@ export const AUDIT_ACTIONS = {
   "staff.password_reset": "Password reset",
   "staff.promoted": "Student promoted",
   "staff.role_revoked": "Staff role revoked",
+  "student_admin.granted": "Student admin granted",
+  "student_admin.revoked": "Student admin revoked",
   "vendors.created": "Vendor created", "vendors.updated": "Vendor updated", "vendors.logo_updated": "Vendor logo updated",
   "offers.created": "Offer created", "offers.updated": "Offer updated",
   "vendor_accounts.created": "Vendor account created", "vendor_accounts.updated": "Vendor account updated", "vendor_accounts.password_reset": "Vendor password reset",

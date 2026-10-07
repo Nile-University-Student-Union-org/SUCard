@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CreditCard, ShieldCheck, ChevronRight, Loader2, Sparkles, AlertTriangle } from "lucide-react";
+import { CreditCard, ShieldCheck, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
 import type { Area } from "@/lib/student/types";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AmbientBackdrop } from "@/components/ui/ambient-backdrop";
@@ -110,7 +110,7 @@ export function ChooseTiles({ areas, userName }: ChooseTilesProps) {
       <main className="w-full max-w-md mx-auto my-auto py-8 space-y-6">
         <div className="space-y-2 text-center">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft text-xs font-bold uppercase tracking-wider mb-1">
-            <Sparkles className="size-3.5" />
+            <ShieldCheck className="size-3.5" />
             <span>Welcome, {userName.split(" ")[0]}</span>
           </div>
           <h1 className="font-heading text-4xl sm:text-5xl uppercase tracking-wider text-charcoal dark:text-white leading-tight">

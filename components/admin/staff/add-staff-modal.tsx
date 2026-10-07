@@ -28,6 +28,7 @@ import { generateSecurePassword } from "./utils";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { copyToClipboard } from "@/lib/clipboard";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 
@@ -93,11 +94,11 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
   const handleGeneratePassword = () => {
     const pwd = generateSecurePassword(16);
     setValue("password", pwd, { shouldValidate: true });
-    navigator.clipboard.writeText(pwd).catch(() => {});
+    copyToClipboard(pwd).catch(() => {});
     toast.info("Password generated & copied to clipboard");
   };
 
-  const handleCopyCredentials = () => {
+  const handleCopyCredentials = async () => {
     if (!createdStaffData) return;
     const text = createdStaffData.password
       ? `Staff Member: ${createdStaffData.staff.name}\nEmail: ${createdStaffData.staff.email}\nRole: ${
@@ -107,10 +108,11 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
           createdStaffData.staff.role === "super_admin" ? "Super Admin" : "Admin"
         }`;
 
-    navigator.clipboard.writeText(text).then(() => {
+    const ok = await copyToClipboard(text);
+    if (ok) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2500);
-    });
+    }
   };
 
   const handleModalClose = () => {

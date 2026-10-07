@@ -12,6 +12,7 @@ import { EditStaffModal } from "./edit-staff-modal";
 import { DisableStaffDialog } from "./disable-staff-dialog";
 import { ResetPasswordModal } from "./reset-password-modal";
 import { ResetTwoFactorDialog } from "./reset-2fa-dialog";
+import { StudentAdmins } from "./student-admins";
 
 interface StaffManagerProps {
   currentUser?: StaffUser;
@@ -112,6 +113,7 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
         onResetPassword={(member) => setResettingPasswordStaff(member)}
         onResetTwoFactor={(member) => setResettingTwoFactorStaff(member)}
       />
+      <StudentAdmins />
 
       {/* Add Staff Modal */}
       <AddStaffModal

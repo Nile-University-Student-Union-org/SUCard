@@ -1,4 +1,8 @@
 export type AdminDecision = "allow" | "setup" | "deny";
+export function resolveAdminRole(storedRole: string, loginMethod: string, activeGrant: boolean): "admin" | "super_admin" | null {
+  if (storedRole === "admin" || storedRole === "super_admin") return storedRole;
+  return storedRole === "student" && loginMethod === "microsoft" && activeGrant ? "admin" : null;
+}
 export function adminDecision(role: string, loginMethod: string, twoFactorEnabled: boolean): AdminDecision {
   if (role !== "admin" && role !== "super_admin") return "deny";
   if (loginMethod === "microsoft") return "allow";
