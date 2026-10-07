@@ -19,6 +19,7 @@ export * from "./modal";
 export * from "./overflow-scroller";
 export * from "./page-shell";
 export * from "./password-strength-meter";
+export * from "./pin-input";
 export * from "./section-error-boundary";
 export * from "./segmented-control";
 export * from "./sign-out-transition";

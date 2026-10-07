@@ -1,4 +1,4 @@
-import { boolean, check, customType, date, doublePrecision, integer, index, jsonb, numeric, pgTable, primaryKey, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, customType, date, doublePrecision, integer, index, jsonb, numeric, pgTable, primaryKey, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 const time = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
@@ -8,6 +8,7 @@ export const user = pgTable("user", {
   emailVerified: boolean("email_verified").notNull().default(false), image: text("image"),
   role: text("role", { enum: ["super_admin", "admin", "cashier", "vendor_manager", "student"] }).notNull().default("student"),
   disabledAt: timestamp("disabled_at", { withTimezone: true }),
+  twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
   vendorId: uuid("vendor_id").references(() => vendors.id), branchId: uuid("branch_id").references(() => branches.id),
   createdAt: time("created_at"), updatedAt: time("updated_at"),
 }, (t) => [check("user_admin_vendor_null_check", sql`${t.role} not in ('super_admin', 'admin', 'student') or (${t.vendorId} is null and ${t.branchId} is null)`) ]);
@@ -15,7 +16,21 @@ export const session = pgTable("session", {
   id: text("id").primaryKey(), expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   token: text("token").notNull().unique(), createdAt: time("created_at"), updatedAt: time("updated_at"),
   ipAddress: text("ip_address"), userAgent: text("user_agent"), userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  loginMethod: text("login_method", { enum: ["password", "microsoft"] }).notNull().default("password"),
 }, (t) => [index("session_user_id_idx").on(t.userId)]);
+export const twoFactor = pgTable("two_factor", {
+  id: text("id").primaryKey(), secret: text("secret").notNull(), backupCodes: text("backup_codes").notNull(),
+  userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  verified: boolean("verified").notNull().default(true), failedVerificationCount: integer("failed_verification_count").notNull().default(0),
+  lockedUntil: timestamp("locked_until", { withTimezone: true }),
+}, (t) => [uniqueIndex("two_factor_user_id_idx").on(t.userId)]);
+export const rateLimit = pgTable("rate_limit", {
+  id: text("id").primaryKey(), key: text("key"), count: integer("count"), lastRequest: bigint("last_request", { mode: "number" }),
+}, (t) => [uniqueIndex("rate_limit_key_idx").on(t.key)]);
+export const authFailedAttempts = pgTable("auth_failed_attempts", {
+  emailHash: text("email_hash").primaryKey(), count: integer("count").notNull(),
+  lastFailedAt: timestamp("last_failed_at", { withTimezone: true }).notNull(),
+});
 export const account = pgTable("account", {
   id: text("id").primaryKey(), accountId: text("account_id").notNull(), providerId: text("provider_id").notNull(),
   userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -68,6 +83,7 @@ export const studentProfiles = pgTable("student_profiles", {
   cardFlow: text("card_flow", { enum: ["digital", "physical"] }).notNull(),
   status: text("status", { enum: ["active", "suspended"] }).notNull().default("active"),
   suspendReason: text("suspend_reason"), registeredAt: time("registered_at"),
+  privacyAcceptedAt: time("privacy_accepted_at"),
 }, (t) => [check("student_profiles_university_id_format", sql`${t.universityId} ~ '^[0-9]{9}$'`)]);
 export const settings = pgTable("settings", {
   key: text("key").primaryKey(), value: jsonb("value").notNull(),
@@ -88,6 +104,12 @@ export const auditLog = pgTable("audit_log", {
   action: text("action").notNull(), entity: text("entity").notNull(), entityId: text("entity_id").notNull(),
   data: jsonb("data").notNull(), createdAt: time("created_at"),
 });
+export const emailOutbox = pgTable("email_outbox", {
+  id: uuid("id").primaryKey().defaultRandom(), to: text("to").notNull(), subject: text("subject").notNull(),
+  html: text("html").notNull(), text: text("text").notNull(), kind: text("kind").notNull(),
+  status: text("status", { enum: ["queued", "sent", "failed"] }).notNull().default("queued"),
+  createdAt: time("created_at"), sentAt: timestamp("sent_at", { withTimezone: true }), attempts: integer("attempts").notNull().default(0),
+}, (t) => [index("email_outbox_status_created_idx").on(t.status, t.createdAt)]);
 
 export const vendorLogos = pgTable("vendor_logos", {
   id: uuid("id").primaryKey().defaultRandom(), data: bytea("data").notNull(), mime: text("mime").notNull(), sha256: text("sha256").notNull(), createdAt: time("created_at"),

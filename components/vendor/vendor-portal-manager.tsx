@@ -18,6 +18,8 @@ import {
   Sparkles,
   Info,
   Lock,
+  LogOut,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -101,6 +103,10 @@ export function VendorPortalManager() {
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
   const [resetSuccess, setResetSuccess] = useState(false);
+
+  // Revoke Sessions Modal
+  const [revokeCashier, setRevokeCashier] = useState<{ id: string; name: string; email: string } | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   // Fetch Overview
   const fetchOverview = useCallback(async () => {
@@ -274,19 +280,28 @@ export function VendorPortalManager() {
       return;
     }
 
+    if (cashierPassword && cashierPassword.length < 8) {
+      setAddCashierError("Password must be at least 8 characters");
+      return;
+    }
+
     setIsAddingCashier(true);
     setAddCashierError(null);
 
     try {
+      const payload: Record<string, unknown> = {
+        name: cashierName.trim(),
+        email: cashierEmail.trim().toLowerCase(),
+        branchId: cashierBranchId,
+      };
+      if (cashierPassword && cashierPassword.trim()) {
+        payload.password = cashierPassword.trim();
+      }
+
       const res = await fetch("/api/vendor/cashiers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: cashierName.trim(),
-          email: cashierEmail.trim().toLowerCase(),
-          password: cashierPassword,
-          branchId: cashierBranchId,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const resData = await res.json().catch(() => ({}));
@@ -305,6 +320,27 @@ export function VendorPortalManager() {
       setAddCashierError("Network error. Please try again.");
     } finally {
       setIsAddingCashier(false);
+    }
+  };
+
+  // Revoke Cashier Sessions
+  const handleRevokeCashierSessions = async () => {
+    if (!revokeCashier) return;
+    setIsRevoking(true);
+    try {
+      const res = await fetch(`/api/vendor/cashiers/${revokeCashier.id}/revoke-sessions`, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to sign out devices");
+      }
+      setRevokeCashier(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to sign out devices");
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -846,7 +882,18 @@ export function VendorPortalManager() {
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
+                            <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                              <Button
+                                variant="surface"
+                                size="sm"
+                                onClick={() => setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email })}
+                                className="h-8 px-2.5 text-xs font-semibold normal-case"
+                                title="Sign out all devices for this cashier"
+                              >
+                                <LogOut className="size-3 mr-1" />
+                                Sign Out Devices
+                              </Button>
+
                               <Button
                                 variant="surface"
                                 size="sm"
@@ -921,7 +968,17 @@ export function VendorPortalManager() {
                         Branch: <strong className="text-foreground font-semibold">{cashier.branchName || "All Branches"}</strong>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-1 border-t border-border">
+                      <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border">
+                        <Button
+                          variant="surface"
+                          size="sm"
+                          onClick={() => setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email })}
+                          className="h-9 px-2 text-xs font-semibold normal-case"
+                        >
+                          <LogOut className="size-3 mr-1" />
+                          Sign Out
+                        </Button>
+
                         <Button
                           variant="surface"
                           size="sm"
@@ -931,7 +988,7 @@ export function VendorPortalManager() {
                             setResetError(null);
                             setResetSuccess(false);
                           }}
-                          className="flex-1 h-9 text-xs font-semibold normal-case"
+                          className="h-9 px-2 text-xs font-semibold normal-case"
                         >
                           <Key className="size-3 mr-1" />
                           Password
@@ -942,7 +999,7 @@ export function VendorPortalManager() {
                           size="sm"
                           onClick={() => handleToggleCashierStatus(cashier.id, cashier.status)}
                           className={cn(
-                            "h-9 px-3 text-xs font-semibold normal-case",
+                            "h-9 px-2 text-xs font-semibold normal-case",
                             cashier.status === "active"
                               ? "text-rose-600 hover:bg-rose-500/10"
                               : "text-emerald-600 hover:bg-emerald-500/10"
@@ -1013,13 +1070,15 @@ export function VendorPortalManager() {
               <Input
                 id="newCashierPassword"
                 type="password"
-                label="Login Password"
-                placeholder="••••••••••••"
+                label="Login Password (Optional)"
+                placeholder="Leave empty to email set-password link"
                 value={cashierPassword}
                 onChange={(e) => setCashierPassword(e.target.value)}
-                required
+                helperText="Leave empty to email them a link to set their own password"
               />
-              <PasswordStrengthMeter password={cashierPassword} />
+              {cashierPassword && (
+                <PasswordStrengthMeter password={cashierPassword} />
+              )}
             </div>
           </ModalBody>
           <ModalFooter>
@@ -1035,7 +1094,7 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isAddingCashier || cashierPassword.length < 10}
+              disabled={isAddingCashier || (cashierPassword ? cashierPassword.length < 8 : false)}
               className="normal-case font-bold"
             >
               {isAddingCashier ? "Creating…" : "Create Cashier"}
@@ -1095,13 +1154,63 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isResetting || resetPassword.length < 10}
+              disabled={isResetting || resetPassword.length < 8}
               className="normal-case font-bold"
             >
               {isResetting ? "Updating…" : "Update Password"}
             </Button>
           </ModalFooter>
         </form>
+      </Modal>
+
+      {/* MODAL 3: Revoke Cashier Sessions */}
+      <Modal
+        isOpen={revokeCashier !== null}
+        onClose={() => {
+          if (!isRevoking) setRevokeCashier(null);
+        }}
+        title="Sign Out All Devices"
+        icon={<LogOut className="size-5 text-amber-600 dark:text-amber-400" />}
+        maxWidth="md"
+      >
+        <ModalBody className="space-y-4">
+          <p className="text-sm text-foreground">
+            Sign out all active sessions for <strong className="font-bold">{revokeCashier?.name}</strong> ({revokeCashier?.email})?
+          </p>
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200 text-xs">
+            <p className="font-bold mb-1">Cashier register sessions</p>
+            <p className="text-amber-800 dark:text-amber-300 font-normal leading-relaxed">
+              Cashier register devices stay signed in for 30 days unless revoked. Revoking sessions will immediately sign out all register devices for this cashier.
+            </p>
+          </div>
+        </ModalBody>
+        <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setRevokeCashier(null)}
+            disabled={isRevoking}
+            className="normal-case font-semibold"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleRevokeCashierSessions}
+            disabled={isRevoking}
+            className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            {isRevoking ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                <span>Signing out…</span>
+              </>
+            ) : (
+              <span>Sign out all devices</span>
+            )}
+          </Button>
+        </ModalFooter>
       </Modal>
     </div>
   );

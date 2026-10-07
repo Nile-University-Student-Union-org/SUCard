@@ -21,12 +21,12 @@ export interface ListStaffResponse {
 }
 
 // POST /api/admin/staff  (super_admin only) → 201
-// No email service yet: the super admin sets the initial password and shares it.
+// A one-time set-password link is queued by email. Legacy clients may still send password; it is ignored.
 export interface CreateStaffRequest {
   email: string;
   name: string;
   role: StaffRole;
-  password: string;
+  password?: string;
 }
 export interface CreateStaffResponse {
   staff: StaffMember;

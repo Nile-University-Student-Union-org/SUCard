@@ -59,7 +59,7 @@ export const offerPatch = z.strictObject(offerBody.shape).partial().refine(v => 
 export const accountBody = z.strictObject({
   email: z.email().transform(v => v.toLowerCase()),
   name: short,
-  password: z.string().min(STAFF_PASSWORD_MIN).max(STAFF_PASSWORD_MAX),
+  password: z.string().min(STAFF_PASSWORD_MIN).max(STAFF_PASSWORD_MAX).optional(),
   role: z.enum(["cashier", "vendor_manager"]),
   branchId: z.uuid().nullable().optional()
 });

@@ -8,6 +8,7 @@ import {
   MoreVertical,
   UserCog,
   KeyRound,
+  ShieldAlert,
   UserX,
   UserCheck,
   Calendar,
@@ -47,6 +48,7 @@ interface StaffTableProps {
   onEdit: (member: StaffMember) => void;
   onToggleStatus: (member: StaffMember) => void;
   onResetPassword: (member: StaffMember) => void;
+  onResetTwoFactor: (member: StaffMember) => void;
 }
 
 export function StaffTable({
@@ -58,6 +60,7 @@ export function StaffTable({
   onEdit,
   onToggleStatus,
   onResetPassword,
+  onResetTwoFactor,
 }: StaffTableProps) {
   return (
     <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
@@ -245,6 +248,12 @@ export function StaffTable({
                                   <KeyRound className="size-4 mr-2 text-ash dark:text-zinc-400" />
                                   <span>Reset password</span>
                                 </DropdownItem>
+                                <DropdownItem
+                                  onClick={() => onResetTwoFactor(member)}
+                                >
+                                  <ShieldAlert className="size-4 mr-2 text-ash dark:text-zinc-400" />
+                                  <span>Reset 2FA</span>
+                                </DropdownItem>
                                 <DropdownSeparator />
                                 <DropdownItem
                                   onClick={() => onToggleStatus(member)}
@@ -333,7 +342,7 @@ export function StaffTable({
                     </div>
 
                     {!isSelf && (
-                      <div className="grid grid-cols-3 gap-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
                         <Button
                           variant="outline"
                           size="sm"
@@ -349,6 +358,14 @@ export function StaffTable({
                           className="min-h-[44px] text-xs font-bold normal-case"
                         >
                           Password
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onResetTwoFactor(member)}
+                          className="min-h-[44px] text-xs font-bold normal-case"
+                        >
+                          Reset 2FA
                         </Button>
                         <Button
                           variant={isActive ? "destructive" : "primary"}

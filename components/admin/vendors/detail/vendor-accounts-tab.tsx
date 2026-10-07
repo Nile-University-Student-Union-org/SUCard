@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Users, KeyRound, Edit2, AlertCircle, MapPin } from "lucide-react";
+import { Plus, Users, KeyRound, Edit2, AlertCircle, MapPin, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
-import { listVendorAccounts, updateVendorAccount, listBranches } from "../api";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
+import { listVendorAccounts, updateVendorAccount, listBranches, revokeVendorAccountSessions } from "../api";
 import { VendorAccountModal } from "./vendor-account-modal";
 import { VendorAccountResetModal } from "./vendor-account-reset-modal";
 import { cn } from "cn";
@@ -26,6 +27,8 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<VendorAccountDto | null>(null);
   const [resetAccount, setResetAccount] = useState<VendorAccountDto | null>(null);
+  const [revokeAccount, setRevokeAccount] = useState<VendorAccountDto | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -95,6 +98,22 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
       toast.error(
         err instanceof Error ? err.message : "Failed to update account status"
       );
+    }
+  };
+
+  const handleRevokeSessions = async () => {
+    if (!revokeAccount) return;
+    setIsRevoking(true);
+    try {
+      await revokeVendorAccountSessions(revokeAccount.id);
+      toast.success(`Signed out all devices for ${revokeAccount.name}`);
+      setRevokeAccount(null);
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to sign out devices"
+      );
+    } finally {
+      setIsRevoking(false);
     }
   };
 
@@ -215,7 +234,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border">
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-border flex-wrap">
                   <Button
                     variant="ghost"
                     size="sm"
@@ -228,6 +247,17 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                     )}
                   >
                     {acc.status === "active" ? "Disable" : "Enable"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setRevokeAccount(acc)}
+                    className="normal-case font-bold text-xs h-9 px-3 rounded-xl border-border"
+                    title="Sign out all devices for this account"
+                  >
+                    <LogOut className="size-3.5 mr-1" />
+                    <span>Sign out devices</span>
                   </Button>
 
                   <Button
@@ -275,6 +305,56 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
         isOpen={!!resetAccount}
         onClose={() => setResetAccount(null)}
       />
+
+      {/* Sign Out Devices Confirmation Modal */}
+      <Modal
+        isOpen={!!revokeAccount}
+        onClose={() => {
+          if (!isRevoking) setRevokeAccount(null);
+        }}
+        title="Sign Out All Devices"
+        icon={<LogOut className="size-5 text-amber-600 dark:text-amber-400" />}
+        maxWidth="md"
+      >
+        <ModalBody className="space-y-4">
+          <p className="text-sm text-foreground">
+            Sign out all active sessions for <strong className="font-bold">{revokeAccount?.name}</strong> ({revokeAccount?.email})?
+          </p>
+          <div className="p-3.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200 text-xs">
+            <p className="font-bold mb-1">Cashier register sessions</p>
+            <p className="text-amber-800 dark:text-amber-300 font-normal leading-relaxed">
+              Cashier scanning devices stay signed in for 30 days unless revoked. Revoking sessions will immediately require signing in again on all register devices.
+            </p>
+          </div>
+        </ModalBody>
+        <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setRevokeAccount(null)}
+            disabled={isRevoking}
+            className="normal-case font-semibold"
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            variant="primary"
+            onClick={handleRevokeSessions}
+            disabled={isRevoking}
+            className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white"
+          >
+            {isRevoking ? (
+              <>
+                <Loader2 className="size-4 mr-2 animate-spin" />
+                <span>Signing out…</span>
+              </>
+            ) : (
+              <span>Sign out all devices</span>
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

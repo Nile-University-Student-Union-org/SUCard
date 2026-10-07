@@ -11,6 +11,7 @@ import { AddStaffModal } from "./add-staff-modal";
 import { EditStaffModal } from "./edit-staff-modal";
 import { DisableStaffDialog } from "./disable-staff-dialog";
 import { ResetPasswordModal } from "./reset-password-modal";
+import { ResetTwoFactorDialog } from "./reset-2fa-dialog";
 
 interface StaffManagerProps {
   currentUser?: StaffUser;
@@ -26,6 +27,7 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
   const [editingStaff, setEditingStaff] = useState<StaffMember | null>(null);
   const [statusStaff, setStatusStaff] = useState<StaffMember | null>(null);
   const [resettingPasswordStaff, setResettingPasswordStaff] = useState<StaffMember | null>(null);
+  const [resettingTwoFactorStaff, setResettingTwoFactorStaff] = useState<StaffMember | null>(null);
 
   const fetchStaffList = useCallback(async () => {
     setIsLoading(true);
@@ -108,6 +110,7 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
         onEdit={(member) => setEditingStaff(member)}
         onToggleStatus={(member) => setStatusStaff(member)}
         onResetPassword={(member) => setResettingPasswordStaff(member)}
+        onResetTwoFactor={(member) => setResettingTwoFactorStaff(member)}
       />
 
       {/* Add Staff Modal */}
@@ -138,6 +141,13 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
         staff={resettingPasswordStaff}
         isOpen={!!resettingPasswordStaff}
         onClose={() => setResettingPasswordStaff(null)}
+      />
+
+      {/* Reset 2FA Dialog */}
+      <ResetTwoFactorDialog
+        staff={resettingTwoFactorStaff}
+        isOpen={!!resettingTwoFactorStaff}
+        onClose={() => setResettingTwoFactorStaff(null)}
       />
     </div>
   );

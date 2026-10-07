@@ -2,7 +2,7 @@
 
 import React, { forwardRef, useEffect, useRef } from "react";
 import { Check, Minus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "cn";
 
 export interface CheckboxProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, "size" | "onChange"> {

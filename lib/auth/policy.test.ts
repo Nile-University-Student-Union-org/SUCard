@@ -1,0 +1,19 @@
+import { describe, expect, it } from "vitest";
+import { adminDecision, sessionExpiry } from "./policy";
+
+describe("admin 2FA policy", () => {
+  it("requires password admins to enroll and lets enrolled admins through", () => {
+    for (const role of ["admin", "super_admin"]) {
+      expect(adminDecision(role, "password", false)).toBe("setup");
+      expect(adminDecision(role, "password", true)).toBe("allow");
+      expect(adminDecision(role, "microsoft", false)).toBe("allow");
+    }
+    expect(adminDecision("cashier", "password", true)).toBe("deny");
+    expect(adminDecision("student", "microsoft", false)).toBe("deny");
+  });
+  it("extends only cashier sessions", () => {
+    const now = new Date("2026-10-07T00:00:00Z"), original = new Date("2026-10-14T00:00:00Z");
+    expect(sessionExpiry("cashier", original, now).toISOString()).toBe("2026-11-06T00:00:00.000Z");
+    expect(sessionExpiry("admin", original, now)).toBe(original);
+  });
+});

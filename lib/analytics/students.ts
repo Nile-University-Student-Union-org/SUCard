@@ -2,9 +2,12 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { auditLog, cards, scanEvents, studentProfiles, user } from "@/lib/db/schema";
+import { auditLog, cards, emailOutbox, scanEvents, studentProfiles, user } from "@/lib/db/schema";
+import { getSettings } from "@/lib/settings/service";
+import { emailTemplate } from "@/lib/email/templates";
 import { StudentError } from "@/lib/student/service";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
+import { deleteStudentOutbox } from "./delete-student-outbox";
 
 export async function correctStudent(id:string, patch:{name?:string;universityId?:string},actorId:string){
   await db.transaction(async tx=>{
@@ -19,12 +22,17 @@ export async function correctStudent(id:string, patch:{name?:string;universityId
 }
 export async function setStudentSuspension(ids:string[], action:"suspend"|"reactivate", reason:string|null, actorId:string){
   const changed=await db.transaction(async tx=>{
+    const emailOnSuspend = action === "suspend" && (await getSettings(tx as unknown as typeof db)).emailOnSuspend;
     const records=await tx.select({id:studentProfiles.userId,status:studentProfiles.status,suspendReason:studentProfiles.suspendReason}).from(studentProfiles).where(inArray(studentProfiles.userId,ids)).for("update");
     if(records.length!==ids.length) throw new StudentError(404,"Student not found");
     const next=action==="suspend"?"suspended":"active";
     for(const p of records){
       await tx.update(studentProfiles).set({status:next,suspendReason:action==="suspend"?reason:null}).where(eq(studentProfiles.userId,p.id));
       await tx.insert(auditLog).values({actorId,action:`students.${action}ed`,entity:"student",entityId:p.id,data:{before:{status:p.status,reason:p.suspendReason},after:{status:next,reason:action==="suspend"?reason:null}}});
+      if (emailOnSuspend && p.status !== "suspended") {
+        const [person] = await tx.select({ email: user.email, name: user.name }).from(user).where(eq(user.id, p.id));
+        if (person) await tx.insert(emailOutbox).values({ to: person.email, kind: "card_suspended", ...emailTemplate("card_suspended", person.name) });
+      }
     }
     return records.map(r=>r.id);
   });
@@ -40,6 +48,7 @@ export async function deleteStudent(id:string,confirmEmail:string,actorId:string
     const hash=createHash("sha256").update(person.email).digest("hex");
     await tx.update(cards).set({status:"void",voidReason:"student_deleted",voidedAt:new Date(),voidedBy:actorId,studentId:null}).where(eq(cards.studentId,id));
     await tx.update(scanEvents).set({studentId:null,studentDeleted:true}).where(eq(scanEvents.studentId,id));
+    await deleteStudentOutbox(tx, person.email);
     await tx.execute(sql`update audit_log set entity_id=${hash}, data='{"redacted":true}'::jsonb
       where entity_id=${id} or data::text like ${`%${id}%`} or data::text like ${`%${person.email}%`}`);
     await tx.delete(user).where(eq(user.id,id));

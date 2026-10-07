@@ -10,6 +10,8 @@ All sign in at http://localhost:3000/login with "Sign in with email".
 |---|---|---|
 | Super admin | `admin@sucard.local` | `adminpass123` |
 
+The seeded super admin must enroll an authenticator app at `/admin-2fa/setup` on first sign-in.
+
 ## Test students — `pnpm db:seed:students` (refuses to run in production)
 
 Password for all: `studentpass123`

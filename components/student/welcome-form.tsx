@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Link from "next/link";
 import { User, Mail, CreditCard, Sparkles, AlertCircle } from "lucide-react";
 import { UNIVERSITY_ID_REGEX } from "@/lib/student/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 
 const welcomeSchema = z.object({
@@ -18,6 +20,7 @@ const welcomeSchema = z.object({
     .string()
     .trim()
     .regex(UNIVERSITY_ID_REGEX, "University ID must be exactly 9 digits (e.g. 231001000)"),
+  acceptPrivacy: z.literal(true, { error: "Please accept the SU Card privacy notice" }),
 });
 
 type WelcomeFormValues = z.infer<typeof welcomeSchema>;
@@ -40,6 +43,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
     resolver: zodResolver(welcomeSchema),
     defaultValues: {
       universityId: "",
+      acceptPrivacy: undefined,
     },
   });
 
@@ -54,7 +58,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ universityId: values.universityId.trim() }),
+        body: JSON.stringify({ universityId: values.universityId.trim(), acceptPrivacy: values.acceptPrivacy }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -139,7 +143,29 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
               />
             </div>
 
-            {/* Permanent Identity Warning Notice */}
+            {/* Privacy Acceptance Checkbox */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700">
+              <Checkbox
+                id="acceptPrivacy"
+                disabled={isLoading}
+                {...register("acceptPrivacy")}
+                label={
+                  <span className="text-xs sm:text-sm font-medium text-foreground">
+                    I agree to the{" "}
+                    <Link
+                      href="/privacy"
+                      target="_blank"
+                      className="text-brand dark:text-brand-soft underline font-bold hover:text-brand-dark transition-colors"
+                    >
+                      SU Card privacy notice
+                    </Link>
+                    .
+                  </span>
+                }
+                error={errors.acceptPrivacy?.message}
+              />
+            </div>
+
             <Alert
               variant="info"
               size="sm"

@@ -11,6 +11,10 @@ import {
   KeyRound,
   CheckCircle2,
   AlertCircle,
+  Smartphone,
+  Copy,
+  Check,
+  Download,
 } from "lucide-react";
 import { type StaffUser } from "@/lib/auth/guards";
 import { STAFF_PASSWORD_MIN, STAFF_PASSWORD_MAX } from "@/lib/staff/types";
@@ -19,6 +23,8 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 
@@ -43,9 +49,22 @@ interface AccountManagerProps {
 }
 
 export function AccountManager({ user }: AccountManagerProps) {
+  const { data: session } = authClient.useSession();
+  const sessionData = session?.session as { loginMethod?: string } | undefined;
+  const isMicrosoftLogin = sessionData?.loginMethod === "microsoft";
+
+  // Change Password State
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  // Regenerate Backup Codes Modal State
+  const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
+  const [regenPassword, setRegenPassword] = useState("");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [regenError, setRegenError] = useState<string | null>(null);
+  const [generatedCodes, setGeneratedCodes] = useState<string[] | null>(null);
+  const [areCodesCopied, setAreCodesCopied] = useState(false);
 
   const {
     register,
@@ -65,7 +84,7 @@ export function AccountManager({ user }: AccountManagerProps) {
   const newPassword = useWatch({ control, name: "newPassword" }) || "";
   const confirmPassword = useWatch({ control, name: "confirmPassword" }) || "";
 
-  const onSubmit = async (values: ChangePasswordFormValues) => {
+  const onSubmitPassword = async (values: ChangePasswordFormValues) => {
     setIsSubmitting(true);
     setSubmitError(null);
     setIsSuccess(false);
@@ -100,6 +119,78 @@ export function AccountManager({ user }: AccountManagerProps) {
     }
   };
 
+  const handleRegenerateCodesSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regenPassword) {
+      setRegenError("Please enter your current password");
+      return;
+    }
+
+    setIsRegenerating(true);
+    setRegenError(null);
+
+    try {
+      const res = await authClient.twoFactor.generateBackupCodes({
+        password: regenPassword,
+      });
+
+      if (res.error) {
+        setRegenError(res.error.message || "Incorrect password. Please verify and try again.");
+        setIsRegenerating(false);
+        return;
+      }
+
+      const codes = res.data?.backupCodes || [];
+      setGeneratedCodes(codes);
+      setRegenPassword("");
+      toast.success("New backup codes generated");
+    } catch (err) {
+      setRegenError(err instanceof Error ? err.message : "Failed to regenerate backup codes.");
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const handleCopyBackupCodes = () => {
+    if (!generatedCodes || generatedCodes.length === 0) return;
+    const content = `SU Card Admin — Two-Factor Backup Codes\nAccount: ${user.email}\nGenerated: ${new Date().toISOString()}\n\n` +
+      generatedCodes.map((code, i) => `${i + 1}. ${code}`).join("\n") +
+      `\n\nEach code can only be used once. Store these codes in a secure location.`;
+
+    navigator.clipboard.writeText(content).then(() => {
+      setAreCodesCopied(true);
+      toast.success("Backup codes copied to clipboard");
+      setTimeout(() => setAreCodesCopied(false), 2500);
+    });
+  };
+
+  const handleDownloadBackupCodes = () => {
+    if (!generatedCodes || generatedCodes.length === 0) return;
+    const content = `SU Card Admin — Two-Factor Backup Codes\nAccount: ${user.email}\nGenerated: ${new Date().toISOString()}\n\n` +
+      generatedCodes.map((code, i) => `${i + 1}. ${code}`).join("\n") +
+      `\n\nEach code can only be used once. Store these codes in a secure location.`;
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `su-card-backup-codes-${user.email.split("@")[0]}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success("Backup codes downloaded");
+  };
+
+  const handleCloseRegenerateModal = () => {
+    if (isRegenerating) return;
+    setIsRegenerateOpen(false);
+    setRegenPassword("");
+    setRegenError(null);
+    setGeneratedCodes(null);
+    setAreCodesCopied(false);
+  };
+
   const isSuperAdmin = user.role === "super_admin";
 
   return (
@@ -115,7 +206,7 @@ export function AccountManager({ user }: AccountManagerProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-        {/* Profile Card */}
+        {/* Profile Card & 2FA Info (Left Col) */}
         <div className="md:col-span-5 space-y-6">
           <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
             <CardHeader className="text-center items-center pb-2">
@@ -169,9 +260,64 @@ export function AccountManager({ user }: AccountManagerProps) {
               </div>
             </CardContent>
           </Card>
+
+          {/* Two-Step Verification Card */}
+          <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="size-8 rounded-xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center shrink-0">
+                    <Smartphone className="size-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base font-bold text-foreground">
+                      Two-Step Verification
+                    </CardTitle>
+                  </div>
+                </div>
+
+                <Badge
+                  variant={isMicrosoftLogin ? "brand" : "success"}
+                  className="text-[10px] font-bold uppercase tracking-wider"
+                >
+                  {isMicrosoftLogin ? "via Microsoft" : "On"}
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-3 pt-0 text-xs text-ash dark:text-zinc-400">
+              {isMicrosoftLogin ? (
+                <div className="p-3 rounded-xl bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-900/60 text-sky-950 dark:text-sky-200 space-y-1">
+                  <p className="font-bold text-xs">Protected by Nile University Microsoft MFA</p>
+                  <p className="text-[11px] text-sky-800 dark:text-sky-300 leading-relaxed font-normal">
+                    Your login is authenticated via Microsoft Single Sign-On. Two-factor security is managed by Nile University&apos;s Microsoft 365 policies.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <p className="leading-relaxed">
+                    Authenticator app (TOTP) verification is required on sign in to keep your administrator access secure.
+                  </p>
+
+                  <div className="pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setIsRegenerateOpen(true)}
+                      className="w-full normal-case text-xs font-bold h-10 border-slate-200 dark:border-zinc-700"
+                    >
+                      <KeyRound className="size-3.5 mr-1.5" />
+                      <span>Regenerate backup codes</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Change Password Card */}
+        {/* Change Password Card (Right Col) */}
         <div className="md:col-span-7">
           <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
             <CardHeader className="pb-4">
@@ -205,7 +351,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 </div>
               )}
 
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <form onSubmit={handleSubmit(onSubmitPassword)} className="space-y-4" noValidate>
                 {/* Current Password */}
                 <Input
                   id="current-password"
@@ -270,6 +416,141 @@ export function AccountManager({ user }: AccountManagerProps) {
           </Card>
         </div>
       </div>
+
+      {/* Regenerate Backup Codes Modal */}
+      <Modal
+        isOpen={isRegenerateOpen}
+        onClose={handleCloseRegenerateModal}
+        title={generatedCodes ? "New Backup Codes" : "Regenerate Backup Codes"}
+        icon={<KeyRound className="size-5 text-brand dark:text-brand-soft" />}
+        maxWidth="md"
+      >
+        {generatedCodes ? (
+          /* Show New Codes View */
+          <>
+            <ModalBody className="space-y-4">
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-200 dark:border-amber-800 text-amber-950 dark:text-amber-200 space-y-1">
+                <p className="font-bold text-xs">Important: Save these new codes now</p>
+                <p className="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed">
+                  All previously generated backup codes have been invalidated. These new codes will not be displayed again.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+                    Backup Codes ({generatedCodes.length})
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyBackupCodes}
+                      className="normal-case text-xs font-bold h-8 px-2.5"
+                    >
+                      {areCodesCopied ? (
+                        <>
+                          <Check className="size-3.5 mr-1 text-emerald-600" />
+                          <span>Copied!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="size-3.5 mr-1" />
+                          <span>Copy</span>
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownloadBackupCodes}
+                      className="normal-case text-xs font-bold h-8 px-2.5"
+                    >
+                      <Download className="size-3.5 mr-1" />
+                      <span>.txt</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {generatedCodes.map((code, idx) => (
+                    <div
+                      key={idx}
+                      className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 font-mono text-xs font-bold text-center text-charcoal dark:text-zinc-200 select-all"
+                    >
+                      {code}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </ModalBody>
+
+            <ModalFooter>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handleCloseRegenerateModal}
+                className="normal-case font-bold text-xs w-full sm:w-auto px-6"
+              >
+                Done
+              </Button>
+            </ModalFooter>
+          </>
+        ) : (
+          /* Password Prompt View */
+          <form onSubmit={handleRegenerateCodesSubmit}>
+            <ModalBody className="space-y-4">
+              <p className="text-xs text-ash dark:text-zinc-400 leading-relaxed font-medium">
+                Regenerating backup codes will invalidate all existing backup codes. Please enter your administrator password to confirm.
+              </p>
+
+              {regenError && (
+                <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-start gap-2">
+                  <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+                  <span>{regenError}</span>
+                </div>
+              )}
+
+              <Input
+                id="regen-password"
+                type="password"
+                label="Current Password"
+                placeholder="••••••••••••"
+                disabled={isRegenerating}
+                showPasswordToggle
+                value={regenPassword}
+                onChange={(e) => {
+                  setRegenPassword(e.target.value);
+                  if (regenError) setRegenError(null);
+                }}
+                autoFocus
+              />
+            </ModalBody>
+
+            <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={handleCloseRegenerateModal}
+                disabled={isRegenerating}
+                className="normal-case font-semibold"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={isRegenerating || !regenPassword}
+                className="normal-case font-bold"
+              >
+                {isRegenerating ? "Generating…" : "Generate new codes"}
+              </Button>
+            </ModalFooter>
+          </form>
+        )}
+      </Modal>
     </div>
   );
 }

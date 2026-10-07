@@ -95,7 +95,7 @@ function VendorAccountForm({
       return;
     }
 
-    if (!editingAccount) {
+    if (!editingAccount && password) {
       if (password.length < 8) {
         setError("Password must be at least 8 characters");
         return;
@@ -123,7 +123,7 @@ function VendorAccountForm({
           role,
           name: name.trim(),
           email: email.trim().toLowerCase(),
-          password,
+          password: password || undefined as unknown as string,
           branchId: role === "cashier" ? branchId : null,
         };
         const res = await createVendorAccount(vendorId, payload);
@@ -256,38 +256,41 @@ function VendorAccountForm({
             <div className="pt-2 border-t border-border space-y-3">
               <div className="space-y-1.5">
                 <Label htmlFor="account-pwd" className="text-xs font-bold uppercase tracking-wider">
-                  Password <span className="text-rose-500">*</span>
+                  Initial Password <span className="text-muted-foreground font-normal lowercase">(optional)</span>
                 </Label>
                 <Input
                   id="account-pwd"
                   type="password"
-                  required
-                  placeholder="At least 8 characters"
+                  placeholder="Leave empty to email set-password link"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="h-11 rounded-xl"
+                  helperText="Leave empty to email them a link to set their own password"
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="account-pwd-confirm" className="text-xs font-bold uppercase tracking-wider">
-                  Confirm Password <span className="text-rose-500">*</span>
-                </Label>
-                <Input
-                  id="account-pwd-confirm"
-                  type="password"
-                  required
-                  placeholder="Re-type password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
-              </div>
+              {password && (
+                <>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="account-pwd-confirm" className="text-xs font-bold uppercase tracking-wider">
+                      Confirm Password <span className="text-rose-500">*</span>
+                    </Label>
+                    <Input
+                      id="account-pwd-confirm"
+                      type="password"
+                      placeholder="Re-type password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-11 rounded-xl"
+                    />
+                  </div>
 
-              <PasswordStrengthMeter
-                password={password}
-                confirmPassword={confirmPassword}
-              />
+                  <PasswordStrengthMeter
+                    password={password}
+                    confirmPassword={confirmPassword}
+                  />
+                </>
+              )}
             </div>
           )}
         </ModalBody>
