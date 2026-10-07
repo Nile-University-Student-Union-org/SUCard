@@ -251,7 +251,7 @@
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading), "Anton", sans-serif;
-    letter-spacing: -0.01em;
+    letter-spacing: 0.06em;
   }
 }
 
@@ -434,6 +434,7 @@
 }
 /* Anton has a single weight: never fake-bold it, and give it brand letter spacing.
    Unlayered on purpose so it wins over font-bold / tracking-* utilities. */
+h1, h2, h3, h4, h5, h6,
 .font-heading {
   font-weight: 400;
   font-synthesis-weight: none;
