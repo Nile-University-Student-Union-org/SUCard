@@ -42,6 +42,7 @@ const CAP_Y = BARREL_Y + BARREL_H / 2 + CAP_H / 2 - 0.01;
 const HANG_Y = CAP_Y + CAP_H / 2 - 0.03; // where the strap attaches, in card space
 
 export const CAMERA_FOV = 25;
+
 const SEGMENT = 0.95;
 const ANCHOR_Y = 4.5;
 
@@ -116,6 +117,7 @@ function Band({ onGrab }: { onGrab?: () => void }) {
   const j2 = useRef<RapierRigidBody>(null!);
   const j3 = useRef<RapierRigidBody>(null!);
   const card = useRef<RapierRigidBody>(null!);
+  const cardMesh = useRef<THREE.Group>(null);
   const lerp1 = useRef<Lerped["current"]>(null);
   const lerp2 = useRef<Lerped["current"]>(null);
 
@@ -178,12 +180,17 @@ function Band({ onGrab }: { onGrab?: () => void }) {
   }, [band, size]);
 
   const curve = useMemo(() => {
-    const c = new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]);
+    const c = new THREE.CatmullRomCurve3(Array.from({ length: 5 }, () => new THREE.Vector3()));
     c.curveType = "chordal";
     return c;
   }, []);
   const tmp = useMemo(
-    () => ({ vec: new THREE.Vector3(), dir: new THREE.Vector3(), ang: new THREE.Vector3(), rot: new THREE.Vector3() }),
+    () => ({
+      vec: new THREE.Vector3(),
+      dir: new THREE.Vector3(),
+      ang: new THREE.Vector3(),
+      rot: new THREE.Vector3(),
+    }),
     [],
   );
 
@@ -258,11 +265,17 @@ function Band({ onGrab }: { onGrab?: () => void }) {
       ref.current.lerp(p as THREE.Vector3, Math.min(1, dt * (10 + dist * 40)));
       return ref.current;
     };
-    curve.points[0].copy(j3.current.translation() as THREE.Vector3);
-    curve.points[1].copy(smooth(lerp2, j2.current));
-    curve.points[2].copy(smooth(lerp1, j1.current));
-    curve.points[3].copy(fixed.current.translation() as THREE.Vector3);
-    (band.geometry as MeshLineGeometry).setPoints(curve.getPoints(40));
+    // The strap leaves the top of the cap straight along the card's up axis, using the card exactly
+    // as it is drawn this frame (interpolated) rather than the raw physics pose.
+    const drawn = cardMesh.current;
+    if (!drawn) return;
+    drawn.updateWorldMatrix(true, false);
+    drawn.localToWorld(curve.points[0].set(0, CAP_Y + CAP_H / 2 - 0.004, 0));
+    drawn.localToWorld(curve.points[1].set(0, CAP_Y + CAP_H / 2 + 0.16, 0));
+    curve.points[2].copy(smooth(lerp2, j2.current));
+    curve.points[3].copy(smooth(lerp1, j1.current));
+    curve.points[4].copy(fixed.current.translation() as THREE.Vector3);
+    (band.geometry as MeshLineGeometry).setPoints(curve.getPoints(64));
 
     // Gently turn the card back to face the viewer.
     ang.copy(card.current.angvel() as THREE.Vector3);
@@ -301,6 +314,7 @@ function Band({ onGrab }: { onGrab?: () => void }) {
         >
           <CuboidCollider args={[CARD_W / 2, CARD_H / 2, 0.02]} />
           <group
+            ref={cardMesh}
             onPointerOver={() => setHovered(true)}
             onPointerOut={() => setHovered(false)}
             onPointerUp={(e) => {
@@ -333,9 +347,9 @@ function Band({ onGrab }: { onGrab?: () => void }) {
               <cylinderGeometry args={[0.05, 0.05, 0.024, 32]} />
             </mesh>
             {/* End cap crimped onto the strap */}
-            <RoundedBox args={[STRAP_W + 0.04, CAP_H, 0.075]} radius={0.03} smoothness={5} position={[0, CAP_Y, 0]} material={materials.cap} />
+            <RoundedBox args={[STRAP_W + 0.1, CAP_H, 0.08]} radius={0.03} smoothness={5} position={[0, CAP_Y, 0]} material={materials.cap} />
             <mesh material={materials.capLine} position={[0, CAP_Y - CAP_H * 0.28, 0]}>
-              <boxGeometry args={[STRAP_W + 0.042, 0.012, 0.077]} />
+              <boxGeometry args={[STRAP_W + 0.118, 0.016, 0.098]} />
             </mesh>
           </group>
         </RigidBody>
@@ -364,7 +378,7 @@ export function LanyardScene({ onCardGrab }: { onCardGrab?: () => void }) {
       <CameraRig />
       <ambientLight intensity={Math.PI * 0.55} />
       <directionalLight position={[3, 5, 6]} intensity={1.2} />
-      <Physics gravity={[0, -40, 0]} timeStep={1 / 60} interpolate>
+      <Physics gravity={[0, -40, 0]} timeStep={1 / 60} interpolate updatePriority={-50}>
         <Band onGrab={onCardGrab} />
       </Physics>
       <Environment resolution={512} frames={1}>

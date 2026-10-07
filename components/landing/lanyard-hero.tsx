@@ -7,6 +7,11 @@ import { Hand, Sparkles } from "lucide-react";
 import { CAMERA_FOV, LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
 
+/** Fades the 3D area into the page: strap comes in from the top, card swings out at the sides and bottom. */
+const CANVAS_FADE =
+  "linear-gradient(to bottom, transparent 0, #000 72px, #000 calc(100% - 96px), transparent 100%), " +
+  "linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%)";
+
 function checkWebGLSupport(): boolean {
   if (typeof window === "undefined") return false;
   try {
@@ -103,8 +108,10 @@ export function LanyardHero() {
             className="w-full h-full"
             style={{
               pointerEvents: "auto",
-              maskImage: "linear-gradient(to bottom, transparent 0, #000 72px)",
-              WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 72px)",
+              maskImage: CANVAS_FADE,
+              WebkitMaskImage: CANVAS_FADE,
+              maskComposite: "intersect",
+              WebkitMaskComposite: "source-in",
             }}
           >
             <LanyardScene onCardGrab={() => setHasInteracted(true)} />
