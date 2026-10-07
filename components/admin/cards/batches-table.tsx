@@ -1,8 +1,23 @@
-import React, { useState } from "react";
-import { Download, Inbox, RotateCcw, AlertTriangle, Calendar, User, Ban, Loader2 } from "lucide-react";
+"use client";
+
+import React, { useState, useEffect } from "react";
+import {
+  Download,
+  Inbox,
+  RotateCcw,
+  AlertTriangle,
+  Calendar,
+  Ban,
+  Loader2,
+  Palette,
+  Truck,
+  ArrowRight,
+} from "lucide-react";
 import type { Batch } from "@/lib/cards/types";
+import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { formatNumber, formatBatchNumber, formatCairoDate } from "./utils";
-import { voidBatch } from "./api";
+import { voidBatch, updateBatch } from "./api";
+import { listStyles } from "@/components/admin/qr-studio/api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +34,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { toast } from "sonner";
 import { cn } from "cn";
 
 interface BatchesTableProps {
@@ -30,6 +46,34 @@ interface BatchesTableProps {
   onDownloadClick: (batch: Batch) => void;
 }
 
+const PRINT_STATUS_MAP: Record<
+  Batch["printStatus"],
+  { label: string; className: string; next?: Batch["printStatus"]; nextLabel?: string }
+> = {
+  draft: {
+    label: "Draft",
+    className: "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border-slate-200 dark:border-zinc-700",
+    next: "sent_to_printer",
+    nextLabel: "Mark Sent to Printer",
+  },
+  sent_to_printer: {
+    label: "Sent to Printer",
+    className: "bg-sky-500/15 text-sky-700 dark:text-sky-300 border-sky-500/30 font-bold",
+    next: "received",
+    nextLabel: "Mark Cards Received",
+  },
+  received: {
+    label: "Received",
+    className: "bg-purple-500/15 text-purple-700 dark:text-purple-300 border-purple-500/30 font-bold",
+    next: "distributing",
+    nextLabel: "Start Distributing",
+  },
+  distributing: {
+    label: "Distributing",
+    className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30 font-bold",
+  },
+};
+
 export function BatchesTable({
   batches,
   isLoading,
@@ -38,10 +82,34 @@ export function BatchesTable({
   onRetry,
   onDownloadClick,
 }: BatchesTableProps) {
+  // Void modal state
   const [voidingBatch, setVoidingBatch] = useState<Batch | null>(null);
   const [voidReason, setVoidReason] = useState("");
   const [isVoiding, setIsVoiding] = useState(false);
   const [voidError, setVoidError] = useState<string | null>(null);
+
+  // Print Status modal state
+  const [statusBatch, setStatusBatch] = useState<Batch | null>(null);
+  const [statusNote, setStatusNote] = useState("");
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+
+  // Restyle modal state
+  const [restyleBatch, setRestyleBatch] = useState<Batch | null>(null);
+  const [restyleVersionId, setRestyleVersionId] = useState<string>("");
+  const [publishedStyles, setPublishedStyles] = useState<QrStyleDto[]>([]);
+  const [isRestyling, setIsRestyling] = useState(false);
+
+  useEffect(() => {
+    listStyles()
+      .then((res) => {
+        setPublishedStyles(
+          (res.styles || []).filter(
+            (s) => s.status === "published" && s.latestVersion !== null
+          )
+        );
+      })
+      .catch((err) => console.warn("Failed to load styles for restyle:", err));
+  }, []);
 
   const handleVoidUnassigned = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +134,53 @@ export function BatchesTable({
       setIsVoiding(false);
     }
   };
+
+  const handleAdvanceStatus = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!statusBatch) return;
+    const next = PRINT_STATUS_MAP[statusBatch.printStatus]?.next;
+    if (!next) return;
+
+    setIsUpdatingStatus(true);
+    try {
+      await updateBatch(statusBatch.id, {
+        printStatus: next,
+        printStatusNote: statusNote.trim() || undefined,
+      });
+      toast.success(
+        `Updated ${formatBatchNumber(statusBatch.number)} print status to ${PRINT_STATUS_MAP[next].label}`
+      );
+      setStatusBatch(null);
+      setStatusNote("");
+      onRetry();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update status";
+      toast.error(msg);
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
+  const handleRestyle = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!restyleBatch || !restyleVersionId) return;
+
+    setIsRestyling(true);
+    try {
+      await updateBatch(restyleBatch.id, {
+        qrStyleVersionId: restyleVersionId,
+      });
+      toast.success(`Updated QR style for ${formatBatchNumber(restyleBatch.number)}`);
+      setRestyleBatch(null);
+      onRetry();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to restyle batch";
+      toast.error(msg);
+    } finally {
+      setIsRestyling(false);
+    }
+  };
+
   return (
     <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
       <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-zinc-800">
@@ -74,7 +189,7 @@ export function BatchesTable({
             CARD BATCHES
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
-            Historical list of generated physical batches, serial number allocations, and QR export archives.
+            Historical list of generated physical batches, QR style assignments, and print pipeline tracking.
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
@@ -139,20 +254,23 @@ export function BatchesTable({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-28">Batch</TableHead>
-                    <TableHead className="min-w-44">Label</TableHead>
-                    <TableHead className="min-w-48">Serials</TableHead>
-                    <TableHead className="w-24 text-right">Cards</TableHead>
-                    <TableHead className="min-w-56">Status</TableHead>
-                    <TableHead className="min-w-44">Created</TableHead>
-                    <TableHead className="min-w-36">Created By</TableHead>
-                    <TableHead className="w-32 text-right pr-4">Actions</TableHead>
+                    <TableHead className="w-24">Batch</TableHead>
+                    <TableHead className="min-w-40">Label</TableHead>
+                    <TableHead className="min-w-36">QR Style</TableHead>
+                    <TableHead className="min-w-36">Print Status</TableHead>
+                    <TableHead className="min-w-44">Serials</TableHead>
+                    <TableHead className="w-20 text-right">Cards</TableHead>
+                    <TableHead className="min-w-48">Status</TableHead>
+                    <TableHead className="min-w-32">Created</TableHead>
+                    <TableHead className="w-48 text-right pr-4">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {batches.map((batch) => {
                     const isHighlighted = highlightedBatchId === batch.id;
                     const stats = batch.stats || { unassigned: batch.count, active: 0, void: 0 };
+                    const isDraft = batch.printStatus === "draft";
+                    const statusInfo = PRINT_STATUS_MAP[batch.printStatus] || PRINT_STATUS_MAP.draft;
 
                     return (
                       <TableRow
@@ -170,17 +288,48 @@ export function BatchesTable({
                         </TableCell>
 
                         {/* Batch Label */}
-                        <TableCell className="text-xs font-medium max-w-xs truncate py-3.5" title={batch.label}>
+                        <TableCell className="text-xs font-medium max-w-[180px] truncate py-3.5" title={batch.label}>
                           {batch.label}
+                        </TableCell>
+
+                        {/* QR Style Version */}
+                        <TableCell className="py-3.5">
+                          <div className="flex items-center gap-1.5">
+                            <Palette className="size-3 text-brand shrink-0" />
+                            <span className="font-bold text-xs text-foreground truncate max-w-[140px]" title={batch.styleVersion ? `${batch.styleVersion.styleName} v${batch.styleVersion.version}` : "Default Print Style"}>
+                              {batch.styleVersion
+                                ? `${batch.styleVersion.styleName} v${batch.styleVersion.version}`
+                                : "Default Print"}
+                            </span>
+                          </div>
+                        </TableCell>
+
+                        {/* Print Status */}
+                        <TableCell className="py-3.5">
+                          <div className="flex flex-col gap-0.5">
+                            <span
+                              className={cn(
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono border w-fit",
+                                statusInfo.className
+                              )}
+                            >
+                              {statusInfo.label}
+                            </span>
+                            {batch.printStatusNote && (
+                              <span className="text-[10px] text-muted-foreground truncate max-w-[130px]" title={batch.printStatusNote}>
+                                {batch.printStatusNote}
+                              </span>
+                            )}
+                          </div>
                         </TableCell>
 
                         {/* Serials Range */}
                         <TableCell className="text-xs font-mono py-3.5 whitespace-nowrap">
-                          <span className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-charcoal dark:text-zinc-200">
+                          <span className="bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded-md text-[10px] font-bold text-charcoal dark:text-zinc-200">
                             {batch.firstSerial}
                           </span>
                           <span className="mx-1 text-ash dark:text-zinc-500">&rarr;</span>
-                          <span className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md text-[11px] font-bold text-charcoal dark:text-zinc-200">
+                          <span className="bg-slate-100 dark:bg-zinc-800 px-1 py-0.5 rounded-md text-[10px] font-bold text-charcoal dark:text-zinc-200">
                             {batch.lastSerial}
                           </span>
                         </TableCell>
@@ -192,44 +341,89 @@ export function BatchesTable({
 
                         {/* Status Badges */}
                         <TableCell className="py-3.5">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+                          <div className="flex flex-wrap items-center gap-1">
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
                               {formatNumber(stats.unassigned)} unassigned
                             </span>
                             {stats.active > 0 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
                                 {formatNumber(stats.active)} active
                               </span>
                             )}
                             {stats.void > 0 && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
                                 {formatNumber(stats.void)} void
                               </span>
                             )}
                           </div>
                         </TableCell>
 
-                        {/* Created Date (Africa/Cairo) */}
+                        {/* Created Date */}
                         <TableCell className="text-xs text-ash dark:text-zinc-400 py-3.5 whitespace-nowrap">
-                          <div className="flex items-center gap-1 text-[11px]">
-                            <Calendar className="size-3 text-ash dark:text-zinc-400" />
+                          <div className="flex items-center gap-1 text-[10px]">
+                            <Calendar className="size-3 text-ash" />
                             <span>{formatCairoDate(batch.createdAt)}</span>
-                          </div>
-                        </TableCell>
-
-                        {/* Created By */}
-                        <TableCell className="text-xs text-ash dark:text-zinc-400 py-3.5 whitespace-nowrap">
-                          <div className="flex items-center gap-1 text-[11px]">
-                            <User className="size-3 text-ash dark:text-zinc-400" />
-                            <span className="truncate max-w-[120px]" title={batch.createdByEmail || undefined}>
-                              {batch.createdByEmail || "—"}
-                            </span>
                           </div>
                         </TableCell>
 
                         {/* Actions */}
                         <TableCell className="text-right py-3.5 pr-4 whitespace-nowrap">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {/* Restyle button (only allowed while draft) */}
+                            <Button
+                              variant="surface"
+                              size="sm"
+                              disabled={!isDraft}
+                              onClick={() => {
+                                if (isDraft) {
+                                  setRestyleBatch(batch);
+                                  setRestyleVersionId(batch.styleVersion?.id || "");
+                                }
+                              }}
+                              className={cn(
+                                "h-8 px-2 text-[11px] font-bold normal-case rounded-lg",
+                                !isDraft && "opacity-40 cursor-not-allowed"
+                              )}
+                              title={
+                                isDraft
+                                  ? "Restyle batch with a different published QR style"
+                                  : "Already sent to printer — tokens and files are locked"
+                              }
+                            >
+                              <Palette className="size-3 mr-1 text-brand" />
+                              Restyle
+                            </Button>
+
+                            {/* Print Status transition button */}
+                            {statusInfo.next && (
+                              <Button
+                                variant="surface"
+                                size="sm"
+                                onClick={() => {
+                                  setStatusBatch(batch);
+                                  setStatusNote(batch.printStatusNote || "");
+                                }}
+                                className="h-8 px-2 text-[11px] font-bold normal-case rounded-lg text-foreground hover:text-brand"
+                                title="Advance print status"
+                              >
+                                <Truck className="size-3 mr-1 text-sky-500" />
+                                Status
+                              </Button>
+                            )}
+
+                            {/* Download */}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onDownloadClick(batch)}
+                              className="h-8 px-2 text-[11px] font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 hover:border-brand/40"
+                              title="Download QR SVG/PNG ZIP export"
+                            >
+                              <Download className="size-3 mr-1" />
+                              ZIP
+                            </Button>
+
+                            {/* Void unassigned */}
                             {stats.unassigned > 0 && (
                               <Button
                                 variant="outline"
@@ -239,22 +433,13 @@ export function BatchesTable({
                                   setVoidReason("");
                                   setVoidError(null);
                                 }}
-                                className="h-8 px-2.5 text-xs font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10"
+                                className="h-8 px-2 text-[11px] font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10"
+                                title="Void remaining unassigned cards"
                               >
-                                <Ban className="size-3.5 mr-1" />
-                                Void unassigned
+                                <Ban className="size-3 mr-1" />
+                                Void
                               </Button>
                             )}
-
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onDownloadClick(batch)}
-                              className="h-8 px-2.5 text-xs font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 hover:border-brand/40"
-                            >
-                              <Download className="size-3.5 mr-1 text-brand dark:text-brand-soft" />
-                              Download ZIP
-                            </Button>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -269,6 +454,8 @@ export function BatchesTable({
               {batches.map((batch) => {
                 const isHighlighted = highlightedBatchId === batch.id;
                 const stats = batch.stats || { unassigned: batch.count, active: 0, void: 0 };
+                const isDraft = batch.printStatus === "draft";
+                const statusInfo = PRINT_STATUS_MAP[batch.printStatus] || PRINT_STATUS_MAP.draft;
 
                 return (
                   <div
@@ -282,8 +469,13 @@ export function BatchesTable({
                       <span className="font-mono text-sm font-bold text-brand dark:text-brand-soft">
                         {formatBatchNumber(batch.number)}
                       </span>
-                      <span className="text-xs font-bold text-charcoal dark:text-white">
-                        {formatNumber(batch.count)} cards
+                      <span
+                        className={cn(
+                          "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono border",
+                          statusInfo.className
+                        )}
+                      >
+                        {statusInfo.label}
                       </span>
                     </div>
 
@@ -291,8 +483,16 @@ export function BatchesTable({
                       <p className="text-xs font-bold text-charcoal dark:text-zinc-100">
                         {batch.label}
                       </p>
+                      <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
+                        <Palette className="size-3 text-brand" />
+                        <span>
+                          {batch.styleVersion
+                            ? `${batch.styleVersion.styleName} v${batch.styleVersion.version}`
+                            : "Default Print Style"}
+                        </span>
+                      </p>
                       <p className="text-[11px] font-mono text-ash dark:text-zinc-400 mt-1">
-                        Serials: {batch.firstSerial} &rarr; {batch.lastSerial}
+                        Serials: {batch.firstSerial} &rarr; {batch.lastSerial} ({formatNumber(batch.count)} cards)
                       </p>
                     </div>
 
@@ -314,30 +514,51 @@ export function BatchesTable({
 
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-[11px] text-ash dark:text-zinc-400">
                       <span>{formatCairoDate(batch.createdAt)}</span>
-                      <div className="flex items-center gap-2">
-                        {stats.unassigned > 0 && (
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Button
+                          variant="surface"
+                          size="sm"
+                          disabled={!isDraft}
+                          onClick={() => {
+                            if (isDraft) {
+                              setRestyleBatch(batch);
+                              setRestyleVersionId(batch.styleVersion?.id || "");
+                            }
+                          }}
+                          className="min-h-[36px] px-2.5 text-xs font-bold normal-case"
+                          title={
+                            isDraft
+                              ? "Restyle batch"
+                              : "Already sent to printer — tokens and files are locked"
+                          }
+                        >
+                          <Palette className="size-3 mr-1" />
+                          Restyle
+                        </Button>
+
+                        {statusInfo.next && (
                           <Button
-                            variant="outline"
+                            variant="surface"
                             size="sm"
                             onClick={() => {
-                              setVoidingBatch(batch);
-                              setVoidReason("");
-                              setVoidError(null);
+                              setStatusBatch(batch);
+                              setStatusNote(batch.printStatusNote || "");
                             }}
-                            className="min-h-[44px] px-3 text-xs font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"
+                            className="min-h-[36px] px-2.5 text-xs font-bold normal-case"
                           >
-                            <Ban className="size-3.5 mr-1" />
-                            Void
+                            <Truck className="size-3 mr-1 text-sky-500" />
+                            Status
                           </Button>
                         )}
+
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => onDownloadClick(batch)}
-                          className="min-h-[44px] px-3 text-xs font-bold normal-case text-brand dark:text-brand-soft"
+                          className="min-h-[36px] px-2.5 text-xs font-bold normal-case text-brand dark:text-brand-soft"
                         >
-                          <Download className="size-3.5 mr-1" />
-                          Download ZIP
+                          <Download className="size-3 mr-1" />
+                          ZIP
                         </Button>
                       </div>
                     </div>
@@ -349,7 +570,149 @@ export function BatchesTable({
         )}
       </CardContent>
 
-      {/* Void Unassigned Cards Modal */}
+      {/* MODAL 1: UPDATE PRINT STATUS */}
+      <Modal
+        isOpen={statusBatch !== null}
+        onClose={() => {
+          if (!isUpdatingStatus) setStatusBatch(null);
+        }}
+        title={`Advance Print Status: ${statusBatch ? formatBatchNumber(statusBatch.number) : ""}`}
+        icon={<Truck className="size-5 text-sky-500" />}
+        maxWidth="md"
+      >
+        <form onSubmit={handleAdvanceStatus}>
+          <ModalBody className="space-y-4 text-xs">
+            {statusBatch && (
+              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground font-bold">Current Status:</span>
+                  <span className="font-mono font-bold text-foreground">
+                    {PRINT_STATUS_MAP[statusBatch.printStatus]?.label}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-brand dark:text-brand-soft font-bold">Next Status:</span>
+                  <span className="font-mono font-bold text-brand dark:text-brand-soft flex items-center gap-1">
+                    <ArrowRight className="size-3" />
+                    {PRINT_STATUS_MAP[statusBatch.printStatus]?.next
+                      ? PRINT_STATUS_MAP[PRINT_STATUS_MAP[statusBatch.printStatus].next!].label
+                      : "None"}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="font-bold text-foreground block">
+                Status Note (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. Sent to Al-Ahram print house / Invoice #402"
+                value={statusNote}
+                onChange={(e) => setStatusNote(e.target.value)}
+                maxLength={500}
+                className="w-full h-9 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Recorded in the permanent audit trail along with the status change timestamp.
+              </p>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isUpdatingStatus}
+              onClick={() => setStatusBatch(null)}
+              className="normal-case font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isUpdatingStatus}
+              className="normal-case font-bold"
+            >
+              {isUpdatingStatus ? (
+                <>
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  Updating…
+                </>
+              ) : (
+                "Confirm Transition"
+              )}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
+
+      {/* MODAL 2: RESTYLE BATCH */}
+      <Modal
+        isOpen={restyleBatch !== null}
+        onClose={() => {
+          if (!isRestyling) setRestyleBatch(null);
+        }}
+        title={`Restyle Batch: ${restyleBatch ? formatBatchNumber(restyleBatch.number) : ""}`}
+        icon={<Palette className="size-5 text-brand" />}
+        maxWidth="md"
+      >
+        <form onSubmit={handleRestyle}>
+          <ModalBody className="space-y-4 text-xs">
+            <p className="text-muted-foreground leading-relaxed">
+              Choose a published QR style version to re-render the batch cards and print archive files. Tokens and serials remain unchanged.
+            </p>
+
+            <div className="space-y-2">
+              <label className="font-bold text-foreground block">
+                Select Published QR Style
+              </label>
+              <select
+                value={restyleVersionId}
+                onChange={(e) => setRestyleVersionId(e.target.value)}
+                disabled={isRestyling || publishedStyles.length === 0}
+                className="w-full h-11 rounded-xl border-2 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+              >
+                {publishedStyles.map((s) => (
+                  <option key={s.id} value={s.latestVersion!.id}>
+                    {s.name} (v{s.latestVersion!.version})
+                    {s.isDefaultPrint ? " — Default Print" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isRestyling}
+              onClick={() => setRestyleBatch(null)}
+              className="normal-case font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="primary"
+              disabled={isRestyling || !restyleVersionId}
+              className="normal-case font-bold"
+            >
+              {isRestyling ? (
+                <>
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  Restyling…
+                </>
+              ) : (
+                "Save & Restyle Batch"
+              )}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
+
+      {/* MODAL 3: VOID UNASSIGNED CARDS */}
       <Modal
         isOpen={voidingBatch !== null}
         onClose={() => {

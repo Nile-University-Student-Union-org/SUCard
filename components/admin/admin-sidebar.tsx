@@ -78,8 +78,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "QR Studio",
+        href: "/admin/qr-studio",
         icon: QrCode,
-        soon: true,
       },
     ],
   },
