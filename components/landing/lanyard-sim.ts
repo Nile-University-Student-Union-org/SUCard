@@ -41,7 +41,12 @@ const STRAP_BEND_COMPLIANCE = 1.5e-3; // strap resists sharp kinks
 /** Half-thickness kept between the strap and the card faces. */
 const STRAP_CLEARANCE = 0.05;
 const CLAMP_COMPLIANCE = 6e-4; // strap leaves the crimp roughly straight
-const FACING_COMPLIANCE = 0.6; // card drifts back to face the viewer
+/** Strap twist: turns the card to show whichever face (front or back) is nearer the viewer. rad/s. */
+const FACING_OMEGA = 2.2;
+/** Spin given by a tap (flip to the other side) and by a sideways flick on release. */
+const FLIP_SPIN = 5; // rad/s
+const FLICK_SPIN = 0.9; // rad/s per unit/s of hand speed
+const MAX_FLICK_SPIN = 16; // rad/s
 const HOLD_COMPLIANCE = 0; // the hand holds firmly; softness comes from the hand spring (a soft hold here rings)
 /** Held card: pointer smoothing, how fast it rights itself, and how much it leans when moved sideways. */
 const HOLD_RESPONSE = 20; // rad/s: the hand is a critically damped spring toward the pointer, so uneven pointer events don't show
@@ -69,6 +74,11 @@ export class LanyardSim {
   private cardEdges: [number, number, number][];
 
   private grab: Hold | null = null;
+  /** Face the card turns to: 0 = front, PI = back. */
+  private faceGoal = 0;
+  /** True while a flip is under way, so the twist spring pulls toward the new face instead of the nearest one. */
+  private flipping = false;
+  private pendingSpin = 0;
 
   constructor(dims: LanyardDims) {
     this.dims = dims;
@@ -149,6 +159,7 @@ export class LanyardSim {
         [w / 2 - x, -h / 2 - y, 0],
       ],
       q: this.cardQuat(),
+      face: nearestFace(this.yaw()),
       raw: [...at],
       hand: [...at],
       vel: [0, 0, 0],
@@ -160,8 +171,28 @@ export class LanyardSim {
     if (this.grab) this.grab.raw = [x, y, z];
   }
 
+  /** Release; a sideways flick sets the card spinning. */
   endDrag() {
+    if (!this.grab) return;
+    this.pendingSpin += Math.max(-MAX_FLICK_SPIN, Math.min(MAX_FLICK_SPIN, this.grab.vel[0] * FLICK_SPIN));
+    this.faceGoal = this.grab.face;
+    this.flipping = false;
     this.grab = null;
+  }
+
+  /** Spin round to show the other side. */
+  flip() {
+    if (this.grab) return;
+    this.faceGoal = nearestFace(this.yaw()) === 0 ? Math.PI : 0;
+    this.flipping = true;
+    this.pendingSpin += FLIP_SPIN;
+  }
+
+  /** Which way the card faces about the vertical: 0 = front to the viewer, PI = back. */
+  yaw() {
+    const o = this.bl * 3;
+    const p = this.br * 3;
+    return Math.atan2(-(this.pos[p + 2] - this.pos[o + 2]), this.pos[p] - this.pos[o]);
   }
 
   get dragging() {
@@ -196,7 +227,9 @@ export class LanyardSim {
     }
 
     const lean = Math.max(-HOLD_MAX_LEAN, Math.min(HOLD_MAX_LEAN, -g.vel[0] * HOLD_LEAN));
-    const upright: Quat = [0, 0, Math.sin(lean / 2), Math.cos(lean / 2)];
+    // Upright, still showing the face it was grabbed on, leaning against the motion.
+    const leanQ: Quat = [0, 0, Math.sin(lean / 2), Math.cos(lean / 2)];
+    const upright = g.face === 0 ? leanQ : qmul(leanQ, [0, 1, 0, 0]);
     g.q = nlerp(g.q, upright, 1 - Math.exp(-TICK / HOLD_UPRIGHT));
 
     g.targets = g.local.map((l) => add(g.hand, rotate(g.q, l)));
@@ -227,6 +260,10 @@ export class LanyardSim {
     const { pos, prev, invMass } = this;
     this.dampCardSpin(dt);
     this.dampStrapWobble(dt);
+    if (this.pendingSpin !== 0) {
+      this.addSpin(this.pendingSpin, dt);
+      this.pendingSpin = 0;
+    }
     const maxStep = MAX_SPEED * dt;
     for (let i = 0; i < this.count; i++) {
       if (invMass[i] === 0) continue;
@@ -263,7 +300,7 @@ export class LanyardSim {
     // The crimp clamps the strap end, so the strap leaves the card along the card's "up".
     this.solveClamp(CLAMP_COMPLIANCE * a);
     this.collideStrapWithCard();
-    if (!this.grab) this.solveFacing(FACING_COMPLIANCE * a);
+    if (!this.grab) this.solveFacing(dt);
   }
 
   private solveTarget(i: number, target: Vec, alpha: number) {
@@ -384,13 +421,36 @@ export class LanyardSim {
     }
   }
 
-  /** Weak twist spring: brings the bottom corners level in depth, so the card ends up facing front. */
-  private solveFacing(alpha: number) {
-    const { pos, invMass, bl, br } = this;
-    const c = pos[br * 3 + 2] - pos[bl * 3 + 2];
-    const lambda = -c / (invMass[bl] + invMass[br] + alpha);
-    pos[br * 3 + 2] += lambda * invMass[br];
-    pos[bl * 3 + 2] -= lambda * invMass[bl];
+  /** Spins the card about the vertical through its hang point (rad/s). */
+  private addSpin(omega: number, dt: number) {
+    const h = this.hang * 3;
+    for (const i of [this.bl, this.br]) {
+      const o = i * 3;
+      const rx = this.pos[o] - this.pos[h];
+      const rz = this.pos[o + 2] - this.pos[h + 2];
+      this.prev[o] -= omega * rz * dt;
+      this.prev[o + 2] += omega * rx * dt;
+    }
+  }
+
+  /** Strap twist as a spring on the card's yaw, toward the face it is turning to. */
+  private solveFacing(dt: number) {
+    const yaw = this.yaw();
+    if (!this.flipping) this.faceGoal = nearestFace(yaw);
+    const err = wrapAngle(this.faceGoal - yaw);
+    if (this.flipping && Math.abs(err) < 0.3) this.flipping = false;
+    const turn = err * (FACING_OMEGA * dt) ** 2;
+    const c = Math.cos(turn);
+    const sn = Math.sin(turn);
+    const h = this.hang * 3;
+    for (const i of [this.bl, this.br]) {
+      const o = i * 3;
+      const rx = this.pos[o] - this.pos[h];
+      const rz = this.pos[o + 2] - this.pos[h + 2];
+      // Rotation about +y by `turn` (raises yaw by `turn`).
+      this.pos[o] = this.pos[h] + rx * c + rz * sn;
+      this.pos[o + 2] = this.pos[h + 2] - rx * sn + rz * c;
+    }
   }
 
   private healthy() {
@@ -415,6 +475,8 @@ export class LanyardSim {
 type Vec = [number, number, number];
 type Quat = [number, number, number, number];
 type Hold = {
+  /** Face shown when grabbed (0 front, PI back); the held card keeps it. */
+  face: number;
   /** Hang point and bottom corners relative to the grab point, in card space. */
   local: Vec[];
   /** Grip orientation. */
@@ -466,3 +528,15 @@ function rotate(q: Quat, v: Vec): Vec {
   const t = scale(cross(u, v), 2);
   return add(add(v, scale(t, q[3])), cross(u, t));
 }
+
+function qmul(a: Quat, b: Quat): Quat {
+  return [
+    a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1],
+    a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0],
+    a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3],
+    a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2],
+  ];
+}
+
+const wrapAngle = (a: number) => Math.atan2(Math.sin(a), Math.cos(a));
+const nearestFace = (yaw: number) => (Math.abs(wrapAngle(yaw)) <= Math.PI / 2 ? 0 : Math.PI);

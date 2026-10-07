@@ -63,4 +63,46 @@ describe("LanyardSim", () => {
     expect(br[0] - bl[0]).toBeGreaterThan(dims.cardW * 0.95); // level, not flipped
     expect(hang[1]).toBeGreaterThan(bl[1]); // hang point stays on top
   });
+
+  it("flips to show the back when tapped, and back again", () => {
+    const sim = new LanyardSim(dims);
+    run(sim, 1);
+    sim.flip();
+    run(sim, 4);
+    expect(Math.abs(Math.abs(sim.yaw()) - Math.PI)).toBeLessThan(0.05);
+    sim.flip();
+    run(sim, 4);
+    expect(Math.abs(sim.yaw())).toBeLessThan(0.05);
+  });
+
+  it("spins on a fast sideways flick and settles on a face", () => {
+    const sim = new LanyardSim(dims);
+    sim.startDrag(0.5, 0);
+    for (let k = 0; k < 30; k++) {
+      sim.moveDrag(-1.5 + k * 0.12, -0.28, 0);
+      sim.tick();
+    }
+    sim.endDrag();
+    let turned = 0;
+    let last = sim.yaw();
+    for (let t = 0; t < 6; t += TICK) {
+      sim.tick();
+      const d = sim.yaw() - last;
+      turned += Math.abs(Math.atan2(Math.sin(d), Math.cos(d)));
+      last = sim.yaw();
+    }
+    expect(turned).toBeGreaterThan(Math.PI / 2);
+    const y = Math.abs(sim.yaw());
+    expect(Math.min(y, Math.abs(y - Math.PI))).toBeLessThan(0.05);
+  });
+
+  it("keeps showing the back while held", () => {
+    const sim = new LanyardSim(dims);
+    sim.flip();
+    run(sim, 4);
+    sim.startDrag(0, 0);
+    sim.moveDrag(0.8, 0, 0);
+    run(sim, 2);
+    expect(Math.abs(Math.abs(sim.yaw()) - Math.PI)).toBeLessThan(0.1);
+  });
 });

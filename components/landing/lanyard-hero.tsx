@@ -133,7 +133,7 @@ export function LanyardHero() {
           >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 border-2 border-slate-200/80 dark:border-zinc-800 shadow-md backdrop-blur-md text-xs font-semibold text-charcoal dark:text-zinc-200">
               <Hand className="size-3.5 text-brand dark:text-brand-soft animate-bounce" />
-              <span>DRAG TO MOVE</span>
+              <span>DRAG · TAP TO FLIP</span>
               <Sparkles className="size-3 text-sky-500 animate-pulse" />
             </div>
           </div>

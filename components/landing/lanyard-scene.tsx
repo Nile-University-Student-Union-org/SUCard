@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/drei";
@@ -127,6 +127,8 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     return created;
   }, []);
   const clock = useRef({ acc: 0, dragZ: 0 });
+  // Where and when the current press started, to tell a tap (flip the card) from a drag.
+  const press = useRef<{ t: number; x: number; y: number } | null>(null);
 
   const [dragged, setDragged] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -216,13 +218,23 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     [sim],
   );
 
+  /** Ends a press. A quick tap without moving flips the card to its other side. */
+  const release = useCallback(
+    (e?: { clientX: number; clientY: number }) => {
+      const p = press.current;
+      press.current = null;
+      if (!p) return;
+      sim.endDrag();
+      setDragged(false);
+      if (e && performance.now() - p.t < 280 && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) sim.flip();
+    },
+    [sim],
+  );
+
   // Release the drag even if the pointer is let go outside the canvas.
   useEffect(() => {
     if (!dragged) return;
-    const end = () => {
-      sim.endDrag();
-      setDragged(false);
-    };
+    const end = (e: Event) => release(e instanceof PointerEvent ? e : undefined);
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
     window.addEventListener("blur", end);
@@ -231,7 +243,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       window.removeEventListener("pointercancel", end);
       window.removeEventListener("blur", end);
     };
-  }, [dragged, sim]);
+  }, [dragged, release]);
 
   // While dragging on touch screens, stop the page from scrolling.
   useEffect(() => {
@@ -326,6 +338,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     (e.target as Element).setPointerCapture?.(e.pointerId);
     const local = cardMesh.current.worldToLocal(e.point.clone());
     clock.current.dragZ = e.point.z;
+    press.current = { t: performance.now(), x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
     sim.startDrag(local.x, local.y);
     setDragged(true);
     onGrab?.();
@@ -339,8 +352,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
         onPointerOut={() => setHovered(false)}
         onPointerUp={(e) => {
           (e.target as Element).releasePointerCapture?.(e.pointerId);
-          sim.endDrag();
-          setDragged(false);
+          release(e.nativeEvent);
         }}
         onPointerDown={grab}
       >
