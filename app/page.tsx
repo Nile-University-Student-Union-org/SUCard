@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ChevronDown } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanyardCard } from "@/components/landing/lanyard-card";
@@ -90,9 +90,10 @@ export default function HomePage() {
                 href="#how-it-works"
                 size="lg"
                 variant="secondary"
-                className="w-full sm:w-auto h-12 px-6 text-base font-semibold"
+                className="group w-full sm:w-auto h-12 px-6 text-base font-semibold text-brand dark:text-white bg-white/70 hover:bg-white/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border-2 border-brand/20 hover:border-brand/40 dark:border-white/15 dark:hover:border-white/30 backdrop-blur-sm shadow-xs hover:shadow-sm"
               >
                 <span>How it works</span>
+                <ChevronDown className="size-4.5 ml-1.5 transition-transform duration-200 motion-safe:group-hover:translate-y-0.5" />
               </ButtonLink>
             </div>
 
