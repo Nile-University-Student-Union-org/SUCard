@@ -36,15 +36,31 @@ describe("LanyardSim", () => {
   it("follows the pointer and keeps momentum on release", () => {
     const sim = new LanyardSim(dims);
     sim.startDrag(0, 0);
-    sim.moveDrag(1.5, 0, 0);
+    sim.moveDrag(1, 0.3, 0);
     run(sim, 1);
     const [w0, w1, w2] = sim.cardWeights(0, 0);
     const centre = [0, 1, 2].map((c) => w0 * sim.pos[sim.hang * 3 + c] + w1 * sim.pos[sim.bl * 3 + c] + w2 * sim.pos[sim.br * 3 + c]);
-    expect(dist(centre, [1.5, 0, 0])).toBeLessThan(0.15);
+    expect(dist(centre, [1, 0.3, 0])).toBeLessThan(0.05);
     sim.endDrag();
     sim.tick();
     const before = at(sim, sim.bl)[0];
     run(sim, 0.1);
     expect(at(sim, sim.bl)[0]).toBeLessThan(before); // swings back toward the middle
+  });
+
+  it("holds the card steady and upright when grabbed by a corner and moved around", () => {
+    const sim = new LanyardSim(dims);
+    sim.startDrag(1.4, -0.9);
+    for (let t = 0; t < 1.5; t += TICK) {
+      sim.moveDrag(1.4 + Math.sin(t * 4) * 1.2, -1 + Math.cos(t * 3) * 0.6, 0);
+      sim.tick();
+    }
+    sim.moveDrag(1.4, -1, 0);
+    run(sim, 1);
+    const bl = at(sim, sim.bl);
+    const br = at(sim, sim.br);
+    const hang = at(sim, sim.hang);
+    expect(br[0] - bl[0]).toBeGreaterThan(dims.cardW * 0.95); // level, not flipped
+    expect(hang[1]).toBeGreaterThan(bl[1]); // hang point stays on top
   });
 });
