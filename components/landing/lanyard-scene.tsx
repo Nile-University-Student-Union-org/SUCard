@@ -7,10 +7,10 @@ import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/dr
 import { LanyardSim, TICK } from "./lanyard-sim";
 import { CARD_TEX_H, CARD_TEX_W, SLOT, STRAP_TEX_H, STRAP_TEX_W, createCardTextures } from "./card-textures";
 
-// Card in world units (ISO ID-1 proportions).
+// Card in world units, in the artwork's proportions.
 const CARD_W = 3.2;
 const CARD_H = (CARD_W * CARD_TEX_H) / CARD_TEX_W;
-const CARD_R = 0.17;
+const CARD_R = 0.11;
 const CARD_DEPTH = 0.028;
 const BEVEL = 0.008;
 const px = (v: number) => (v / CARD_TEX_W) * CARD_W;

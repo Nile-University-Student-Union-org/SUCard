@@ -236,9 +236,9 @@ function LoginContent() {
       : null;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
+    <div className="min-h-screen bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
       {/* 1. Left Brand Panel (Desktop Split Layout) */}
-      <div className="hidden lg:flex lg:col-span-5 relative bg-gradient-to-b from-[#0F3056] via-[#0D2849] to-[#0A1E38] text-white flex-col justify-between p-8 xl:p-10 overflow-hidden border-r border-[#0A2240] shadow-2xl">
+      <div className="hidden lg:flex lg:col-span-5 relative bg-gradient-to-b from-[#0F3056] via-[#0D2849] to-[#0A1E38] text-white flex-col justify-between p-8 xl:p-10 overflow-hidden border-r border-[#0A2240] shadow-2xl animate-login-panel">
         {/* Background decorative dot-grid texture & ambient glows/rings */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
           {/* Dot-grid texture with radial fade mask */}
@@ -391,7 +391,7 @@ function LoginContent() {
         </div>
 
         {/* Form Container */}
-        <main className="w-full max-w-md mx-auto my-auto">
+        <main className="w-full max-w-md mx-auto my-auto animate-login-card">
           <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl overflow-hidden p-6 sm:p-8">
             {/* Mobile Header Logo */}
             <div className="lg:hidden mb-6 flex justify-center">

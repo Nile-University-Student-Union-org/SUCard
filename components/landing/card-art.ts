@@ -3,6 +3,6 @@
  * leave null to use the built-in design. Spec: docs/card-design/README.md.
  */
 export const CARD_ART: { front: string | null; back: string | null } = {
-  front: null,
-  back: null,
+  front: "/card/front.png",
+  back: "/card/back.png",
 };

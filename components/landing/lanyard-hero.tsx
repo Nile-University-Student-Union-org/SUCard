@@ -106,7 +106,7 @@ export function LanyardHero() {
               gl.toneMapping = THREE.NeutralToneMapping;
             }}
             aria-hidden="true"
-            className={`w-full h-full transition-opacity duration-500 ${sceneReady ? "opacity-100" : "opacity-0"}`}
+            className={`w-full h-full transition-opacity duration-400 ease-in-out ${sceneReady ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{
               pointerEvents: "auto",
               maskImage: CANVAS_FADE,
@@ -120,7 +120,7 @@ export function LanyardHero() {
 
           <LanyardSkeleton
             done={sceneReady}
-            className={`transition-opacity ${sceneReady ? "opacity-0 duration-200" : "opacity-100 duration-500"}`}
+            className={`transition-opacity duration-400 ease-in-out ${sceneReady ? "opacity-0 pointer-events-none" : "opacity-100"}`}
           />
         </>
       )}

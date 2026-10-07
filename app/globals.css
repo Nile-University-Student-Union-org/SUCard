@@ -360,6 +360,16 @@
   .animate-skip-badge-pop {
     animation: skipBadgePop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  .animate-login-panel {
+    animation: loginPanelEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    will-change: transform, opacity;
+  }
+
+  .animate-login-card {
+    animation: loginCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 80ms backwards;
+    will-change: transform, opacity;
+  }
 }
 
 /* Keyframes */
@@ -423,6 +433,28 @@
   100% { opacity: 0; transform: scale(0.92) translateY(-4px); }
 }
 
+@keyframes loginPanelEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes loginCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in,
   .animate-slide-in-right,
@@ -433,7 +465,9 @@
   .animate-page-enter,
   .animate-card-enter,
   .animate-pulse-glow,
-  .animate-skip-badge-pop {
+  .animate-skip-badge-pop,
+  .animate-login-panel,
+  .animate-login-card {
     animation: none !important;
     transform: none !important;
   }

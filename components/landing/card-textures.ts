@@ -2,9 +2,9 @@ import * as THREE from "three";
 import QRCode from "qrcode";
 import { CARD_ART } from "./card-art";
 
-/** Card face texture size — ISO ID-1 ratio (85.6 × 54 mm ≈ 1.585). */
+/** Card face texture size, matching the card artwork in public/card (1.37 : 1). */
 export const CARD_TEX_W = 2560;
-export const CARD_TEX_H = 1615;
+export const CARD_TEX_H = 1868;
 
 /** Slot punched near the top edge of the card, in texture pixels (kept clear of artwork). */
 export const SLOT = { cx: CARD_TEX_W / 2, cy: 108, w: 400, h: 72 };

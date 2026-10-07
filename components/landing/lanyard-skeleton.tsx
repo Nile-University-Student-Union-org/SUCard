@@ -1,8 +1,8 @@
 import { cn } from "cn";
 import type { CSSProperties } from "react";
 
-/** Soft placeholder bar on the navy card; breathes while loading. */
-const bar = "rounded-full bg-white/[0.09] motion-safe:animate-[skeleton-breathe_2.4s_ease-in-out_infinite]";
+/** Soft placeholder bar on the navy card. */
+const bar = "rounded-full bg-white/[0.09]";
 
 /** Navy woven strap, matching the real lanyard's colours. */
 const STRAP_STYLE: CSSProperties = {
@@ -31,11 +31,11 @@ export function LanyardSkeleton({ className, done = false }: { className?: strin
       aria-label={done ? undefined : "Loading the SU Card preview"}
       aria-hidden={done || undefined}
     >
-      {/* Soft glow behind the card */}
-      <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 w-[min(70%,420px)] aspect-square rounded-full bg-macaw-blue/15 dark:bg-macaw-blue/20 blur-3xl" />
+      {/* Soft radial glow behind the card (uses radial gradient instead of blur-3xl to avoid rasterization overhead) */}
+      <div className="absolute left-1/2 top-[58%] -translate-x-1/2 -translate-y-1/2 w-[min(70%,420px)] aspect-square rounded-full bg-[radial-gradient(ellipse_at_center,rgb(1_139_206/0.15)_0%,rgb(1_139_206/0.05)_50%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgb(1_139_206/0.20)_0%,rgb(1_139_206/0.08)_50%,transparent_70%)] pointer-events-none" />
 
       {/* Hanging assembly, pivoting from the top edge */}
-      <div className="relative h-full flex flex-col items-center origin-top motion-safe:animate-[lanyard-sway_5s_ease-in-out_infinite]">
+      <div className="relative h-full flex flex-col items-center origin-top will-change-transform motion-safe:animate-[lanyard-sway_5s_ease-in-out_infinite]">
         {/* Strap, fading in from the top */}
         <div
           className="w-[11%] max-w-14 min-w-9 flex-1 max-h-[36%] shadow-[inset_0_-6px_8px_-6px_rgb(0_0_0/0.5)] [mask-image:linear-gradient(to_bottom,transparent,#000_72px)]"
@@ -55,7 +55,7 @@ export function LanyardSkeleton({ className, done = false }: { className?: strin
         </div>
 
         {/* Card */}
-        <div className="relative -mt-[22px] w-[min(78%,440px)] aspect-[1.585/1]">
+        <div className="relative -mt-[22px] w-[min(78%,440px)] aspect-[1.37/1]">
           <div className="absolute inset-0 overflow-hidden rounded-[22px] bg-gradient-to-br from-[#16477A] via-[#0F3056] to-[#0A2140] ring-1 ring-inset ring-white/15 shadow-[0_30px_60px_-20px_rgb(15_48_86/0.55),0_12px_24px_-12px_rgb(0_0_0/0.35)]">
             {/* Top highlight, like clearcoat catching the light */}
             <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/[0.10] to-transparent" />
@@ -64,33 +64,33 @@ export function LanyardSkeleton({ className, done = false }: { className?: strin
             {/* Sky foil strip */}
             <div className="absolute left-0 top-[16%] h-[1.5%] w-[38%] bg-gradient-to-r from-macaw-blue/70 to-transparent" />
 
-            {/* Placeholder content */}
-            <div className="absolute inset-0 p-[6%] pt-[13%] flex justify-between gap-[6%]">
+            {/* Placeholder content: single unified breathe animation */}
+            <div className="absolute inset-0 p-[6%] pt-[13%] flex justify-between gap-[6%] motion-safe:animate-[skeleton-breathe_2.4s_ease-in-out_infinite]">
               <div className="flex flex-col justify-between w-[52%]">
                 <div className={cn(bar, "h-[10%] w-[34%] rounded-md")} />
                 <div className="space-y-[6%]">
                   <div className={cn(bar, "h-7 sm:h-10 w-full rounded-lg bg-white/[0.13]")} />
-                  <div className={cn(bar, "h-2 sm:h-2.5 w-4/5 [animation-delay:150ms]")} />
+                  <div className={cn(bar, "h-2 sm:h-2.5 w-4/5")} />
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={cn(bar, "h-4 sm:h-5 w-[38%] bg-macaw-blue/35 [animation-delay:300ms]")} />
-                  <div className={cn(bar, "h-2 sm:h-2.5 w-[42%] [animation-delay:450ms]")} />
+                  <div className={cn(bar, "h-4 sm:h-5 w-[38%] bg-macaw-blue/35")} />
+                  <div className={cn(bar, "h-2 sm:h-2.5 w-[42%]")} />
                 </div>
               </div>
               {/* QR placeholder: a white tile with a faint dot grid */}
               <div className="self-end aspect-square w-[33%] rounded-xl bg-white/[0.92] p-[5%] shadow-[0_6px_14px_-6px_rgb(0_0_0/0.5)]">
-                <div className="size-full rounded-md [background-image:radial-gradient(rgb(15_48_86/0.28)_32%,transparent_36%)] [background-size:12.5%_12.5%] motion-safe:animate-[skeleton-breathe_2.4s_ease-in-out_infinite] [animation-delay:200ms]" />
+                <div className="size-full rounded-md [background-image:radial-gradient(rgb(15_48_86/0.28)_32%,transparent_36%)] [background-size:12.5%_12.5%]" />
               </div>
             </div>
 
             {/* Diagonal sheen sweeping across the gloss */}
-            <div className="absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.14] to-transparent motion-safe:animate-[card-sheen_2.8s_ease-in-out_infinite]" />
+            <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/[0.14] to-transparent will-change-transform motion-safe:animate-[card-sheen_2.8s_ease-in-out_infinite]" />
           </div>
         </div>
       </div>
 
-      {/* Contact shadow that follows the sway */}
-      <div className="absolute left-1/2 bottom-[7%] -ml-[min(30%,170px)] w-[min(60%,340px)] h-5 rounded-[50%] bg-black/25 dark:bg-black/50 blur-xl motion-safe:animate-[lanyard-shadow_5s_ease-in-out_infinite]" />
+      {/* Contact shadow that follows the sway: radial gradient without blur filter for pure composited transforms */}
+      <div className="absolute left-1/2 bottom-[7%] -ml-[min(30%,170px)] w-[min(60%,340px)] h-5 rounded-[50%] bg-[radial-gradient(ellipse_at_center,rgb(0_0_0/0.25)_0%,rgb(0_0_0/0.10)_45%,transparent_70%)] dark:bg-[radial-gradient(ellipse_at_center,rgb(0_0_0/0.50)_0%,rgb(0_0_0/0.20)_45%,transparent_70%)] will-change-transform motion-safe:animate-[lanyard-shadow_5s_ease-in-out_infinite]" />
 
       {!done && <span className="sr-only">Loading…</span>}
     </div>
