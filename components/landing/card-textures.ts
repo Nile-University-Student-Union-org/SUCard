@@ -1,634 +1,361 @@
 import * as THREE from "three";
 import QRCode from "qrcode";
 
-/**
- * Generates front card texture at 2048x1292 resolution (ISO ID-1 ratio 1.585)
- * Deep navy/blue brand palette with high contrast, large Anton typography,
- * SU logo, STUDENT badge, holographic strip, and high-contrast QR code.
- * (No chip, no NFC waves, no year/expiry).
- */
-export function createCardFrontTexture(): {
-  texture: THREE.CanvasTexture;
-  cleanup: () => void;
-} {
-  const width = 2048;
-  const height = 1292;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d", { alpha: false });
+/** Card face texture size — ISO ID-1 ratio (85.6 × 54 mm ≈ 1.585). */
+export const CARD_TEX_W = 2560;
+export const CARD_TEX_H = 1615;
 
-  if (!ctx) {
-    const fallbackTexture = new THREE.CanvasTexture(canvas);
-    return { texture: fallbackTexture, cleanup: () => {} };
-  }
+/** Slot punched near the top edge of the card, in texture pixels (kept clear of artwork). */
+export const SLOT = { cx: CARD_TEX_W / 2, cy: 108, w: 400, h: 72 };
 
-  // Texture setup
+const NAVY = "#0F3056";
+const BLUE = "#0F548D";
+const SKY = "#018BCE";
+
+function fontFamily(variable: string, fallback: string) {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
+  return value || fallback;
+}
+
+function loadImage(src: string) {
+  return new Promise<HTMLImageElement | null>((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => resolve(null);
+    img.src = src;
+  });
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+function spacedText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, spacing: number) {
+  ctx.letterSpacing = `${spacing}px`;
+  ctx.fillText(text, x, y);
+  ctx.letterSpacing = "0px";
+}
+
+function makeTexture(canvas: HTMLCanvasElement, maxAnisotropy: number) {
   const texture = new THREE.CanvasTexture(canvas);
   texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
+  texture.anisotropy = maxAnisotropy;
   texture.generateMipmaps = true;
+  texture.minFilter = THREE.LinearMipmapLinearFilter;
+  return texture;
+}
 
-  let isDisposed = false;
-  let cachedLogoImg: HTMLImageElement | null = null;
+function canvasOf(w: number, h: number) {
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  return { canvas, ctx: canvas.getContext("2d")! };
+}
 
-  const renderCanvas = () => {
-    if (isDisposed) return;
+function paintBase(ctx: CanvasRenderingContext2D, w: number, h: number) {
+  const bg = ctx.createLinearGradient(0, 0, w, h);
+  bg.addColorStop(0, "#0A2342");
+  bg.addColorStop(0.55, NAVY);
+  bg.addColorStop(1, "#123E6E");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
 
-    // 1. Base Gradient (Deep NUSU Navy to SU Blue)
-    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#081E38"); // Deep midnight navy
-    bgGrad.addColorStop(0.45, "#0F3056"); // NUSU primary navy
-    bgGrad.addColorStop(1, "#0F548D"); // SU blue
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+  const glow = ctx.createRadialGradient(w * 0.82, h * 0.1, 0, w * 0.82, h * 0.1, w * 0.62);
+  glow.addColorStop(0, "rgba(1,139,206,0.42)");
+  glow.addColorStop(0.5, "rgba(1,139,206,0.12)");
+  glow.addColorStop(1, "rgba(1,139,206,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, w, h);
 
-    // 2. Soft Sky Accent Radial Glow (adds depth without washing out)
-    const radialGlow = ctx.createRadialGradient(
-      width * 0.72,
-      height * 0.28,
-      40,
-      width * 0.72,
-      height * 0.28,
-      850
-    );
-    radialGlow.addColorStop(0, "rgba(1, 139, 206, 0.45)");
-    radialGlow.addColorStop(0.5, "rgba(1, 139, 206, 0.14)");
-    radialGlow.addColorStop(1, "rgba(1, 139, 206, 0)");
-    ctx.fillStyle = radialGlow;
-    ctx.fillRect(0, 0, width, height);
+  const low = ctx.createRadialGradient(w * 0.05, h * 1.05, 0, w * 0.05, h * 1.05, w * 0.5);
+  low.addColorStop(0, "rgba(15,84,141,0.55)");
+  low.addColorStop(1, "rgba(15,84,141,0)");
+  ctx.fillStyle = low;
+  ctx.fillRect(0, 0, w, h);
 
-    // 3. Security Guilloche / Wave Micro-lines
-    ctx.save();
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
-    ctx.lineWidth = 2.5;
-    for (let i = 0; i < 18; i++) {
-      ctx.beginPath();
-      const offset = i * 75;
-      ctx.moveTo(0, offset);
-      ctx.bezierCurveTo(
-        width * 0.35,
-        offset + 140,
-        width * 0.65,
-        offset - 140,
-        width,
-        offset + 90
-      );
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // 4. Subtle Isometric Micro-dot Grid
-    ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.04)";
-    const dotSpacing = 52;
-    for (let x = 40; x < width - 40; x += dotSpacing) {
-      for (let y = 40; y < height - 40; y += dotSpacing) {
-        ctx.beginPath();
-        ctx.arc(x, y, 2.0, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-    ctx.restore();
-
-    // 5. Holographic Iridescent Security Foil Strip (Left Edge)
-    const holoX = 80;
-    const holoW = 95;
-    const holoGrad = ctx.createLinearGradient(holoX, 0, holoX + holoW, height);
-    holoGrad.addColorStop(0, "rgba(56, 189, 248, 0.6)");
-    holoGrad.addColorStop(0.2, "rgba(167, 243, 208, 0.65)");
-    holoGrad.addColorStop(0.4, "rgba(251, 191, 36, 0.6)");
-    holoGrad.addColorStop(0.6, "rgba(244, 114, 182, 0.65)");
-    holoGrad.addColorStop(0.8, "rgba(129, 140, 248, 0.65)");
-    holoGrad.addColorStop(1, "rgba(56, 189, 248, 0.6)");
-
-    ctx.save();
-    ctx.fillStyle = holoGrad;
-    ctx.fillRect(holoX, 0, holoW, height);
-
-    // Diagonal foil shimmer patterns
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.45)";
-    ctx.lineWidth = 3;
-    for (let y = -200; y < height + 200; y += 36) {
-      ctx.beginPath();
-      ctx.moveTo(holoX, y);
-      ctx.lineTo(holoX + holoW, y + 70);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // 6. Top Header: Nile University Student Union Logo
-    const logoX = 220;
-    const logoY = 100;
-    if (cachedLogoImg && cachedLogoImg.complete && cachedLogoImg.naturalWidth > 0) {
-      const logoAspect = cachedLogoImg.naturalWidth / cachedLogoImg.naturalHeight;
-      const logoH = 125;
-      const logoW = logoH * logoAspect;
-      ctx.drawImage(cachedLogoImg, logoX, logoY, logoW, logoH);
-    } else {
-      ctx.save();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 52px sans-serif";
-      ctx.fillText("NILE UNIVERSITY", logoX, logoY + 55);
-      ctx.fillStyle = "#018BCE";
-      ctx.font = "bold 34px sans-serif";
-      ctx.fillText("STUDENT UNION", logoX, logoY + 105);
-      ctx.restore();
-    }
-
-    // 7. Prominent Card Heading: "SU CARD" in Anton Display
-    ctx.save();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.shadowColor = "rgba(1, 139, 206, 0.65)";
-    ctx.shadowBlur = 24;
-    ctx.font = "900 250px 'Anton', -apple-system, sans-serif";
-    ctx.letterSpacing = "6px";
-    ctx.fillText("SU CARD", 215, 600);
-    ctx.restore();
-
-    // 8. Student Status Pill Badge (Bold & Clean)
-    const pillX = 220;
-    const pillY = 680;
-    const pillW = 310;
-    const pillH = 86;
-
-    ctx.save();
-    ctx.fillStyle = "rgba(1, 139, 206, 0.35)";
-    ctx.strokeStyle = "#018BCE";
-    ctx.lineWidth = 4;
+  // Fine guilloche lines
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,255,0.045)";
+  ctx.lineWidth = 2;
+  for (let i = -6; i < 30; i++) {
     ctx.beginPath();
-    ctx.roundRect(pillX, pillY, pillW, pillH, 20);
-    ctx.fill();
+    for (let x = 0; x <= w; x += 16) {
+      const y = i * 64 + Math.sin(x / 210 + i * 0.35) * 38 + x * 0.18;
+      if (x === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
     ctx.stroke();
+  }
+  ctx.restore();
+}
 
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 42px 'Poppins', -apple-system, sans-serif";
-    ctx.letterSpacing = "5px";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("STUDENT", pillX + pillW / 2, pillY + pillH / 2);
-    ctx.restore();
+function paintQr(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number) {
+  const qr = QRCode.create(text, { errorCorrectionLevel: "M" });
+  const n = qr.modules.size;
+  const quiet = 2;
+  const cell = size / (n + quiet * 2);
+  const ox = x + quiet * cell;
+  const oy = y + quiet * cell;
+  const isFinder = (r: number, c: number) =>
+    (r < 7 && c < 7) || (r < 7 && c >= n - 7) || (r >= n - 7 && c < 7);
 
-    // 9. Student Union Text Labels
-    ctx.save();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 40px 'Poppins', -apple-system, sans-serif";
-    ctx.letterSpacing = "1px";
-    ctx.fillText("NILE UNIVERSITY STUDENT UNION", 220, 890);
+  ctx.fillStyle = "#FFFFFF";
+  roundRect(ctx, x, y, size, size, cell * 1.6);
+  ctx.fill();
 
-    ctx.fillStyle = "#8FB8E8";
-    ctx.font = "600 30px 'Poppins', -apple-system, sans-serif";
-    ctx.letterSpacing = "2px";
-    ctx.fillText("DIGITAL VERIFICATION & PARTNER SAVINGS", 220, 950);
-    ctx.restore();
-
-    // 10. High-Contrast QR Code Container (Right Side)
-    const qrBoxX = 1360;
-    const qrBoxY = 380;
-    const qrBoxSize = 560;
-    const qrBoxRadius = 42;
-
-    ctx.save();
-    ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
-    ctx.shadowBlur = 35;
-    ctx.shadowOffsetY = 15;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.beginPath();
-    ctx.roundRect(qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, qrBoxRadius);
-    ctx.fill();
-    ctx.restore();
-
-    try {
-      const qr = QRCode.create("NUSU1:DEMO0000000000000000", {
-        errorCorrectionLevel: "H",
-      });
-      const moduleCount = qr.modules.size;
-      const qrPadding = 52;
-      const qrInnerSize = qrBoxSize - qrPadding * 2;
-      const cellSize = qrInnerSize / moduleCount;
-
-      ctx.save();
-      for (let r = 0; r < moduleCount; r++) {
-        for (let c = 0; c < moduleCount; c++) {
-          if (qr.modules.get(r, c)) {
-            const isFinder =
-              (r < 7 && c < 7) ||
-              (r < 7 && c >= moduleCount - 7) ||
-              (r >= moduleCount - 7 && c < 7);
-
-            ctx.fillStyle = isFinder ? "#018BCE" : "#081E38";
-            const px = qrBoxX + qrPadding + c * cellSize;
-            const py = qrBoxY + qrPadding + r * cellSize;
-            ctx.beginPath();
-            ctx.roundRect(px, py, cellSize * 0.96, cellSize * 0.96, cellSize * 0.25);
-            ctx.fill();
-          }
-        }
-      }
-
-      // Center NUSU emblem in QR code
-      const centerSize = 76;
-      const centerX = qrBoxX + qrBoxSize / 2 - centerSize / 2;
-      const centerY = qrBoxY + qrBoxSize / 2 - centerSize / 2;
-      ctx.fillStyle = "#081E38";
-      ctx.beginPath();
-      ctx.roundRect(centerX, centerY, centerSize, centerSize, 14);
+  ctx.fillStyle = NAVY;
+  for (let r = 0; r < n; r++) {
+    for (let c = 0; c < n; c++) {
+      if (!qr.modules.get(r, c) || isFinder(r, c)) continue;
+      roundRect(ctx, ox + c * cell + cell * 0.06, oy + r * cell + cell * 0.06, cell * 0.88, cell * 0.88, cell * 0.32);
       ctx.fill();
-      ctx.strokeStyle = "#018BCE";
-      ctx.lineWidth = 3.5;
-      ctx.stroke();
-      ctx.fillStyle = "#FFFFFF";
-      ctx.font = "bold 28px 'Poppins', sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("SU", centerX + centerSize / 2, centerY + centerSize / 2);
-      ctx.restore();
-    } catch {
-      // QR fallback
     }
-
-    // Label below QR
-    ctx.save();
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 28px 'Poppins', sans-serif";
-    ctx.letterSpacing = "4px";
-    ctx.textAlign = "center";
-    ctx.fillText("SCAN TO VERIFY", qrBoxX + qrBoxSize / 2, qrBoxY + qrBoxSize + 70);
-    ctx.restore();
-
-    // 11. Top Lanyard Slot Outline
-    const slotW = 300;
-    const slotH = 44;
-    const slotX = width / 2 - slotW / 2;
-    const slotY = 28;
-    ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.roundRect(slotX, slotY, slotW, slotH, slotH / 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
-    texture.needsUpdate = true;
-  };
-
-  renderCanvas();
-
-  if (typeof window !== "undefined") {
-    if (document.fonts) {
-      document.fonts.ready.then(() => {
-        if (!isDisposed) renderCanvas();
-      });
-    }
-
-    const logo = new window.Image();
-    logo.crossOrigin = "anonymous";
-    logo.src = "/brand/su-logo-white@hd.png";
-    logo.onload = () => {
-      if (!isDisposed) {
-        cachedLogoImg = logo;
-        renderCanvas();
-      }
-    };
   }
-
-  return {
-    texture,
-    cleanup: () => {
-      isDisposed = true;
-      texture.dispose();
-    },
-  };
+  for (const [r, c] of [[0, 0], [0, n - 7], [n - 7, 0]] as const) {
+    const fx = ox + c * cell;
+    const fy = oy + r * cell;
+    ctx.fillStyle = NAVY;
+    roundRect(ctx, fx, fy, cell * 7, cell * 7, cell * 2);
+    ctx.fill();
+    ctx.fillStyle = "#FFFFFF";
+    roundRect(ctx, fx + cell, fy + cell, cell * 5, cell * 5, cell * 1.4);
+    ctx.fill();
+    ctx.fillStyle = SKY;
+    roundRect(ctx, fx + cell * 2, fy + cell * 2, cell * 3, cell * 3, cell * 0.9);
+    ctx.fill();
+  }
 }
 
-/**
- * Generates back card texture at 2048x1292 resolution (ISO ID-1 ratio 1.585)
- */
-export function createCardBackTexture(): {
-  texture: THREE.CanvasTexture;
-  cleanup: () => void;
-} {
-  const width = 2048;
-  const height = 1292;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d", { alpha: false });
+async function paintFront(ctx: CanvasRenderingContext2D, logo: HTMLImageElement | null, icon: HTMLImageElement | null) {
+  const w = CARD_TEX_W;
+  const h = CARD_TEX_H;
+  const heading = fontFamily("--font-heading", "Impact, sans-serif");
+  const sans = fontFamily("--font-sans", "system-ui, sans-serif");
+  paintBase(ctx, w, h);
 
-  if (!ctx) {
-    const fallbackTexture = new THREE.CanvasTexture(canvas);
-    return { texture: fallbackTexture, cleanup: () => {} };
+  // Big watermark icon on the right
+  if (icon) {
+    ctx.save();
+    ctx.globalAlpha = 0.06;
+    const ih = h * 1.05;
+    const iw = (icon.width / icon.height) * ih;
+    ctx.drawImage(icon, w - iw * 0.78, h - ih * 0.92, iw, ih);
+    ctx.restore();
   }
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
+  // Holographic foil strip on the left edge
+  const foil = ctx.createLinearGradient(0, 0, 0, h);
+  ["#7FD8FF", "#B9A6FF", "#FF9FD6", "#FFE29A", "#9DFFCB", "#7FD8FF"].forEach((c, i, a) => foil.addColorStop(i / (a.length - 1), c));
+  ctx.save();
+  ctx.globalAlpha = 0.85;
+  ctx.fillStyle = foil;
+  ctx.fillRect(120, 0, 26, h);
+  ctx.globalAlpha = 0.35;
+  ctx.fillRect(160, 0, 6, h);
+  ctx.restore();
 
-  let isDisposed = false;
+  const left = 240;
 
-  const renderCanvas = () => {
-    if (isDisposed) return;
+  // Logo
+  if (logo) {
+    const lh = 150;
+    const lw = (logo.width / logo.height) * lh;
+    ctx.drawImage(logo, left, 210, lw, lh);
+  }
 
-    // 1. Midnight Navy Background
-    const bgGrad = ctx.createLinearGradient(0, 0, width, height);
-    bgGrad.addColorStop(0, "#081424");
-    bgGrad.addColorStop(0.5, "#0A2240");
-    bgGrad.addColorStop(1, "#0F3056");
-    ctx.fillStyle = bgGrad;
-    ctx.fillRect(0, 0, width, height);
+  // Title
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `400 360px ${heading}`;
+  spacedText(ctx, "SU CARD", left - 8, 860, 14);
 
-    // 2. Watermark Repeating NUSU Icon Motif
+  // Subtitle
+  ctx.font = `600 54px ${sans}`;
+  ctx.fillStyle = "#A9CDEB";
+  spacedText(ctx, "NILE UNIVERSITY STUDENT UNION", left, 970, 7);
+
+  // Student pill
+  ctx.font = `700 50px ${sans}`;
+  const pillText = "STUDENT";
+  ctx.letterSpacing = "10px";
+  const pw = ctx.measureText(pillText).width + 96;
+  ctx.letterSpacing = "0px";
+  const py = 1190;
+  ctx.fillStyle = SKY;
+  roundRect(ctx, left, py, pw, 104, 52);
+  ctx.fill();
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textBaseline = "middle";
+  spacedText(ctx, pillText, left + 48, py + 55, 10);
+
+  ctx.textBaseline = "alphabetic";
+  ctx.font = `500 44px ${sans}`;
+  ctx.fillStyle = "rgba(255,255,255,0.62)";
+  spacedText(ctx, "Show at partner stores to save", left, 1440, 1);
+
+  // QR
+  const qrSize = 640;
+  const qx = w - qrSize - 200;
+  const qy = 470;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 50;
+  ctx.shadowOffsetY = 18;
+  ctx.fillStyle = "#FFFFFF";
+  roundRect(ctx, qx, qy, qrSize, qrSize, 48);
+  ctx.fill();
+  ctx.restore();
+  paintQr(ctx, "NUSU1:DEMO0000000000000000", qx, qy, qrSize);
+
+  ctx.font = `600 40px ${sans}`;
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.textAlign = "center";
+  spacedText(ctx, "SCAN AT CHECKOUT", qx + qrSize / 2, qy + qrSize + 90, 6);
+  ctx.textAlign = "left";
+
+  // Bottom sky accent line
+  const line = ctx.createLinearGradient(0, 0, w, 0);
+  line.addColorStop(0, "rgba(1,139,206,0)");
+  line.addColorStop(0.3, SKY);
+  line.addColorStop(1, BLUE);
+  ctx.fillStyle = line;
+  ctx.fillRect(0, h - 22, w, 22);
+}
+
+function paintBack(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null, logo: HTMLImageElement | null) {
+  const w = CARD_TEX_W;
+  const h = CARD_TEX_H;
+  const heading = fontFamily("--font-heading", "Impact, sans-serif");
+  const sans = fontFamily("--font-sans", "system-ui, sans-serif");
+  paintBase(ctx, w, h);
+
+  // Icon pattern
+  if (icon) {
     ctx.save();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.03)";
-    ctx.font = "bold 64px 'Anton', sans-serif";
-    ctx.textAlign = "center";
-    for (let x = 120; x < width; x += 320) {
-      for (let y = 380; y < height; y += 180) {
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(-0.25);
-        ctx.fillText("NUSU", 0, 0);
-        ctx.restore();
+    ctx.globalAlpha = 0.05;
+    const s = 150;
+    const iw = (icon.width / icon.height) * s;
+    for (let row = 0; row * 230 < h + 230; row++) {
+      for (let col = -1; col * 260 < w + 260; col++) {
+        ctx.drawImage(icon, col * 260 + (row % 2) * 130, row * 230 + 40, iw, s);
       }
     }
     ctx.restore();
-
-    // 3. Magnetic Stripe
-    const magY = 120;
-    const magH = 210;
-    const magGrad = ctx.createLinearGradient(0, magY, 0, magY + magH);
-    magGrad.addColorStop(0, "#090D14");
-    magGrad.addColorStop(0.5, "#151D2A");
-    magGrad.addColorStop(1, "#080B10");
-    ctx.fillStyle = magGrad;
-    ctx.fillRect(0, magY, width, magH);
-
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.08)";
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(0, magY + 40);
-    ctx.lineTo(width, magY + 40);
-    ctx.stroke();
-
-    // 4. Signature & Authorization Panel
-    const sigX = 140;
-    const sigY = 400;
-    const sigW = 1280;
-    const sigH = 150;
-
-    ctx.fillStyle = "#F8FAFC";
-    ctx.fillRect(sigX, sigY, sigW, sigH);
-
-    ctx.save();
-    ctx.strokeStyle = "rgba(15, 48, 86, 0.12)";
-    ctx.lineWidth = 2;
-    for (let x = -200; x < sigW + 200; x += 30) {
-      ctx.beginPath();
-      ctx.moveTo(sigX + x, sigY);
-      ctx.lineTo(sigX + x + 80, sigY + sigH);
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    // Security Code Box
-    const cvcX = sigX + sigW + 40;
-    const cvcW = 440;
-    const cvcH = sigH;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(cvcX, sigY, cvcW, cvcH);
-    ctx.strokeStyle = "#CBD5E1";
-    ctx.lineWidth = 3;
-    ctx.strokeRect(cvcX, sigY, cvcW, cvcH);
-
-    ctx.fillStyle = "#0F3056";
-    ctx.font = "italic bold 44px 'Courier New', monospace";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("NUSU-VERIFIED", cvcX + cvcW / 2, sigY + cvcH / 2);
-
-    // 5. Terms & Instructions
-    ctx.save();
-    ctx.textAlign = "left";
-    ctx.fillStyle = "#018BCE";
-    ctx.font = "bold 34px 'Poppins', sans-serif";
-    ctx.fillText("NILE UNIVERSITY STUDENT UNION — CARDHOLDER PRIVILEGES", 140, 640);
-
-    ctx.fillStyle = "#E2E8F0";
-    ctx.font = "500 28px 'Poppins', sans-serif";
-    ctx.letterSpacing = "0.5px";
-
-    const instructions = [
-      "• Show this card at participating campus venues & partner stores.",
-      "• Valid only for the registered Nile University student.",
-      "• Add to Google Wallet for instant offline QR verification.",
-      "• Inquiries & partner directory: visit nusu.org or scan the front QR code.",
-    ];
-
-    let lineY = 705;
-    for (const line of instructions) {
-      ctx.fillText(line, 140, lineY);
-      lineY += 50;
-    }
-    ctx.restore();
-
-    // 6. Union Footer & Security Seal
-    ctx.save();
-    ctx.fillStyle = "rgba(143, 184, 232, 0.75)";
-    ctx.font = "600 24px 'Poppins', sans-serif";
-    ctx.letterSpacing = "2px";
-    ctx.fillText(
-      "NILE UNIVERSITY STUDENT UNION • CAIRO, EGYPT • ALL RIGHTS RESERVED",
-      140,
-      1160
-    );
-
-    const sealX = width - 300;
-    const sealY = 1040;
-    const sealR = 90;
-
-    const sealGrad = ctx.createRadialGradient(
-      sealX,
-      sealY,
-      10,
-      sealX,
-      sealY,
-      sealR
-    );
-    sealGrad.addColorStop(0, "rgba(56, 189, 248, 0.5)");
-    sealGrad.addColorStop(0.7, "rgba(15, 84, 141, 0.6)");
-    sealGrad.addColorStop(1, "rgba(1, 139, 206, 0.3)");
-
-    ctx.fillStyle = sealGrad;
-    ctx.beginPath();
-    ctx.arc(sealX, sealY, sealR, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = "#018BCE";
-    ctx.lineWidth = 4;
-    ctx.stroke();
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 20px 'Poppins', sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText("OFFICIAL", sealX, sealY - 20);
-    ctx.fillText("NUSU SEAL", sealX, sealY + 15);
-    ctx.restore();
-
-    // 7. Top Lanyard Slot Indicator
-    const slotW = 300;
-    const slotH = 44;
-    const slotX = width / 2 - slotW / 2;
-    const slotY = 28;
-    ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.45)";
-    ctx.strokeStyle = "rgba(255, 255, 255, 0.25)";
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.roundRect(slotX, slotY, slotW, slotH, slotH / 2);
-    ctx.fill();
-    ctx.stroke();
-    ctx.restore();
-
-    texture.needsUpdate = true;
-  };
-
-  renderCanvas();
-
-  if (typeof window !== "undefined" && document.fonts) {
-    document.fonts.ready.then(() => {
-      if (!isDisposed) renderCanvas();
-    });
   }
 
-  return {
-    texture,
-    cleanup: () => {
-      isDisposed = true;
-      texture.dispose();
-    },
-  };
+  if (logo) {
+    const lh = 230;
+    const lw = (logo.width / logo.height) * lh;
+    ctx.drawImage(logo, (w - lw) / 2, 470, lw, lh);
+  }
+
+  ctx.textAlign = "center";
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = `400 150px ${heading}`;
+  spacedText(ctx, "SHOW. SCAN. SAVE.", w / 2, 960, 10);
+
+  ctx.font = `500 50px ${sans}`;
+  ctx.fillStyle = "rgba(255,255,255,0.72)";
+  spacedText(ctx, "Present this card at participating partners.", w / 2, 1080, 0);
+  ctx.font = `500 40px ${sans}`;
+  ctx.fillStyle = "rgba(255,255,255,0.45)";
+  spacedText(ctx, "If found, please return it to the NUSU office.", w / 2, 1400, 0);
+  ctx.textAlign = "left";
+
+  ctx.fillStyle = SKY;
+  ctx.fillRect(0, h - 22, w, 22);
 }
 
+function paintStrap(ctx: CanvasRenderingContext2D, w: number, h: number, icon: HTMLImageElement | null) {
+  const heading = fontFamily("--font-heading", "Impact, sans-serif");
+  const body = ctx.createLinearGradient(0, 0, 0, h);
+  body.addColorStop(0, "#0B2747");
+  body.addColorStop(0.5, NAVY);
+  body.addColorStop(1, "#0B2747");
+  ctx.fillStyle = body;
+  ctx.fillRect(0, 0, w, h);
+
+  // Woven texture
+  ctx.fillStyle = "rgba(255,255,255,0.035)";
+  for (let y = 0; y < h; y += 6) ctx.fillRect(0, y, w, 2);
+
+  // Edge stripes
+  ctx.fillStyle = SKY;
+  ctx.fillRect(0, 14, w, 10);
+  ctx.fillRect(0, h - 24, w, 10);
+
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textBaseline = "middle";
+  ctx.font = `400 120px ${heading}`;
+  const unit = w / 2;
+  for (let i = 0; i < 2; i++) {
+    const x0 = i * unit;
+    if (icon) {
+      const ih = 120;
+      const iw = (icon.width / icon.height) * ih;
+      ctx.drawImage(icon, x0 + 70, h / 2 - ih / 2, iw, ih);
+    }
+    spacedText(ctx, "NUSU", x0 + 240, h / 2 + 6, 18);
+  }
+}
+
+export type CardTextures = {
+  front: THREE.CanvasTexture;
+  back: THREE.CanvasTexture;
+  strap: THREE.CanvasTexture;
+  dispose: () => void;
+};
+
 /**
- * Generates lanyard fabric strap texture with woven fabric details
- * and repeated "NUSU" / "NILE UNIVERSITY" branding pattern.
+ * Creates the card front/back and strap textures. They are returned immediately
+ * (plain navy) and repainted once fonts and logos have loaded.
  */
-export function createLanyardStrapTexture(): {
-  texture: THREE.CanvasTexture;
-  cleanup: () => void;
-} {
-  const width = 1024;
-  const height = 128;
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d", { alpha: false });
+export function createCardTextures(maxAnisotropy: number): CardTextures {
+  const front = canvasOf(CARD_TEX_W, CARD_TEX_H);
+  const back = canvasOf(CARD_TEX_W, CARD_TEX_H);
+  const strap = canvasOf(1024, 160);
+  paintBase(front.ctx, CARD_TEX_W, CARD_TEX_H);
+  paintBase(back.ctx, CARD_TEX_W, CARD_TEX_H);
+  strap.ctx.fillStyle = NAVY;
+  strap.ctx.fillRect(0, 0, 1024, 160);
 
-  if (!ctx) {
-    const fallbackTexture = new THREE.CanvasTexture(canvas);
-    return { texture: fallbackTexture, cleanup: () => {} };
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  texture.wrapS = THREE.RepeatWrapping;
-  texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(5, 1);
-  texture.minFilter = THREE.LinearMipmapLinearFilter;
-  texture.magFilter = THREE.LinearFilter;
-  texture.generateMipmaps = true;
-
-  let isDisposed = false;
-
-  const renderCanvas = () => {
-    if (isDisposed) return;
-
-    // 1. Navy Fabric Base
-    ctx.fillStyle = "#0B213D";
-    ctx.fillRect(0, 0, width, height);
-
-    // 2. Micro Weave Fabric Texture
-    ctx.save();
-    ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
-    for (let x = 0; x < width; x += 4) {
-      ctx.fillRect(x, 0, 2, height);
-    }
-    ctx.fillStyle = "rgba(255, 255, 255, 0.06)";
-    for (let y = 0; y < height; y += 4) {
-      ctx.fillRect(0, y, width, 2);
-    }
-    ctx.restore();
-
-    // 3. Stitched Borders (Top and Bottom)
-    ctx.save();
-    ctx.strokeStyle = "#018BCE";
-    ctx.lineWidth = 3.5;
-    ctx.setLineDash([8, 8]);
-    ctx.beginPath();
-    ctx.moveTo(0, 8);
-    ctx.lineTo(width, 8);
-    ctx.moveTo(0, height - 8);
-    ctx.lineTo(width, height - 8);
-    ctx.stroke();
-    ctx.restore();
-
-    // 4. Repeated Branding Pattern
-    ctx.save();
-    ctx.textBaseline = "middle";
-    ctx.textAlign = "center";
-
-    // Segment 1: Star & NUSU
-    ctx.fillStyle = "#018BCE";
-    ctx.font = "bold 34px sans-serif";
-    ctx.fillText("★", 100, height / 2);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "900 48px 'Anton', -apple-system, sans-serif";
-    ctx.letterSpacing = "4px";
-    ctx.fillText("NUSU", 260, height / 2);
-
-    // Segment 2: Star & NILE UNIVERSITY
-    ctx.fillStyle = "#018BCE";
-    ctx.font = "bold 34px sans-serif";
-    ctx.fillText("★", 420, height / 2);
-
-    ctx.fillStyle = "#8FB8E8";
-    ctx.font = "700 36px 'Poppins', sans-serif";
-    ctx.letterSpacing = "2px";
-    ctx.fillText("NILE UNIVERSITY", 640, height / 2);
-
-    // Segment 3: Star & SU CARD
-    ctx.fillStyle = "#018BCE";
-    ctx.font = "bold 34px sans-serif";
-    ctx.fillText("★", 860, height / 2);
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "900 48px 'Anton', -apple-system, sans-serif";
-    ctx.fillText("SU CARD", 960, height / 2);
-
-    ctx.restore();
-
-    texture.needsUpdate = true;
+  const textures = {
+    front: makeTexture(front.canvas, maxAnisotropy),
+    back: makeTexture(back.canvas, maxAnisotropy),
+    strap: makeTexture(strap.canvas, maxAnisotropy),
   };
+  textures.strap.wrapS = THREE.RepeatWrapping;
+  textures.strap.wrapT = THREE.RepeatWrapping;
 
-  renderCanvas();
-
-  if (typeof window !== "undefined" && document.fonts) {
-    document.fonts.ready.then(() => {
-      if (!isDisposed) renderCanvas();
-    });
-  }
+  let disposed = false;
+  void (async () => {
+    const heading = fontFamily("--font-heading", "Impact");
+    const sans = fontFamily("--font-sans", "sans-serif");
+    const [logo, icon] = await Promise.all([
+      loadImage("/brand/su-logo-white@hd.png"),
+      loadImage("/brand/su-icon-white@hd.png"),
+      document.fonts.load(`400 100px ${heading}`).catch(() => null),
+      document.fonts.load(`600 100px ${sans}`).catch(() => null),
+      document.fonts.load(`700 100px ${sans}`).catch(() => null),
+      document.fonts.load(`500 100px ${sans}`).catch(() => null),
+    ]);
+    if (disposed) return;
+    await paintFront(front.ctx, logo, icon);
+    paintBack(back.ctx, icon, logo);
+    paintStrap(strap.ctx, 1024, 160, icon);
+    textures.front.needsUpdate = true;
+    textures.back.needsUpdate = true;
+    textures.strap.needsUpdate = true;
+  })();
 
   return {
-    texture,
-    cleanup: () => {
-      isDisposed = true;
-      texture.dispose();
+    ...textures,
+    dispose: () => {
+      disposed = true;
+      textures.front.dispose();
+      textures.back.dispose();
+      textures.strap.dispose();
     },
   };
 }

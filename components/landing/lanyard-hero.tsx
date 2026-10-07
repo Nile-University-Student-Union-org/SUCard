@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas } from "@react-three/fiber";
+import * as THREE from "three";
 import { Hand, Sparkles } from "lucide-react";
 import { LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
@@ -89,14 +90,17 @@ export function LanyardHero() {
           <Canvas
             dpr={[1, 2]}
             frameloop={isFrameloopActive ? "always" : "never"}
-            camera={{ position: [0, 0.25, 4.6], fov: 42 }}
+            camera={{ position: [0, 0, 13], fov: 25 }}
             gl={{
               alpha: true,
               antialias: true,
               powerPreference: "high-performance",
             }}
+            onCreated={({ gl }) => {
+              gl.toneMapping = THREE.NeutralToneMapping;
+            }}
             aria-hidden="true"
-            className="w-full h-full cursor-grab active:cursor-grabbing"
+            className="w-full h-full"
             style={{ pointerEvents: "auto" }}
           >
             <LanyardScene onCardGrab={() => setHasInteracted(true)} />

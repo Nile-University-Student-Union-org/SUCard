@@ -20,7 +20,7 @@ import { LanyardCard } from "@/components/landing/lanyard-card";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground overflow-x-hidden selection:bg-brand selection:text-white">
+    <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground overflow-clip selection:bg-brand selection:text-white">
       {/* Ambient background brand glows */}
       <div
         className="pointer-events-none absolute -top-40 -left-40 size-[30rem] rounded-full bg-brand/10 dark:bg-brand/15 blur-3xl"
@@ -291,7 +291,7 @@ export default function HomePage() {
               CLAIM YOUR SU CARD TODAY
             </h2>
             <p className="relative z-10 text-base sm:text-lg text-sky-100/90 max-w-xl mx-auto mb-8 font-normal leading-relaxed">
-              Join thousands of Nile University students enjoying verified campus access and partner perks across Egypt.
+              Sign in with your NU Microsoft account and your card is ready in seconds.
             </p>
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <ButtonLink
@@ -300,7 +300,7 @@ export default function HomePage() {
                 variant="accent"
                 className="w-full sm:w-auto h-12 px-8 text-base font-bold shadow-lg"
               >
-                <span>Get started with Microsoft</span>
+                <span>Get started</span>
                 <ArrowRight className="size-5 ml-1.5" />
               </ButtonLink>
             </div>
