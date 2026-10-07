@@ -8,6 +8,7 @@ import { ScannerHeader } from "./scanner-header";
 import { ScannerViewfinder } from "./scanner-viewfinder";
 import { ScanValidPanel } from "./scan-valid-panel";
 import { ScanInvalidPanel } from "./scan-invalid-panel";
+import { ScanSuccessPanel } from "./scan-success-panel";
 import { ScannerTodayTab } from "./scanner-today-tab";
 import { validateQr, confirmDiscount } from "./api";
 import { notifySuccess, notifyError } from "@/lib/scanner/feedback";
@@ -74,10 +75,18 @@ export function ScannerManager({
     resetsAt: string | null;
   } | null>(null);
 
+  const [successResult, setSuccessResult] = useState<{
+    studentName: string;
+    universityId: string;
+    offerTitle: string;
+    discountLabel: string;
+    billAmount: string | number | null;
+    confirmedAt: string;
+  } | null>(null);
+
   // Debounce tracking: ignore same QR for 3 seconds
   const lastScannedQrRef = useRef<string | null>(null);
   const lastScannedTimeRef = useRef<number>(0);
-
 
   const handleQrDecoded = useCallback(
     async (qrString: string) => {
@@ -86,7 +95,7 @@ export function ScannerManager({
         lastScannedQrRef.current === qrString &&
         now - lastScannedTimeRef.current < 3000;
 
-      if (isSameAsRecent || isValidating || validResult || invalidResult) {
+      if (isSameAsRecent || isValidating || validResult || invalidResult || successResult) {
         return;
       }
 
@@ -127,7 +136,7 @@ export function ScannerManager({
         setIsValidating(false);
       }
     },
-    [isValidating, validResult, invalidResult]
+    [isValidating, validResult, invalidResult, successResult]
   );
 
   const handleConfirmDiscount = async (
@@ -138,9 +147,18 @@ export function ScannerManager({
     setIsConfirming(true);
 
     try {
-      await confirmDiscount(validResult.scanId, offerId, billAmount);
+      const res = await confirmDiscount(validResult.scanId, offerId, billAmount);
       notifySuccess();
-      toast.success("Discount recorded successfully!");
+
+      const appliedOffer = validResult.offers.find((o) => o.id === offerId);
+      setSuccessResult({
+        studentName: validResult.studentName,
+        universityId: validResult.universityId,
+        offerTitle: appliedOffer?.title || "Special Offer",
+        discountLabel: appliedOffer?.discountLabel || "Discount Applied",
+        billAmount: res.billAmount ?? (billAmount !== undefined && billAmount > 0 ? billAmount : null),
+        confirmedAt: res.confirmedAt || new Date().toISOString(),
+      });
       setValidResult(null);
     } catch (err: unknown) {
       notifyError();
@@ -158,6 +176,10 @@ export function ScannerManager({
 
   const handleDismissInvalid = () => {
     setInvalidResult(null);
+  };
+
+  const handleDismissSuccess = () => {
+    setSuccessResult(null);
   };
 
   return (
@@ -180,7 +202,7 @@ export function ScannerManager({
             vendorName={initialContext.vendorName}
             isOnline={isOnline}
             onScan={handleQrDecoded}
-            isProcessing={!!validResult || !!invalidResult}
+            isProcessing={!!validResult || !!invalidResult || !!successResult}
             isValidating={isValidating}
           />
         ) : (
@@ -189,7 +211,7 @@ export function ScannerManager({
           </div>
         )}
 
-        {/* Valid Result Modal Panel */}
+        {/* Valid Result Bottom Sheet / Modal Panel */}
         {validResult && (
           <ScanValidPanel
             studentName={validResult.studentName}
@@ -198,6 +220,19 @@ export function ScannerManager({
             onConfirm={handleConfirmDiscount}
             onCancel={handleCancelValid}
             isConfirming={isConfirming}
+          />
+        )}
+
+        {/* Success Result Confirmation Screen */}
+        {successResult && (
+          <ScanSuccessPanel
+            studentName={successResult.studentName}
+            universityId={successResult.universityId}
+            offerTitle={successResult.offerTitle}
+            discountLabel={successResult.discountLabel}
+            billAmount={successResult.billAmount}
+            confirmedAt={successResult.confirmedAt}
+            onDismiss={handleDismissSuccess}
           />
         )}
 
@@ -225,6 +260,7 @@ export function ScannerManager({
               // Clear any modals when switching tabs
               setValidResult(null);
               setInvalidResult(null);
+              setSuccessResult(null);
             }}
             ariaLabel="Scanner Modes"
             fullWidth

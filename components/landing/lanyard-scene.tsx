@@ -300,6 +300,22 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     [sim, invalidate],
   );
 
+  // The hero allows vertical page panning (touch-pan-y), so on phones a vertical drag on the card would turn into a
+  // scroll and cancel the grab. Pointer events fire before touch events, so a touch that just grabbed the card is
+  // known here: cancel its scrolling. Touches that miss the card still scroll the page.
+  useEffect(() => {
+    const el = gl.domElement;
+    const hold = (e: TouchEvent) => {
+      if (press.current && e.cancelable) e.preventDefault();
+    };
+    el.addEventListener("touchstart", hold, { passive: false });
+    el.addEventListener("touchmove", hold, { passive: false });
+    return () => {
+      el.removeEventListener("touchstart", hold);
+      el.removeEventListener("touchmove", hold);
+    };
+  }, [gl]);
+
   // Release the drag even if the pointer is let go outside the canvas.
   useEffect(() => {
     if (!dragged) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { X, ShieldAlert, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScanResultCode } from "@/lib/vendors/types";
@@ -76,7 +76,7 @@ function getReasonDetails(
     case "limit_reached":
       return {
         title: "Offer Limit Reached",
-        description: `This student has already used their discount for this period.`,
+        description: "This student has already used their discount for this period.",
         hint: `Discount resets: ${formatResetTime(resetsAt)}`,
       };
     case "rate_limited":
@@ -104,6 +104,22 @@ export function ScanInvalidPanel({
 }: ScanInvalidPanelProps) {
   const [secondsLeft, setSecondsLeft] = useState(AUTO_RETURN_SECONDS);
   const details = getReasonDetails(code, resetsAt);
+  const dismissBtnRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    dismissBtnRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onDismiss();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onDismiss]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -123,9 +139,20 @@ export function ScanInvalidPanel({
   const progressPercent = ((AUTO_RETURN_SECONDS - secondsLeft) / AUTO_RETURN_SECONDS) * 100;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#881337] text-white flex flex-col justify-between overflow-y-auto overscroll-contain animate-in fade-in-0 duration-200">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="invalid-title"
+      aria-describedby="invalid-description"
+      className="fixed inset-0 z-50 bg-[#881337] text-white flex flex-col justify-between overflow-y-auto overscroll-contain animate-in fade-in-0 duration-200"
+    >
+      {/* Screen Reader Announcement */}
+      <div aria-live="assertive" className="sr-only">
+        Scan declined: {details.title}. {details.description}
+      </div>
+
       {/* Top Bar */}
-      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20">
+      <header className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/20 text-rose-200 border border-rose-400/30 text-xs font-bold uppercase tracking-wider">
           <ShieldAlert className="size-4" />
           <span>Discount Declined</span>
@@ -139,21 +166,27 @@ export function ScanInvalidPanel({
         >
           <X className="size-5" />
         </button>
-      </div>
+      </header>
 
       {/* Main Error Body */}
-      <div className="flex-1 px-6 py-8 sm:px-10 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
+      <main className="flex-1 px-6 py-8 sm:px-10 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
         {/* Giant ✕ Badge */}
-        <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center animate-in zoom-in-75 duration-300">
+        <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-reduce:transform-none">
           <X className="size-12 sm:size-14 stroke-[3.5]" />
         </div>
 
         {/* Reason Typography */}
         <div className="space-y-2 max-w-sm">
-          <h2 className="font-heading text-3xl sm:text-4xl text-white uppercase tracking-tight leading-tight drop-shadow-sm">
+          <h1
+            id="invalid-title"
+            className="font-heading text-3xl sm:text-4xl text-white uppercase tracking-tight leading-tight drop-shadow-sm"
+          >
             {details.title}
-          </h2>
-          <p className="text-sm sm:text-base text-rose-100 font-medium leading-relaxed">
+          </h1>
+          <p
+            id="invalid-description"
+            className="text-sm sm:text-base text-rose-100 font-medium leading-relaxed"
+          >
             {details.description}
           </p>
         </div>
@@ -170,21 +203,22 @@ export function ScanInvalidPanel({
         <div className="w-full max-w-xs space-y-1.5 pt-2">
           <div className="flex justify-between text-[11px] font-semibold text-rose-200/80">
             <span>Auto-returning to camera</span>
-            <span>{secondsLeft}s</span>
+            <span className="font-mono font-bold text-white">{secondsLeft}s</span>
           </div>
           <div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden">
             <div
-              className="h-full bg-white/80 rounded-full transition-all duration-1000 ease-linear"
+              className="h-full bg-white/80 rounded-full transition-all duration-1000 ease-linear motion-reduce:transition-none"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
         </div>
-      </div>
+      </main>
 
       {/* Bottom Action Bar */}
-      <div className="p-4 sm:p-6 bg-black/40 border-t border-white/15 backdrop-blur-md">
+      <footer className="p-4 sm:p-6 bg-black/40 border-t border-white/15 backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
         <div className="max-w-lg mx-auto flex flex-col gap-2.5">
           <Button
+            ref={dismissBtnRef}
             variant="primary"
             size="lg"
             onClick={onDismiss}
@@ -194,7 +228,7 @@ export function ScanInvalidPanel({
             <span>Scan next card</span>
           </Button>
         </div>
-      </div>
+      </footer>
     </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
-import { Check, Loader2, Sparkles, X, Tag } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+import { Check, Loader2, Sparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
@@ -17,13 +17,13 @@ interface ScanValidPanelProps {
 }
 
 function formatRemainingUses(remainingUses: number | null): string {
-  if (remainingUses === null) return "Unlimited";
+  if (remainingUses === null) return "Unlimited uses";
   if (remainingUses === 1) return "1 use left";
   return `${remainingUses} uses left`;
 }
 
 function formatResetDate(resetsAt: string | null): string {
-  if (!resetsAt) return "later";
+  if (!resetsAt) return "next period";
   try {
     const d = new Date(resetsAt);
     return d.toLocaleString("en-GB", {
@@ -50,14 +50,37 @@ export function ScanValidPanel({
     (o) => o.remainingUses === null || o.remainingUses > 0
   );
 
-  const [selectedOfferId, setSelectedOfferId] = useState<string>(
-    usableOffers[0]?.id || offers[0]?.id || ""
-  );
+  // Preselect single offer or the first usable offer
+  const [selectedOfferId, setSelectedOfferId] = useState<string>(() => {
+    if (usableOffers.length > 0) return usableOffers[0].id;
+    return offers[0]?.id || "";
+  });
+
   const [billAmount, setBillAmount] = useState<string>("");
   const [billError, setBillError] = useState<string | null>(null);
+  const confirmBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Auto-focus confirm button if single offer available
+  useEffect(() => {
+    if (usableOffers.length === 1 && selectedOfferId) {
+      confirmBtnRef.current?.focus();
+    }
+  }, [usableOffers.length, selectedOfferId]);
+
+  // Handle keyboard Escape to cancel
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !isConfirming) {
+        e.preventDefault();
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isConfirming, onCancel]);
 
   const handleConfirm = async () => {
-    if (!selectedOfferId) return;
+    if (!selectedOfferId || isConfirming) return;
 
     let numBill: number | undefined = undefined;
     if (billAmount.trim()) {
@@ -74,202 +97,249 @@ export function ScanValidPanel({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#064E3B] text-white flex flex-col justify-between overflow-y-auto overscroll-contain animate-in fade-in-0 duration-200">
-      {/* Top Bar with Cancel */}
-      <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/20 text-emerald-200 border border-emerald-400/30 text-xs font-bold uppercase tracking-wider">
-          <Check className="size-4 stroke-[3]" />
-          <span>Valid SU Card</span>
-        </div>
-
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={isConfirming}
-          aria-label="Cancel scan"
-          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 disabled:opacity-50"
-        >
-          <X className="size-5" />
-        </button>
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="valid-student-name"
+      aria-describedby="valid-card-badge"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 overflow-hidden animate-in fade-in-0 duration-200"
+    >
+      {/* Screen reader live announcement */}
+      <div aria-live="polite" className="sr-only">
+        Valid student card for {studentName}, ID {universityId}. Select discount offer.
       </div>
 
-      {/* Main Student & Offer Content */}
-      <div className="flex-1 px-4 py-6 sm:px-8 max-w-lg w-full mx-auto space-y-6">
-        {/* Giant Success Badge */}
-        <div className="flex items-center gap-4">
-          <div className="size-16 sm:size-20 rounded-2xl bg-emerald-500 text-white shadow-xl shadow-emerald-950/40 flex items-center justify-center shrink-0 animate-in zoom-in-75 duration-300">
-            <Check className="size-10 sm:size-12 stroke-[3.5]" />
-          </div>
-
-          <div className="min-w-0 space-y-0.5">
-            <h2 className="font-heading text-3xl sm:text-4xl text-white uppercase tracking-tight leading-none truncate drop-shadow-sm">
-              {studentName}
-            </h2>
-            <p className="font-mono text-sm sm:text-base text-emerald-200 font-bold tracking-wider">
-              ID: {universityId}
-            </p>
-          </div>
-        </div>
-
-        {/* Offers Selection */}
-        <div className="space-y-2.5">
-          <label className="block text-xs font-bold uppercase tracking-wider text-emerald-200">
-            {offers.length > 1 ? "Select applicable discount" : "Applicable discount"}
-          </label>
-
-          <div className="space-y-2" role="radiogroup" aria-label="Available offers">
-            {offers.map((offer) => {
-              const isUsable = offer.remainingUses === null || offer.remainingUses > 0;
-              const isSelected = selectedOfferId === offer.id;
-
-              return (
-                <div
-                  key={offer.id}
-                  onClick={() => {
-                    if (isUsable) {
-                      setSelectedOfferId(offer.id);
-                    }
-                  }}
-                  role="radio"
-                  aria-checked={isSelected}
-                  aria-disabled={!isUsable}
-                  tabIndex={isUsable ? 0 : -1}
-                  onKeyDown={(e) => {
-                    if (isUsable && (e.key === " " || e.key === "Enter")) {
-                      e.preventDefault();
-                      setSelectedOfferId(offer.id);
-                    }
-                  }}
-                  className={cn(
-                    "p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-start justify-between gap-3",
-                    isUsable
-                      ? isSelected
-                        ? "bg-white text-slate-950 border-white shadow-lg shadow-black/20 cursor-pointer scale-[1.01]"
-                        : "bg-black/30 text-white border-white/20 hover:border-white/40 cursor-pointer active:scale-[0.99]"
-                      : "bg-black/20 text-white/50 border-white/10 opacity-60 cursor-not-allowed"
-                  )}
-                >
-                  <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg font-heading text-sm uppercase tracking-wide",
-                          isSelected
-                            ? "bg-emerald-700 text-white"
-                            : isUsable
-                            ? "bg-emerald-500/30 text-emerald-300"
-                            : "bg-white/10 text-white/50"
-                        )}
-                      >
-                        <Tag className="size-3.5" />
-                        <span>{offer.discountLabel}</span>
-                      </span>
-
-                      <span
-                        className={cn(
-                          "text-xs font-bold",
-                          isSelected ? "text-emerald-800" : "text-emerald-300"
-                        )}
-                      >
-                        {isUsable
-                          ? formatRemainingUses(offer.remainingUses)
-                          : `Used — resets ${formatResetDate(offer.resetsAt)}`}
-                      </span>
-                    </div>
-
-                    <p
-                      className={cn(
-                        "text-sm font-semibold truncate",
-                        isSelected ? "text-slate-900" : "text-white"
-                      )}
-                    >
-                      {offer.title}
-                    </p>
-                  </div>
-
-                  {/* Radio Indicator */}
-                  <div
-                    className={cn(
-                      "size-6 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors",
-                      isSelected
-                        ? "border-emerald-600 bg-emerald-600 text-white"
-                        : "border-white/40 bg-transparent"
-                    )}
-                  >
-                    {isSelected && <Check className="size-3.5 stroke-[3]" />}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Optional Bill Amount Input */}
-        <div className="space-y-1.5 pt-1">
-          <label
-            htmlFor="bill-amount"
-            className="block text-xs font-bold uppercase tracking-wider text-emerald-200"
+      {/* Main Bottom Sheet on Mobile / Centered Card on sm+ */}
+      <div className="h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg w-full bg-card text-card-foreground flex flex-col rounded-t-[28px] sm:rounded-[24px] shadow-2xl overflow-hidden border-t sm:border border-border motion-safe:animate-in motion-safe:slide-in-from-bottom-6 sm:motion-safe:zoom-in-95 duration-250">
+        {/* Top Header with Safe Area Inset */}
+        <header className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/95 backdrop-blur-md shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
+          <div
+            id="valid-card-badge"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider"
           >
-            Bill amount in EGP <span className="font-normal opacity-75">(Optional)</span>
-          </label>
-          <div className="relative">
-            <Input
-              id="bill-amount"
-              type="text"
-              inputMode="decimal"
-              placeholder="e.g. 85.00"
-              value={billAmount}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (/^\d*\.?\d{0,2}$/.test(val)) {
-                  setBillAmount(val);
-                  setBillError(null);
-                }
-              }}
-              className="bg-black/30 border-white/30 text-white placeholder:text-white/40 h-13 text-lg font-bold rounded-xl focus:border-white focus:ring-white"
-            />
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-emerald-300">
-              EGP
-            </span>
+            <Check className="size-3.5 stroke-[3]" />
+            <span>Valid SU Card</span>
           </div>
-          {billError && (
-            <p className="text-xs text-rose-300 font-semibold">{billError}</p>
-          )}
-        </div>
-      </div>
 
-      {/* Bottom Sticky Action Bar */}
-      <div className="p-4 sm:p-6 bg-black/40 border-t border-white/15 backdrop-blur-md">
-        <div className="max-w-lg mx-auto flex flex-col gap-2.5">
-          <Button
-            variant="primary"
-            size="lg"
-            onClick={handleConfirm}
-            disabled={!selectedOfferId || isConfirming}
-            className="w-full h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider bg-white text-emerald-950 hover:bg-emerald-50 active:scale-[0.98] shadow-xl shadow-black/30 font-bold border-none cursor-pointer"
-          >
-            {isConfirming ? (
-              <>
-                <Loader2 className="size-6 mr-2 animate-spin text-emerald-950" />
-                <span>Recording discount…</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="size-5 mr-2 text-emerald-700 stroke-[2.5]" />
-                <span>Confirm discount</span>
-              </>
-            )}
-          </Button>
-
-          <Button
-            variant="ghost"
+          <button
+            type="button"
             onClick={onCancel}
             disabled={isConfirming}
-            className="w-full text-white/80 hover:text-white hover:bg-white/10 normal-case font-semibold text-sm min-h-[44px]"
+            aria-label="Cancel scan"
+            className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 disabled:opacity-50"
           >
-            Cancel (Scan next card)
-          </Button>
-        </div>
+            <X className="size-5" />
+          </button>
+        </header>
+
+        {/* Scrollable Body Content */}
+        <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 space-y-6">
+          {/* Student Identification Hero */}
+          <div className="flex items-center gap-3.5 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/40 border border-border">
+            {/* High-contrast Green/Sky Success Badge */}
+            <div className="size-14 sm:size-16 rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20 flex items-center justify-center shrink-0">
+              <Check className="size-8 sm:size-9 stroke-[3.5]" />
+            </div>
+
+            <div className="min-w-0 flex-1 space-y-1">
+              <h2
+                id="valid-student-name"
+                className="font-heading text-2xl sm:text-3xl text-foreground uppercase tracking-wide leading-none truncate"
+              >
+                {studentName}
+              </h2>
+              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background border border-border text-xs font-mono font-bold tracking-wider text-muted-foreground">
+                <span>ID:</span>
+                <span className="text-foreground tabular-nums">{universityId}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Offers Selection Radiogroup */}
+          <div className="space-y-2.5">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                {offers.length > 1 ? "Select applicable discount" : "Applicable discount"}
+              </label>
+              <span className="text-[11px] font-semibold text-muted-foreground">
+                {usableOffers.length} available
+              </span>
+            </div>
+
+            <div
+              className="space-y-2.5"
+              role="radiogroup"
+              aria-label="Available discount offers"
+            >
+              {offers.map((offer) => {
+                const isUsable =
+                  offer.remainingUses === null || offer.remainingUses > 0;
+                const isSelected = selectedOfferId === offer.id;
+
+                return (
+                  <div
+                    key={offer.id}
+                    onClick={() => {
+                      if (isUsable && !isConfirming) {
+                        setSelectedOfferId(offer.id);
+                      }
+                    }}
+                    role="radio"
+                    aria-checked={isSelected}
+                    aria-disabled={!isUsable}
+                    tabIndex={isUsable ? 0 : -1}
+                    onKeyDown={(e) => {
+                      if (isUsable && !isConfirming && (e.key === " " || e.key === "Enter")) {
+                        e.preventDefault();
+                        setSelectedOfferId(offer.id);
+                      }
+                    }}
+                    className={cn(
+                      "min-h-[56px] p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 text-left select-none",
+                      isUsable
+                        ? isSelected
+                          ? "bg-sky-500/10 dark:bg-sky-500/15 border-[#018BCE] shadow-sm ring-2 ring-[#018BCE]/20 cursor-pointer"
+                          : "bg-card border-border hover:border-border/80 hover:bg-muted/40 cursor-pointer active:scale-[0.99]"
+                        : "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
+                    )}
+                  >
+                    <div className="min-w-0 flex-1 space-y-1">
+                      {/* Prominent Discount Value Badge & Usage */}
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span
+                          className={cn(
+                            "font-heading text-xl sm:text-2xl leading-none tracking-wide",
+                            isSelected
+                              ? "text-[#0F548D] dark:text-[#38BDF8]"
+                              : isUsable
+                              ? "text-foreground"
+                              : "text-muted-foreground"
+                          )}
+                        >
+                          {offer.discountLabel}
+                        </span>
+
+                        <span
+                          className={cn(
+                            "text-xs font-bold",
+                            isSelected
+                              ? "text-[#0F548D] dark:text-[#38BDF8]"
+                              : isUsable
+                              ? "text-muted-foreground"
+                              : "text-rose-500 dark:text-rose-400"
+                          )}
+                        >
+                          {isUsable
+                            ? formatRemainingUses(offer.remainingUses)
+                            : `Used — resets ${formatResetDate(offer.resetsAt)}`}
+                        </span>
+                      </div>
+
+                      {/* Offer Title */}
+                      <p
+                        className={cn(
+                          "text-sm font-semibold line-clamp-1",
+                          isSelected ? "text-foreground" : "text-muted-foreground"
+                        )}
+                      >
+                        {offer.title}
+                      </p>
+                    </div>
+
+                    {/* Radio Indicator (min 24px) */}
+                    <div
+                      className={cn(
+                        "size-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                        isSelected
+                          ? "border-[#018BCE] bg-[#018BCE] text-white"
+                          : "border-muted-foreground/40 bg-transparent"
+                      )}
+                    >
+                      {isSelected && <Check className="size-3.5 stroke-[3]" />}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Optional Bill Amount Input */}
+          <div className="space-y-1.5 pt-1">
+            <label
+              htmlFor="bill-amount"
+              className="block text-xs font-bold uppercase tracking-wider text-muted-foreground"
+            >
+              Bill amount in EGP <span className="font-normal opacity-75">(Optional)</span>
+            </label>
+
+            <div className="relative">
+              <Input
+                id="bill-amount"
+                type="text"
+                inputMode="decimal"
+                placeholder="e.g. 85.00"
+                value={billAmount}
+                disabled={isConfirming}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (/^\d*\.?\d{0,2}$/.test(val)) {
+                    setBillAmount(val);
+                    setBillError(null);
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleConfirm();
+                  }
+                }}
+                className="bg-background border-2 border-border text-foreground placeholder:text-muted-foreground/50 h-13 sm:h-14 text-lg font-bold font-mono rounded-xl focus:border-[#018BCE] focus:ring-2 focus:ring-[#018BCE]/20 pr-14"
+              />
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none px-1.5 py-0.5 bg-muted rounded border border-border">
+                EGP
+              </span>
+            </div>
+
+            {billError && (
+              <p className="text-xs text-destructive font-semibold pt-0.5">{billError}</p>
+            )}
+          </div>
+        </main>
+
+        {/* Sticky Bottom Action Area */}
+        <footer className="p-4 sm:p-6 bg-card/95 border-t border-border backdrop-blur-md shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
+          <div className="max-w-lg mx-auto w-full flex flex-col gap-2.5">
+            <Button
+              ref={confirmBtnRef}
+              variant="primary"
+              size="lg"
+              onClick={handleConfirm}
+              disabled={!selectedOfferId || isConfirming}
+              className="w-full h-13 sm:h-14 text-base sm:text-lg font-heading uppercase tracking-wider bg-[#0F3056] dark:bg-[#018BCE] text-white hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[#0F3056]/20 font-bold border-none cursor-pointer flex items-center justify-center transition-all disabled:opacity-50"
+            >
+              {isConfirming ? (
+                <>
+                  <Loader2 className="size-5 mr-2 animate-spin text-white" />
+                  <span>Recording discount…</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="size-5 mr-2 text-sky-300 stroke-[2.5]" />
+                  <span>Confirm discount</span>
+                </>
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              onClick={onCancel}
+              disabled={isConfirming}
+              className="w-full text-muted-foreground hover:text-foreground hover:bg-muted/50 normal-case font-semibold text-sm min-h-[44px]"
+            >
+              Cancel (Scan next card)
+            </Button>
+          </div>
+        </footer>
       </div>
     </div>
   );
