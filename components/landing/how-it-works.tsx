@@ -6,6 +6,7 @@ import QRCode from "qrcode";
 import { Check, ScanLine, Store } from "lucide-react";
 import { cn } from "cn";
 import { GoogleWalletLogo } from "@/components/student/student-card-view";
+import { CARD_ART } from "./card-art";
 
 const STEPS = [
   {
@@ -299,10 +300,10 @@ function Phone({ active }: { active: number }) {
 
               {/* One card shared by the sign-in and card screens, so it morphs from one into the other */}
               <div
-                className="pointer-events-none absolute left-[6cqw] top-[19cqw] z-10 w-[88cqw] will-change-transform transition-[transform,opacity] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+                className="pointer-events-none absolute left-[6cqw] top-[19cqw] z-10 w-[88cqw] will-change-transform motion-safe:transition-[transform,opacity] motion-safe:duration-[900ms] motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
                 style={CARD_POSES[active]}
               >
-                <MiniCard />
+                <MiniCard flipped={active === 1} />
               </div>
             </div>
 
@@ -320,7 +321,7 @@ function Phone({ active }: { active: number }) {
 
 /** Shared card pose per step: tilted hero on sign-in, in place on "My card", tucked away at checkout. */
 const CARD_POSES: React.CSSProperties[] = [
-  { transform: "translateY(22cqw) rotate(-7deg) scale(0.8)", opacity: 1 },
+  { transform: "translateY(20cqw) rotate(-7deg) scale(0.8)", opacity: 1 },
   { transform: "none", opacity: 1 },
   // Leaves quickly, so it never sits over the incoming checkout screen.
   {
@@ -426,18 +427,43 @@ function DemoQr({ className }: { className?: string }) {
   );
 }
 
-function MiniCard() {
+function MiniCard({ flipped = false }: { flipped?: boolean }) {
+  const frontArt = CARD_ART.front ?? "/card/front.png";
+  const backArt = CARD_ART.back ?? "/card/back.png";
+
   return (
-    <div className="relative aspect-[1.585/1] w-full overflow-hidden rounded-[4cqw] bg-gradient-to-br from-[#16477A] via-[#0F3056] to-[#0A2140] p-[5cqw] ring-1 ring-inset ring-white/15 shadow-[0_6cqw_12cqw_-6cqw_rgb(0_0_0/0.8)]">
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-white/10 to-transparent" />
-      <div className="absolute left-0 top-[34%] h-[1.2cqw] w-[45%] bg-gradient-to-r from-macaw-blue to-transparent" />
-      <div className="relative flex h-full flex-col justify-between">
-        <Image src="/brand/su-logo-white@hd.png" alt="" width={120} height={36} className="h-[6cqw] w-auto self-start" />
-        <div>
-          <p className="font-heading text-[9cqw] uppercase leading-none tracking-wide">SU Card</p>
-          <span className="mt-[2cqw] inline-block rounded-full bg-macaw-blue px-[2.6cqw] py-[0.6cqw] text-[2.6cqw] font-bold tracking-wider">
-            STUDENT
-          </span>
+    <div className="relative aspect-[1.37/1] w-full [perspective:1000px]">
+      <div
+        className={cn(
+          "relative size-full motion-safe:transition-transform motion-safe:duration-700 motion-safe:ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none [transform-style:preserve-3d] [-webkit-transform-style:preserve-3d]",
+          flipped && "[transform:rotateY(180deg)]",
+        )}
+        style={{
+          transitionDelay: flipped ? "350ms" : "0ms",
+        }}
+      >
+        {/* Front Face */}
+        <div className="absolute inset-0 size-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden] drop-shadow-[0_4cqw_10cqw_rgba(0,0,0,0.65)]">
+          <Image
+            src={frontArt}
+            alt="SU Card front"
+            fill
+            sizes="(max-width: 768px) 60vw, 320px"
+            className="object-contain select-none pointer-events-none"
+            priority
+          />
+        </div>
+
+        {/* Back Face (QR Code side) */}
+        <div className="absolute inset-0 size-full [backface-visibility:hidden] [-webkit-backface-visibility:hidden] [transform:rotateY(180deg)] drop-shadow-[0_4cqw_10cqw_rgba(0,0,0,0.65)]">
+          <Image
+            src={backArt}
+            alt="SU Card back"
+            fill
+            sizes="(max-width: 768px) 60vw, 320px"
+            className="object-contain select-none pointer-events-none"
+            priority
+          />
         </div>
       </div>
     </div>
@@ -446,7 +472,7 @@ function MiniCard() {
 
 function CardScreen({ on }: { on: boolean }) {
   const head = rise(on, 0);
-  const qr = rise(on, 260);
+  const info = rise(on, 260);
   const wallet = rise(on, 380);
   return (
     <div className="flex h-full flex-col px-[6cqw] pt-[5cqw]">
@@ -457,16 +483,14 @@ function CardScreen({ on }: { on: boolean }) {
         </span>
       </div>
       {/* Slot the shared card lands in */}
-      <div className="mt-[5cqw] aspect-[1.585/1] w-full" />
-      <div className={cn("flex flex-1 flex-col items-center justify-center", qr.className)} style={qr.style}>
-        <div className="rounded-[4cqw] bg-white p-[3cqw] shadow-[0_4cqw_10cqw_-4cqw_rgb(0_0_0/0.6)]">
-          <DemoQr className="block w-[44cqw]" />
-        </div>
-        <p className="mt-[3cqw] text-[3.2cqw] text-white/55">Show this at partner stores</p>
+      <div className="mt-[5cqw] aspect-[1.37/1] w-full" />
+      <div className={cn("flex flex-1 flex-col items-center justify-center text-center", info.className)} style={info.style}>
+        <p className="text-[3.4cqw] font-semibold text-white/80">Show this QR at partner stores</p>
+        <p className="mt-[1.5cqw] text-[2.8cqw] text-white/45">Digital membership • Valid 2026/2027</p>
       </div>
       <div
         className={cn(
-          "mb-[10cqw] flex items-center justify-center gap-[2.4cqw] rounded-full bg-black py-[3.6cqw] text-[3.6cqw] font-semibold ring-1 ring-white/20",
+          "mb-[8cqw] flex items-center justify-center gap-[2.4cqw] rounded-full bg-black py-[3.6cqw] text-[3.6cqw] font-semibold ring-1 ring-white/20",
           wallet.className,
         )}
         style={wallet.style}

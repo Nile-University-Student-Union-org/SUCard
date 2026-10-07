@@ -7,7 +7,8 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck, Sparkles, QrCode } from "lucide-react";
+import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck } from "lucide-react";
+import { CARD_ART } from "@/components/landing/card-art";
 import { signIn, authClient } from "@/lib/auth/client";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
@@ -273,7 +274,7 @@ function LoginContent() {
         {/* Middle Content */}
         <div className="relative z-10 flex flex-col items-center my-auto w-full max-w-sm mx-auto space-y-6 xl:space-y-7">
           {/* Hero SU Card: tilted, softly floating with ambient glow & contact shadow */}
-          <div className="relative w-full max-w-[300px] xl:max-w-[320px] mx-auto select-none pointer-events-none">
+          <div className="relative w-full max-w-[280px] xl:max-w-[300px] mx-auto select-none pointer-events-none">
             {/* Ambient Glow behind card */}
             <div
               className="absolute -inset-3 bg-gradient-to-r from-sky-400/20 via-brand-soft/25 to-sky-500/20 rounded-[24px] blur-2xl pointer-events-none"
@@ -282,63 +283,16 @@ function LoginContent() {
 
             {/* Floating Card Container */}
             <div className="motion-safe:animate-[phone-float_7s_ease-in-out_infinite] relative">
-              {/* The Card */}
-              <div
-                className="relative aspect-[1.585/1] w-full rounded-2xl p-4 sm:p-5 text-white overflow-hidden border border-white/20 shadow-2xl -rotate-6"
-                style={{
-                  background: "linear-gradient(135deg, #081E38 0%, #0F3056 48%, #0F548D 100%)",
-                  boxShadow: "0 20px 40px -12px rgba(8, 26, 48, 0.7), 0 0 30px rgba(1, 139, 206, 0.22)",
-                }}
-              >
-                {/* Holographic vertical strip */}
-                <div
-                  className="absolute top-0 bottom-0 left-5 w-4 opacity-35 bg-gradient-to-b from-sky-400 via-emerald-300 via-amber-300 via-pink-400 to-indigo-400 pointer-events-none"
-                  aria-hidden="true"
+              {/* Real SU Card Artwork */}
+              <div className="relative aspect-[1.37/1] w-full -rotate-6 select-none drop-shadow-[0_20px_35px_rgba(8,26,48,0.85)] drop-shadow-[0_0_25px_rgba(1,139,206,0.25)]">
+                <Image
+                  src={CARD_ART.front ?? "/card/front.png"}
+                  alt="SU Card"
+                  fill
+                  sizes="(max-width: 1280px) 280px, 300px"
+                  className="object-contain pointer-events-none"
+                  priority
                 />
-
-                {/* Ambient internal card glow */}
-                <div
-                  className="absolute -top-8 -right-8 size-28 rounded-full bg-sky-400/25 blur-xl pointer-events-none"
-                  aria-hidden="true"
-                />
-
-                {/* Card Top: Logo & Student Chip */}
-                <div className="relative z-10 flex items-center justify-between">
-                  <Image
-                    src="/brand/su-logo-white@hd.png"
-                    alt="NUSU Logo"
-                    width={110}
-                    height={32}
-                    className="h-5.5 w-auto object-contain"
-                  />
-                  <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-sky-500/25 border border-sky-400/40 text-[9px] font-bold text-sky-100 tracking-wider">
-                    <Sparkles className="size-2.5 text-sky-300" />
-                    <span>STUDENT</span>
-                  </div>
-                </div>
-
-                {/* Card Bottom: SU Card Title + QR code block */}
-                <div className="relative z-10 mt-4 sm:mt-5 flex items-end justify-between">
-                  <div>
-                    <h2 className="font-heading text-3xl xl:text-4xl text-white tracking-wider leading-none font-normal drop-shadow-sm">
-                      SU CARD
-                    </h2>
-                    <p className="text-[9px] font-semibold text-sky-200/90 tracking-wider uppercase mt-1">
-                      Nile University Student Union
-                    </p>
-                  </div>
-
-                  {/* QR Placeholder Block */}
-                  <div className="size-12 rounded-xl bg-white p-1 shadow-md flex items-center justify-center shrink-0">
-                    <QrCode className="size-full text-[#0F3056]" />
-                  </div>
-                </div>
-
-                {/* Card Footer strip */}
-                <div className="relative z-10 mt-2.5 pt-1.5 border-t border-white/15 flex items-center justify-between text-[8px] text-sky-200/75 font-medium tracking-wide">
-                  <span>DIGITAL &amp; PHYSICAL CARD</span>
-                  <span className="font-mono text-[7.5px] text-sky-300">SCAN TO VERIFY</span>
-                </div>
               </div>
 
               {/* Contact Shadow beneath tilted card */}
