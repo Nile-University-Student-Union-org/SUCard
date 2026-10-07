@@ -296,9 +296,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         {/* Section 1: Card Issuance Mode (M2a) */}
         <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs rounded-2xl">
           <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
-            <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-              <CreditCard className="size-5 text-brand dark:text-brand-soft" />
-              <span>Card Issuance</span>
+            <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
+              <CreditCard className="size-5 text-brand dark:text-brand-soft shrink-0" />
+              <span>CARD ISSUANCE</span>
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               Define whether new students receive instant digital cards or collect physical cards at the office.
@@ -390,9 +390,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         {/* Section 2: SU Office Details */}
         <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs rounded-2xl">
           <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
-            <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-              <Building2 className="size-5 text-brand dark:text-brand-soft" />
-              <span>Office Location &amp; Hours</span>
+            <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
+              <Building2 className="size-5 text-brand dark:text-brand-soft shrink-0" />
+              <span>OFFICE LOCATION &amp; HOURS</span>
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               Displayed to students who need to collect physical cards or resolve account issues.
@@ -426,9 +426,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         {isSuperAdmin && (
           <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs rounded-2xl">
             <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
-              <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-                <Mail className="size-5 text-brand dark:text-brand-soft" />
-                <span>Student Email Pattern</span>
+              <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
+                <Mail className="size-5 text-brand dark:text-brand-soft shrink-0" />
+                <span>STUDENT EMAIL PATTERN</span>
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
                 Regular expression used to validate student emails during Microsoft SSO onboarding.

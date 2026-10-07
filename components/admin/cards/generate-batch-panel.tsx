@@ -118,8 +118,8 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
               <Plus className="size-5 stroke-[2.5]" />
             </div>
             <div>
-              <CardTitle className="text-base sm:text-lg font-bold text-foreground">
-                Generate Physical Cards
+              <CardTitle className="text-xl sm:text-2xl text-foreground">
+                GENERATE PHYSICAL CARDS
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
                 Create a new physical batch with unique cryptographic QR tokens.

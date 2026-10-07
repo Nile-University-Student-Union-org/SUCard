@@ -47,7 +47,6 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [claimedSerial, setClaimedSerial] = useState<string | null>(null);
 
   // Stop camera media tracks
   const stopCamera = useCallback(() => {
@@ -99,9 +98,6 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       // Success
       isSuccessRef.current = true;
       setIsSuccess(true);
-      if (data.card?.serial) {
-        setClaimedSerial(data.card.serial);
-      }
       stopCamera();
 
       // Delay to show celebration
@@ -111,7 +107,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         } else {
           router.push("/card");
         }
-      }, 1600);
+      }, 1800);
     } catch {
       setClaimError("Network error. Please check your connection and try again.");
       setIsSubmitting(false);
@@ -360,7 +356,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
                 CARD LINKED!
               </h2>
               <p className="text-sm text-zinc-300 font-medium max-w-xs mx-auto">
-                Your physical membership card {claimedSerial ? `(${claimedSerial}) ` : ""}is now active and ready to use.
+                Your physical membership card is now active and ready to use.
               </p>
             </div>
             <div className="pt-2">

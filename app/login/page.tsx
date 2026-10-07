@@ -145,8 +145,8 @@ function LoginContent() {
             <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
             <span>Back to home</span>
           </Link>
-          <span className="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-sky-200">
-            2026/27
+          <span className="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-sky-200 border border-white/15">
+            Official Portal
           </span>
         </div>
 

@@ -12,6 +12,7 @@ import {
   User,
   CreditCard,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "cn";
 
@@ -272,17 +273,27 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Switch to
               </div>
-              {otherAreas.map((area) => (
-                <button
-                  key={area.href}
-                  type="button"
-                  onClick={() => handleSwitchArea(area)}
-                  role="menuitem"
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer text-left"
-                >
-                  <span>{area.label}</span>
-                </button>
-              ))}
+              {otherAreas.map((area) => {
+                const isCardArea =
+                  area.key === "student" ||
+                  area.label.toLowerCase().includes("card");
+                return (
+                  <button
+                    key={area.href}
+                    type="button"
+                    onClick={() => handleSwitchArea(area)}
+                    role="menuitem"
+                    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer text-left group"
+                  >
+                    {isCardArea ? (
+                      <CreditCard className="w-4 h-4 text-brand dark:text-brand-soft group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    ) : (
+                      <LayoutDashboard className="w-4 h-4 text-blue-600 dark:text-sky-400 group-hover:scale-110 transition-transform duration-200 shrink-0" />
+                    )}
+                    <span className="flex-1">{area.label}</span>
+                  </button>
+                );
+              })}
             </div>
           )}
 
