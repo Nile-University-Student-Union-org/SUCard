@@ -296,3 +296,17 @@ export async function resetVendorAccountPassword(
     throw new Error(data.error || "Failed to reset password");
   }
 }
+
+export async function revokeVendorAccountSessions(accountId: string): Promise<void> {
+  const res = await fetch(`/api/admin/vendor-accounts/${accountId}/revoke-sessions`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to revoke sessions");
+  }
+}
+

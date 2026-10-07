@@ -82,3 +82,14 @@ export async function resetStaffPassword(id: string, payload: ResetStaffPassword
   });
   return handleResponse<void>(res);
 }
+
+export async function resetStaffTwoFactor(id: string): Promise<void> {
+  const res = await fetch(`/api/admin/staff/${encodeURIComponent(id)}/reset-2fa`, {
+    method: "POST",
+    headers: {
+      Accept: "application/json",
+    },
+  });
+  return handleResponse<void>(res);
+}
+

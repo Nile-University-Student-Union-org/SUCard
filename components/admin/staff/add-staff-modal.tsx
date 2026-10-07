@@ -14,6 +14,7 @@ import {
   Shield,
   Loader2,
   AlertCircle,
+  Mail,
 } from "lucide-react";
 import {
   STAFF_NAME_MAX,
@@ -44,8 +45,12 @@ const addStaffSchema = z.object({
   role: z.enum(["admin", "super_admin"] as const),
   password: z
     .string()
-    .min(STAFF_PASSWORD_MIN, `Password must be at least ${STAFF_PASSWORD_MIN} characters`)
-    .max(STAFF_PASSWORD_MAX, `Password cannot exceed ${STAFF_PASSWORD_MAX} characters`),
+    .max(STAFF_PASSWORD_MAX, `Password cannot exceed ${STAFF_PASSWORD_MAX} characters`)
+    .refine((val) => !val || val.length >= STAFF_PASSWORD_MIN, {
+      message: `Password must be at least ${STAFF_PASSWORD_MIN} characters`,
+    })
+    .optional()
+    .or(z.literal("")),
 });
 
 type AddStaffFormValues = z.infer<typeof addStaffSchema>;
@@ -60,7 +65,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdStaffData, setCreatedStaffData] = useState<{
     staff: StaffMember;
-    password: string;
+    password?: string;
   } | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -94,9 +99,13 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
 
   const handleCopyCredentials = () => {
     if (!createdStaffData) return;
-    const text = `Staff Member: ${createdStaffData.staff.name}\nEmail: ${createdStaffData.staff.email}\nRole: ${
-      createdStaffData.staff.role === "super_admin" ? "Super Admin" : "Admin"
-    }\nPassword: ${createdStaffData.password}`;
+    const text = createdStaffData.password
+      ? `Staff Member: ${createdStaffData.staff.name}\nEmail: ${createdStaffData.staff.email}\nRole: ${
+          createdStaffData.staff.role === "super_admin" ? "Super Admin" : "Admin"
+        }\nPassword: ${createdStaffData.password}`
+      : `Staff Member: ${createdStaffData.staff.name}\nEmail: ${createdStaffData.staff.email}\nRole: ${
+          createdStaffData.staff.role === "super_admin" ? "Super Admin" : "Admin"
+        }`;
 
     navigator.clipboard.writeText(text).then(() => {
       setIsCopied(true);
@@ -123,12 +132,19 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
     setIsSubmitting(true);
     setSubmitError(null);
 
+    const payload = {
+      name: values.name.trim(),
+      email: values.email.trim().toLowerCase(),
+      role: values.role,
+      ...(values.password && values.password.trim() ? { password: values.password.trim() } : {}),
+    };
+
     try {
-      const res = await createStaff(values);
+      const res = await createStaff(payload);
       onStaffAdded(res.staff);
       setCreatedStaffData({
         staff: res.staff,
-        password: values.password,
+        password: values.password && values.password.trim() ? values.password.trim() : undefined,
       });
       toast.success(`Staff member ${res.staff.name} added successfully`);
     } catch (err) {
@@ -149,7 +165,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
       maxWidth="md"
     >
       {createdStaffData ? (
-        /* One-time Credentials Success Pane */
+        /* Success Pane */
         <>
           <ModalBody className="space-y-4">
             <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 space-y-2">
@@ -158,7 +174,9 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 <span>Account Created Successfully</span>
               </div>
               <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
-                Make sure to copy these credentials now. For security reasons, the password cannot be retrieved once you close this dialog.
+                {createdStaffData.password
+                  ? "Make sure to copy these credentials now. For security reasons, the password cannot be retrieved once you close this dialog."
+                  : `A secure set-password link has been queued to email ${createdStaffData.staff.email}.`}
               </p>
             </div>
 
@@ -178,34 +196,43 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                   {createdStaffData.staff.role === "super_admin" ? "Super Admin" : "Admin"}
                 </span>
               </div>
-              <div className="flex justify-between items-center py-1">
-                <span className="text-ash dark:text-zinc-400 font-sans font-bold">Password:</span>
-                <span className="text-brand dark:text-brand-soft font-bold select-all bg-white dark:bg-zinc-900 px-2 py-1 rounded-md border border-slate-200 dark:border-zinc-700">
-                  {createdStaffData.password}
-                </span>
-              </div>
+              {createdStaffData.password ? (
+                <div className="flex justify-between items-center py-1">
+                  <span className="text-ash dark:text-zinc-400 font-sans font-bold">Password:</span>
+                  <span className="text-brand dark:text-brand-soft font-bold select-all bg-white dark:bg-zinc-900 px-2 py-1 rounded-md border border-slate-200 dark:border-zinc-700">
+                    {createdStaffData.password}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 py-1 text-emerald-700 dark:text-emerald-300 font-sans text-xs">
+                  <Mail className="size-4 shrink-0" />
+                  <span>Set-password link sent via email</span>
+                </div>
+              )}
             </div>
           </ModalBody>
 
           <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCopyCredentials}
-              className="normal-case text-xs font-bold"
-            >
-              {isCopied ? (
-                <>
-                  <Check className="size-4 mr-1.5 text-emerald-600" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="size-4 mr-1.5" />
-                  Copy credentials
-                </>
-              )}
-            </Button>
+            {createdStaffData.password ? (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCopyCredentials}
+                className="normal-case text-xs font-bold"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="size-4 mr-1.5 text-emerald-600" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-4 mr-1.5" />
+                    Copy credentials
+                  </>
+                )}
+              </Button>
+            ) : <div />}
             <Button
               type="button"
               variant="primary"
@@ -279,11 +306,11 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               </p>
             </div>
 
-            {/* Password */}
+            {/* Password (Optional) */}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="staff-password" className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-                  Initial Password
+                  Initial Password <span className="text-ash dark:text-zinc-500 font-normal">(Optional)</span>
                 </label>
                 <button
                   type="button"
@@ -303,14 +330,17 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 disabled={isSubmitting}
                 showPasswordToggle
                 error={errors.password?.message}
+                helperText="Leave empty to email them a link to set their own password"
                 {...register("password")}
               />
 
-              {/* Password Strength Meter */}
-              <PasswordStrengthMeter
-                password={currentPassword}
-                showMatch={false}
-              />
+              {/* Password Strength Meter when password is typed */}
+              {currentPassword && (
+                <PasswordStrengthMeter
+                  password={currentPassword}
+                  showMatch={false}
+                />
+              )}
             </div>
           </ModalBody>
 
@@ -320,7 +350,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               variant="secondary"
               onClick={handleModalClose}
               disabled={isSubmitting}
-              className="normal-case"
+              className="normal-case font-semibold"
             >
               Cancel
             </Button>
