@@ -27,10 +27,10 @@ Password for all: `studentpass123`
 
 Password for all: `cashierpass123`
 
-| Role | Email | Vendor / branch |
+| Role | Email | Vendor |
 |---|---|---|
-| Cashier | `cashier.coffee@sucard.local` | Campus Coffee — Main Gate |
-| Cashier | `cashier.library@sucard.local` | Campus Coffee — Library |
+| Cashier | `cashier.coffee@sucard.local` | Campus Coffee |
+| Cashier | `cashier.coffee2@sucard.local` | Campus Coffee |
 | Vendor manager | `manager.coffee@sucard.local` | Campus Coffee |
 
 Seeded vendors: **Campus Coffee** (active; offers "15% off any drink" 1/day, "Free cookie with any coffee" 2/week 08:00–12:00) and **Book Corner** (paused; "10% off", unlimited).

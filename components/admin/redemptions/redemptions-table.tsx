@@ -107,7 +107,7 @@ export function RedemptionsTable({
           <thead>
             <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
               <th className="px-4 py-3.5">Time (Cairo)</th>
-              <th className="px-4 py-3.5">Vendor & Branch</th>
+              <th className="px-4 py-3.5">Vendor</th>
               <th className="px-4 py-3.5">Cashier</th>
               <th className="px-4 py-3.5">Student</th>
               <th className="px-4 py-3.5">Offer</th>
@@ -135,11 +135,10 @@ export function RedemptionsTable({
                     {formatTimestamp(r.createdAt)}
                   </td>
 
-                  {/* Vendor & Branch */}
+                  {/* Vendor */}
                   <td className="px-4 py-3.5 font-medium text-foreground">
                     <div className={cn("space-y-0.5", isVoided && "line-through")}>
                       <span className="font-bold text-foreground block">{r.vendorName}</span>
-                      <span className="text-muted-foreground text-[11px] block">{r.branchName}</span>
                     </div>
                   </td>
 
@@ -258,7 +257,6 @@ export function RedemptionsTable({
                   <h4 className={cn("font-bold text-sm text-foreground", isVoided && "line-through")}>
                     {r.vendorName}
                   </h4>
-                  <p className="text-xs text-muted-foreground">{r.branchName}</p>
                 </div>
 
                 <span

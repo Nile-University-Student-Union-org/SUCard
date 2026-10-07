@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "cn";
 
+import { toast } from "sonner";
+
 const emptySubscribe = () => () => {};
 
 export interface UserNavUser {
@@ -53,11 +55,31 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
   const updateCoords = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      const calculatedRight = viewportWidth - rect.right;
       setCoords({
         top: Math.round(rect.bottom + 8),
-        right: Math.round(Math.max(16, window.innerWidth - rect.right)),
+        right: Math.round(Math.max(16, Math.min(viewportWidth - 280, calculatedRight))),
       });
     }
+  }, []);
+
+  const openFromKeyboard = (last = false) => {
+    updateCoords();
+    setIsOpen(true);
+    requestAnimationFrame(() => {
+      const items = dropdownRef.current?.querySelectorAll<HTMLElement>(
+        '[role="menuitem"]:not(:disabled)'
+      );
+      if (items && items.length > 0) {
+        (last ? items[items.length - 1] : items[0])?.focus();
+      }
+    });
+  };
+
+  const closeAndRestoreFocus = useCallback(() => {
+    setIsOpen(false);
+    buttonRef.current?.focus();
   }, []);
 
   const handleToggle = () => {
@@ -104,22 +126,6 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
     };
   }, [isOpen]);
 
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && isOpen) {
-        setIsOpen(false);
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isOpen]);
-
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const isSuperAdmin = user.role === "super_admin";
   const isAdmin = user.role === "admin" || isSuperAdmin;
@@ -140,8 +146,9 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
           window.location.assign(data.href || area.href);
           return;
         }
+        toast.error(`Couldn't save preferred area. Continuing to ${area.label}…`);
       } catch {
-        // Fallback to direct navigation
+        toast.error(`Couldn't save preferred area. Continuing to ${area.label}…`);
       }
     }
     window.location.assign(area.href);
@@ -154,6 +161,12 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
         ref={buttonRef}
         type="button"
         onClick={handleToggle}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            openFromKeyboard(e.key === "ArrowUp");
+          }
+        }}
         aria-expanded={isOpen}
         aria-haspopup="menu"
         aria-label={`User account menu for ${user.name}`}
@@ -200,7 +213,37 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
           ref={dropdownRef}
           role="menu"
           aria-label="User Account Options"
-          className="fixed z-[65] w-80 sm:w-84 rounded-2xl border border-slate-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-2 animate-in fade-in-0 zoom-in-95 duration-150 origin-top-right text-foreground max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain no-scrollbar"
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              event.stopPropagation();
+              closeAndRestoreFocus();
+              return;
+            }
+            if (event.key === "Tab") {
+              setIsOpen(false);
+              return;
+            }
+            if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+            const items = Array.from(
+              event.currentTarget.querySelectorAll<HTMLElement>(
+                '[role="menuitem"]:not(:disabled)'
+              )
+            );
+            if (!items.length) return;
+            event.preventDefault();
+            const currentIndex = items.indexOf(document.activeElement as HTMLElement);
+            const nextIndex =
+              event.key === "Home"
+                ? 0
+                : event.key === "End"
+                ? items.length - 1
+                : event.key === "ArrowUp"
+                ? (currentIndex - 1 + items.length) % items.length
+                : (currentIndex + 1) % items.length;
+            items[nextIndex]?.focus();
+          }}
+          className="fixed z-[65] w-[calc(100vw-32px)] sm:w-80 max-w-sm rounded-2xl border border-slate-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-2 animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none origin-top-right text-foreground max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain no-scrollbar"
           style={{
             top: `${coords.top}px`,
             right: `${coords.right}px`,

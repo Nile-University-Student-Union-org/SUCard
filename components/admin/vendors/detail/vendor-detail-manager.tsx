@@ -22,7 +22,6 @@ import { getVendor } from "../api";
 import { isExpiringSoon } from "../vendors-table";
 import { VendorInsightsTab } from "./vendor-insights-tab";
 import { VendorOverviewTab } from "./vendor-overview-tab";
-import { VendorBranchesTab } from "./vendor-branches-tab";
 import { VendorOffersTab } from "./vendor-offers-tab";
 import { VendorAccountsTab } from "./vendor-accounts-tab";
 import { cn } from "cn";
@@ -32,7 +31,7 @@ interface VendorDetailManagerProps {
   vendorId: string;
 }
 
-type TabKey = "insights" | "overview" | "branches" | "offers" | "accounts";
+type TabKey = "insights" | "overview" | "offers" | "accounts";
 
 const TABS: TabBarItem<TabKey>[] = [
   {
@@ -44,11 +43,6 @@ const TABS: TabBarItem<TabKey>[] = [
     id: "overview",
     label: "Overview",
     icon: <Settings className="size-4" />,
-  },
-  {
-    id: "branches",
-    label: "Branches",
-    icon: <MapPin className="size-4" />,
   },
   {
     id: "offers",
@@ -275,10 +269,6 @@ export function VendorDetailManager({ vendorId }: VendorDetailManagerProps) {
             vendor={vendor}
             onVendorUpdated={(updated) => setVendor(updated)}
           />
-        )}
-
-        {activeTab === "branches" && (
-          <VendorBranchesTab vendorId={vendor.id} />
         )}
 
         {activeTab === "offers" && (

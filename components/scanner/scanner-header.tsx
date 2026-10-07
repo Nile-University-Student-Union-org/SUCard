@@ -11,7 +11,6 @@ interface ScannerHeaderProps {
   user: UserNavUser;
   areas: UserNavArea[];
   vendorName: string;
-  branchName: string;
   vendorLogoUrl: string | null;
   isOnline: boolean;
   onMuteToggle?: (isMuted: boolean) => void;
@@ -21,7 +20,6 @@ export function ScannerHeader({
   user,
   areas,
   vendorName,
-  branchName,
   vendorLogoUrl,
   isOnline,
   onMuteToggle,
@@ -73,7 +71,7 @@ export function ScannerHeader({
               )}
             </div>
             <p className="text-xs text-sky-200/80 font-medium truncate">
-              {branchName}
+              {user.name}
             </p>
           </div>
         </div>

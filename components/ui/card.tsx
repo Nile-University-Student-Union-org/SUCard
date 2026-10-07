@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const cardVariants = cva(
-  "min-w-0 max-w-full rounded-[16px] text-foreground transition-all duration-200",
+  "min-w-0 max-w-full rounded-[16px] text-foreground transition-all duration-200 motion-reduce:transition-none motion-reduce:transform-none",
   {
     variants: {
       variant: {
@@ -14,7 +14,7 @@ const cardVariants = cva(
         flat:
           "bg-slate-50/60 dark:bg-zinc-800/40 border-2 border-slate-200 dark:border-zinc-800",
         interactive:
-          "bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-brand/50 dark:hover:border-brand-soft/50 active:translate-y-0 active:scale-[0.99] cursor-pointer select-none",
+          "bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-brand/50 dark:hover:border-brand-soft/50 active:translate-y-0 active:scale-[0.99] cursor-pointer select-none motion-reduce:hover:translate-none motion-reduce:active:scale-100",
         elevated:
           "bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-md",
         muted:
@@ -83,7 +83,7 @@ export const CardDescription = forwardRef<
   <p
     ref={ref}
     className={cn(
-      "text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed",
+      "text-xs sm:text-sm text-muted-foreground font-medium leading-relaxed [overflow-wrap:anywhere]",
       className
     )}
     {...props}

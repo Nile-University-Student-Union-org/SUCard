@@ -1,16 +1,12 @@
 import type {
   CreateVendorRequest,
   UpdateVendorRequest,
-  CreateBranchRequest,
-  UpdateBranchRequest,
   CreateOfferRequest,
   UpdateOfferRequest,
   CreateVendorAccountRequest,
   UpdateVendorAccountRequest,
   ListVendorsResponse,
   VendorResponse,
-  ListBranchesResponse,
-  BranchResponse,
   ListOffersResponse,
   OfferResponse,
   OfferRevisionsResponse,
@@ -93,58 +89,6 @@ export async function uploadVendorLogo(
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.error || "Failed to upload vendor logo");
-  }
-  return data;
-}
-
-export async function listBranches(
-  vendorId: string
-): Promise<ListBranchesResponse> {
-  const res = await fetch(`/api/admin/vendors/${vendorId}/branches`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "Failed to load branches");
-  }
-  return res.json();
-}
-
-export async function createBranch(
-  vendorId: string,
-  payload: CreateBranchRequest
-): Promise<BranchResponse> {
-  const res = await fetch(`/api/admin/vendors/${vendorId}/branches`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || "Failed to create branch");
-  }
-  return data;
-}
-
-export async function updateBranch(
-  branchId: string,
-  payload: UpdateBranchRequest
-): Promise<BranchResponse> {
-  const res = await fetch(`/api/admin/branches/${branchId}`, {
-    method: "PATCH",
-    headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
-    throw new Error(data.error || "Failed to update branch");
   }
   return data;
 }

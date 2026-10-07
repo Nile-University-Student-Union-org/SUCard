@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 import { ValidationBubble, type ValidationBubbleProps } from "./validation-bubble";
 
 const textareaVariants = cva(
-  "w-full min-w-0 rounded-[12px] text-sm font-medium text-charcoal dark:text-white placeholder:text-ash dark:placeholder:text-zinc-500 transition-all duration-150 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-text resize-y",
+  "w-full min-w-0 rounded-[12px] text-sm font-medium text-charcoal dark:text-white placeholder:text-muted-foreground transition-all duration-150 motion-reduce:transition-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-text resize-y",
   {
     variants: {
       variant: {
@@ -16,7 +16,7 @@ const textareaVariants = cva(
         filled:
           "bg-slate-100/80 dark:bg-zinc-800/80 border-2 border-slate-300 dark:border-zinc-700 focus:bg-white dark:focus:bg-zinc-900 focus:border-brand dark:focus:border-brand-soft focus:ring-2 focus:ring-brand/20",
         tactile:
-          "bg-white dark:bg-zinc-900 border-2 border-slate-300 dark:border-zinc-700 shadow-[0_2px_0_0_rgb(0_0_0/0.06)] dark:shadow-none focus:border-brand dark:focus:border-brand-soft focus:ring-2 focus:ring-brand/20 active:translate-y-[1px]",
+          "bg-white dark:bg-zinc-900 border-2 border-slate-300 dark:border-zinc-700 shadow-[0_2px_0_0_rgb(0_0_0/0.06)] dark:shadow-none focus:border-brand dark:focus:border-brand-soft focus:ring-2 focus:ring-brand/20 active:translate-y-[1px] motion-reduce:active:translate-none",
       },
       textareaSize: {
         sm: "p-3 text-xs min-h-[70px]",

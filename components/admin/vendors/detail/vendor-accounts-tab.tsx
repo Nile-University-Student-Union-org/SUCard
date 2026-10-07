@@ -1,17 +1,17 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Users, KeyRound, Edit2, AlertCircle, MapPin, LogOut, Loader2 } from "lucide-react";
+import { Plus, Users, KeyRound, Edit2, AlertCircle, LogOut, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { listVendorAccounts, updateVendorAccount, listBranches, revokeVendorAccountSessions } from "../api";
+import { listVendorAccounts, updateVendorAccount, revokeVendorAccountSessions } from "../api";
 import { VendorAccountModal } from "./vendor-account-modal";
 import { VendorAccountResetModal } from "./vendor-account-reset-modal";
 import { cn } from "cn";
-import type { VendorAccountDto, BranchDto } from "@/lib/vendors/types";
+import type { VendorAccountDto } from "@/lib/vendors/types";
 
 interface VendorAccountsTabProps {
   vendorId: string;
@@ -19,7 +19,6 @@ interface VendorAccountsTabProps {
 
 export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
   const [accounts, setAccounts] = useState<VendorAccountDto[]>([]);
-  const [branches, setBranches] = useState<BranchDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,12 +33,8 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const [accRes, branchRes] = await Promise.all([
-        listVendorAccounts(vendorId),
-        listBranches(vendorId),
-      ]);
+      const accRes = await listVendorAccounts(vendorId);
       setAccounts(accRes.accounts || []);
-      setBranches(branchRes.branches || []);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load vendor accounts"
@@ -51,11 +46,10 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
 
   useEffect(() => {
     let active = true;
-    Promise.all([listVendorAccounts(vendorId), listBranches(vendorId)])
-      .then(([accRes, branchRes]) => {
+    listVendorAccounts(vendorId)
+      .then((accRes) => {
         if (active) {
           setAccounts(accRes.accounts || []);
-          setBranches(branchRes.branches || []);
           setIsLoading(false);
         }
       })
@@ -117,11 +111,6 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
     }
   };
 
-  const getBranchName = (branchId: string | null) => {
-    if (!branchId) return null;
-    return branches.find((b) => b.id === branchId)?.name || "Unknown Branch";
-  };
-
   return (
     <div className="space-y-6 animate-in fade-in-0 duration-200">
       {/* Header bar */}
@@ -131,7 +120,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
             STAFF ACCOUNTS
           </h3>
           <p className="text-xs text-muted-foreground font-medium">
-            Cashiers assigned to scanner branches and vendor managers.
+            Cashiers and vendor managers for this vendor.
           </p>
         </div>
 
@@ -181,10 +170,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
         />
       ) : (
         <div className="space-y-3.5">
-          {accounts.map((acc) => {
-            const branchName = getBranchName(acc.branchId);
-
-            return (
+          {accounts.map((acc) => (
               <div
                 key={acc.id}
                 className="p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-zinc-700 transition-all"
@@ -224,12 +210,6 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                   <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap">
                     <span className="font-medium text-foreground/80">{acc.email}</span>
 
-                    {branchName && (
-                      <span className="inline-flex items-center gap-1 text-muted-foreground font-semibold">
-                        <MapPin className="size-3 text-brand" />
-                        <span>Branch: {branchName}</span>
-                      </span>
-                    )}
                   </div>
                 </div>
 
@@ -281,8 +261,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                   </Button>
                 </div>
               </div>
-            );
-          })}
+          ))}
         </div>
       )}
 
@@ -294,7 +273,6 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
           setEditingAccount(null);
         }}
         vendorId={vendorId}
-        branches={branches}
         editingAccount={editingAccount}
         onAccountSaved={handleAccountSaved}
       />

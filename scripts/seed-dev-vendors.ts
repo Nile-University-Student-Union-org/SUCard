@@ -15,7 +15,6 @@ async function main() {
   } = await import("../lib/db");
   const {
     vendors,
-    branches,
     offers,
     offerRevisions,
     user
@@ -35,16 +34,6 @@ async function main() {
         name,
         category,
         status
-      }).returning();
-      return created;
-    }
-    async function branch(vendorId: string, name: string) {
-      const [found] = await db.select().from(branches).where(and(eq(branches.vendorId, vendorId), eq(branches.name, name)));
-      if (found) return found;
-      const [created] = await db.insert(branches).values({
-        vendorId,
-        name,
-        address: name
       }).returning();
       return created;
     }
@@ -70,8 +59,6 @@ async function main() {
       });
     }
     const coffee = await vendor("Campus Coffee", "coffee", "active");
-    const main = await branch(coffee.id, "Main Gate");
-    const library = await branch(coffee.id, "Library");
     await offer(coffee.id, "15% off any drink", {
       discountType: "percent",
       discountValue: "15",
@@ -96,18 +83,15 @@ async function main() {
     for (const input of [{
       email: "cashier.coffee@sucard.local",
       name: "Coffee Cashier",
-      role: "cashier",
-      branchId: main.id
+      role: "cashier"
     }, {
-      email: "cashier.library@sucard.local",
-      name: "Library Cashier",
-      role: "cashier",
-      branchId: library.id
+      email: "cashier.coffee2@sucard.local",
+      name: "Coffee Cashier 2",
+      role: "cashier"
     }, {
       email: "manager.coffee@sucard.local",
       name: "Coffee Manager",
-      role: "vendor_manager",
-      branchId: null
+      role: "vendor_manager"
     }] as const) {
       if (await ctx.internalAdapter.findUserByEmail(input.email)) continue;
       const hash = await ctx.password.hash("cashierpass123");
@@ -126,8 +110,7 @@ async function main() {
         password: hash
       });
       await db.update(user).set({
-        vendorId: coffee.id,
-        branchId: input.branchId
+        vendorId: coffee.id
       }).where(eq(user.id, created.id));
     }
     console.log("Dev vendors seeded");

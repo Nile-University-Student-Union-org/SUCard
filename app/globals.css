@@ -170,8 +170,8 @@
   --popover-foreground: #F4F7FB;
 
   /* Primary */
-  --primary: #018BCE;
-  --primary-foreground: #FFFFFF;
+  --primary: #52A5E8;
+  --primary-foreground: #081424;
 
   /* Secondary */
   --secondary: #143054;
@@ -184,7 +184,7 @@
   /* Accent */
   --accent: #173E6D;
   --accent-foreground: #FFFFFF;
-  --ring: #018BCE;
+  --ring: #52A5E8;
 
   /* Destructive */
   --destructive: #EF4444;
@@ -309,6 +309,16 @@
   }
   .pt-safe {
     padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+  }
+  .mb-safe {
+    margin-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  .bottom-safe {
+    bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  .px-safe {
+    padding-left: max(1rem, env(safe-area-inset-left, 1rem));
+    padding-right: max(1rem, env(safe-area-inset-right, 1rem));
   }
 
   .touch-pan-x {

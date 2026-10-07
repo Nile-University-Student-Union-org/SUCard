@@ -17,14 +17,6 @@ export const vendorBody = z.strictObject({
   notes: optionalText
 }).refine(v => !v.contractStart || !v.contractEnd || v.contractStart <= v.contractEnd, "Contract end precedes start");
 export const vendorPatch = z.strictObject(vendorBody.shape).partial().refine(v => Object.keys(v).length > 0, "No changes supplied");
-export const branchBody = z.strictObject({
-  name: short,
-  address: short,
-  lat: z.number().min(-90).max(90).nullable(),
-  lng: z.number().min(-180).max(180).nullable(),
-  status: z.enum(["active", "inactive"])
-});
-export const branchPatch = branchBody.partial().refine(v => Object.keys(v).length > 0, "No changes supplied");
 export const offerBody = z.strictObject({
   title: short,
   description: optionalText,
@@ -60,12 +52,10 @@ export const accountBody = z.strictObject({
   email: z.email().transform(v => v.toLowerCase()),
   name: short,
   password: z.string().min(STAFF_PASSWORD_MIN).max(STAFF_PASSWORD_MAX).optional(),
-  role: z.enum(["cashier", "vendor_manager"]),
-  branchId: z.uuid().nullable().optional()
+  role: z.enum(["cashier", "vendor_manager"])
 });
 export const accountPatch = z.strictObject({
   name: short.optional(),
-  branchId: z.uuid().nullable().optional(),
   status: z.enum(["active", "disabled"]).optional()
 }).refine(v => Object.keys(v).length > 0);
 export const passwordBody = z.strictObject({

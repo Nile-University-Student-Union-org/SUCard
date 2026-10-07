@@ -18,7 +18,7 @@ export async function admin(request: Request) {
 export async function cashier(request: Request) {
   const person = await getCurrentUser(request.headers);
   if (!person) return json({ error: "Unauthorized" }, 401);
-  if (person.disabledAt || person.role !== "cashier" || !person.vendorId || !person.branchId) return json({ error: "Forbidden" }, 403);
+  if (person.disabledAt || person.role !== "cashier" || !person.vendorId) return json({ error: "Forbidden" }, 403);
   const { getCashierFromRequest } = await import("@/lib/auth/guards");
   return (await getCashierFromRequest(request)) ?? json({ error: "Forbidden" }, 403);
 }

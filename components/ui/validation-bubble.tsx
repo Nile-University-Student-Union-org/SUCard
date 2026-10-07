@@ -6,7 +6,7 @@ import { X, Info, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const validationBubbleVariants = cva(
-  "relative z-30 inline-flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-xs font-semibold shadow-xl border backdrop-blur-md select-none transition-all duration-200 animate-in fade-in-0 zoom-in-95",
+  "relative z-30 inline-flex items-center gap-2.5 px-3 py-2 rounded-[12px] text-xs font-semibold shadow-xl border backdrop-blur-md select-none transition-all duration-200 animate-in fade-in-0 zoom-in-95 motion-reduce:animate-none motion-reduce:transition-none motion-reduce:transform-none",
   {
     variants: {
       variant: {
@@ -149,7 +149,7 @@ export const ValidationBubble: React.FC<ValidationBubbleProps> = ({
     >
       {renderBeak()}
       {renderIcon()}
-      <span className="text-xs font-semibold leading-tight text-slate-100 dark:text-zinc-100">
+      <span className="text-xs font-semibold leading-tight text-slate-100 dark:text-zinc-100 [overflow-wrap:anywhere]">
         {content}
       </span>
       {dismissible && (
@@ -157,9 +157,9 @@ export const ValidationBubble: React.FC<ValidationBubbleProps> = ({
           type="button"
           onClick={onDismiss}
           aria-label="Dismiss validation message"
-          className="ml-1 w-4 h-4 rounded-full flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 active:scale-90 transition-all cursor-pointer"
+          className="ml-1 -my-2 -mr-2 min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
         >
-          <X className="w-3 h-3" />
+          <X className="w-3.5 h-3.5" />
         </button>
       )}
     </div>

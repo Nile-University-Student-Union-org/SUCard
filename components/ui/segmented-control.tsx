@@ -145,7 +145,7 @@ export function SegmentedControl<Id extends string>({
               size === "sm" ? "px-3 text-xs" : "px-3.5 text-sm",
               fullWidth && "grow",
               selected
-                ? "text-white"
+                ? "text-white dark:text-midnight font-bold"
                 : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white",
               selected && !indicator && "bg-brand shadow-xs",
             )}

@@ -118,7 +118,8 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
                        hover:border-brand/60 dark:hover:border-brand-soft/60 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-brand dark:hover:text-white 
                        shadow-xs items-center justify-center transition-all shrink-0 cursor-pointer select-none
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2
-                       active:scale-95 animate-in fade-in-0 duration-200"
+                       active:scale-95 animate-in fade-in-0 duration-200
+                       motion-reduce:animate-none motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
           >
             <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
           </button>
@@ -130,7 +131,7 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
           {showGradients && hasOverflow && canScrollLeft && (
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200"
+              className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200 motion-reduce:transition-none"
             />
           )}
 
@@ -150,7 +151,7 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
           {showGradients && hasOverflow && canScrollRight && (
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200"
+              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200 motion-reduce:transition-none"
             />
           )}
         </div>
@@ -167,7 +168,8 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
                        hover:border-brand/60 dark:hover:border-brand-soft/60 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-brand dark:hover:text-white 
                        shadow-xs items-center justify-center transition-all shrink-0 cursor-pointer select-none
                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2
-                       active:scale-95 animate-in fade-in-0 duration-200"
+                       active:scale-95 animate-in fade-in-0 duration-200
+                       motion-reduce:animate-none motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
           >
             <ChevronRight className="w-5 h-5 stroke-[2.5]" />
           </button>

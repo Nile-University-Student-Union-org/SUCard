@@ -51,7 +51,8 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
         className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-[12px] text-xs font-bold uppercase tracking-wider
                    border-2 border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm
                    text-charcoal dark:text-zinc-200 hover:border-brand/40 dark:hover:border-brand-soft/40 
-                   hover:text-brand dark:hover:text-brand-soft active:scale-[0.98] transition-all cursor-pointer select-none"
+                   hover:text-brand dark:hover:text-brand-soft active:scale-[0.98] transition-all cursor-pointer select-none
+                   motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
         aria-label={backLabel}
       >
         <ArrowLeft className="w-4 h-4" />

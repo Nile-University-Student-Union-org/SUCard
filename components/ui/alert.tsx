@@ -108,7 +108,7 @@ export const Alert: React.FC<AlertProps> = ({
       aria-live="polite"
       className={cn(
         alertVariants({ variant, size }),
-        "animate-in fade-in-0 duration-200",
+        "animate-in fade-in-0 duration-200 motion-reduce:animate-none",
         className
       )}
       {...props}
@@ -120,7 +120,7 @@ export const Alert: React.FC<AlertProps> = ({
         </div>
 
         {/* Content Container */}
-        <div className="flex-1 min-w-0 space-y-1">
+        <div className="flex-1 min-w-0 space-y-1 [overflow-wrap:anywhere]">
           {title && <AlertTitle>{title}</AlertTitle>}
           {description && <AlertDescription>{description}</AlertDescription>}
           {children}
@@ -133,7 +133,7 @@ export const Alert: React.FC<AlertProps> = ({
             type="button"
             onClick={handleDismiss}
             aria-label="Dismiss alert"
-            className="shrink-0 -mr-1 -mt-1 w-7 h-7 rounded-[8px] flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all cursor-pointer select-none"
+            className="shrink-0 -mr-2 -mt-2 min-h-[44px] min-w-[44px] w-11 h-11 rounded-xl flex items-center justify-center opacity-70 hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 active:scale-95 transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
           >
             <X className="w-4 h-4" />
           </button>
@@ -149,7 +149,7 @@ export const AlertTitle: React.FC<React.HTMLAttributes<HTMLHeadingElement>> = ({
   ...props
 }) => (
   <h5
-    className={cn("text-sm font-bold tracking-tight leading-snug", className)}
+    className={cn("text-sm font-bold tracking-tight leading-snug [overflow-wrap:anywhere]", className)}
     {...props}
   >
     {children}
@@ -162,7 +162,7 @@ export const AlertDescription: React.FC<React.HTMLAttributes<HTMLParagraphElemen
   ...props
 }) => (
   <div
-    className={cn("text-xs font-medium leading-relaxed opacity-90", className)}
+    className={cn("text-xs font-medium leading-relaxed opacity-90 [overflow-wrap:anywhere]", className)}
     {...props}
   >
     {children}

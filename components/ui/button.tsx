@@ -4,12 +4,12 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "relative inline-flex min-h-[44px] items-center justify-center gap-2 font-bold rounded-tactile select-none cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 dark:focus-visible:ring-brand-soft dark:focus-visible:ring-offset-zinc-900 disabled:opacity-50 disabled:pointer-events-none",
+  "relative inline-flex min-h-[44px] items-center justify-center gap-2 font-bold rounded-tactile select-none cursor-pointer transition-all duration-100 motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand focus-visible:ring-offset-2 dark:focus-visible:ring-brand-soft dark:focus-visible:ring-offset-zinc-900 disabled:opacity-50 disabled:pointer-events-none",
   {
     variants: {
       variant: {
         primary:
-          "text-white bg-brand border-b-4 border-black/25 duration-100 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
+          "text-white dark:text-midnight bg-brand border-b-4 border-black/25 duration-100 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
         secondary:
           "text-charcoal dark:text-zinc-200 bg-slate-100 dark:bg-zinc-800 border-2 border-slate-200 dark:border-zinc-700 hover:bg-slate-200 dark:hover:bg-zinc-700 hover:border-slate-300 dark:hover:border-zinc-600 active:scale-[0.98]",
         surface:
@@ -17,7 +17,7 @@ export const buttonVariants = cva(
         destructive:
           "text-white bg-rose-600 border-b-4 border-black/25 hover:bg-rose-500 active:translate-y-[2px] active:border-b-2",
         accent:
-          "text-midnight dark:text-white bg-macaw-blue border-b-4 border-black/25 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
+          "text-midnight dark:text-midnight bg-macaw-blue border-b-4 border-black/25 hover:brightness-110 active:translate-y-[2px] active:border-b-2",
         ghost:
           "text-charcoal dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-800 hover:text-charcoal dark:hover:text-white active:scale-[0.98]",
         outline:
@@ -34,7 +34,7 @@ export const buttonVariants = cva(
         md: "px-6 py-2.5 text-sm",
         lg: "px-8 py-3.5 text-base",
         icon: "w-11 min-w-[44px] h-11 p-0",
-        "icon-sm": "w-9 min-w-[36px] h-9 p-0",
+        "icon-sm": "w-11 min-w-[44px] h-11 p-0 text-xs",
       },
     },
     defaultVariants: {

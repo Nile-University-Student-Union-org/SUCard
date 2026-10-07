@@ -25,10 +25,10 @@ export async function studentsCsv(q:{q:string;status?:string;signedUpFrom?:strin
 }
 export async function redemptionsCsv(q:{from?:string;to?:string;vendorId?:string}){
  const r=dateRange(q);
- return pages((limit,offset)=>sql`select se.id,se.confirmed_at,v.name vendor,b.name branch,o.title offer,u.name student_name,sp.university_id,se.student_deleted,se.bill_amount
-   from scan_events se join vendors v on v.id=se.vendor_id join branches b on b.id=se.branch_id left join offers o on o.id=se.offer_id left join "user" u on u.id=se.student_id left join student_profiles sp on sp.user_id=se.student_id
+ return pages((limit,offset)=>sql`select se.id,se.confirmed_at,v.name vendor,o.title offer,u.name student_name,sp.university_id,se.student_deleted,se.bill_amount
+   from scan_events se join vendors v on v.id=se.vendor_id left join offers o on o.id=se.offer_id left join "user" u on u.id=se.student_id left join student_profiles sp on sp.user_id=se.student_id
    where se.confirmed and not se.voided and se.confirmed_at>=${start(r.from)} and se.confirmed_at<${end(r.to)} and (${!q.vendorId} or se.vendor_id=${q.vendorId??"00000000-0000-0000-0000-000000000000"}::uuid)
-   order by se.confirmed_at desc,se.id desc limit ${limit} offset ${offset}`,["id","confirmed_at","vendor","branch","offer","student_name","university_id","student_deleted","bill_amount"],filename("redemptions"));
+   order by se.confirmed_at desc,se.id desc limit ${limit} offset ${offset}`,["id","confirmed_at","vendor","offer","student_name","university_id","student_deleted","bill_amount"],filename("redemptions"));
 }
 export async function vendorsCsv(q:{from?:string;to?:string}){
  const r=dateRange(q);
@@ -37,6 +37,6 @@ export async function vendorsCsv(q:{from?:string;to?:string}){
 }
 export async function vendorCsv(vendorId:string,q:{from?:string;to?:string}){
  const r=dateRange(q);
- return pages((limit,offset)=>sql`select to_char(se.confirmed_at at time zone 'Africa/Cairo','YYYY-MM-DD') day,b.name branch,o.title offer,count(*)::int redemptions,count(distinct se.student_id)::int unique_students,coalesce(sum(se.bill_amount),0) total_bill
-   from scan_events se join branches b on b.id=se.branch_id left join offers o on o.id=se.offer_id where se.vendor_id=${vendorId}::uuid and se.confirmed and not se.voided and se.confirmed_at>=${start(r.from)} and se.confirmed_at<${end(r.to)} group by 1,b.id,o.id order by day,b.name,o.title limit ${limit} offset ${offset}`,["day","branch","offer","redemptions","unique_students","total_bill"],filename("vendor-stats"));
+ return pages((limit,offset)=>sql`select to_char(se.confirmed_at at time zone 'Africa/Cairo','YYYY-MM-DD') day,o.title offer,count(*)::int redemptions,count(distinct se.student_id)::int unique_students,coalesce(sum(se.bill_amount),0) total_bill
+   from scan_events se left join offers o on o.id=se.offer_id where se.vendor_id=${vendorId}::uuid and se.confirmed and not se.voided and se.confirmed_at>=${start(r.from)} and se.confirmed_at<${end(r.to)} group by 1,o.id order by day,o.title limit ${limit} offset ${offset}`,["day","offer","redemptions","unique_students","total_bill"],filename("vendor-stats"));
 }

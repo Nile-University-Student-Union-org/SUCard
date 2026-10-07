@@ -5,8 +5,8 @@ const offer = { status: "active", startsAt: null, endsAt: null, activeDays: [], 
 describe("vendor rules", () => {
   it("uses Cairo dates across UTC midnight and inclusive contract ends", () => {
     expect(cairoParts(new Date("2026-09-01T21:30:00Z")).day).toBe("2026-09-02");
-    expect(vendorIsActive({ status: "active", contractStart: "2026-09-02", contractEnd: "2026-09-02" }, { status: "active" }, new Date("2026-09-01T21:30:00Z"))).toBe(true);
-    expect(vendorIsActive({ status: "paused", contractStart: null, contractEnd: null }, { status: "active" }, new Date())).toBe(false);
+    expect(vendorIsActive({ status: "active", contractStart: "2026-09-02", contractEnd: "2026-09-02" }, new Date("2026-09-01T21:30:00Z"))).toBe(true);
+    expect(vendorIsActive({ status: "paused", contractStart: null, contractEnd: null }, new Date())).toBe(false);
   });
   it("handles day filters, inclusive dates and overnight ranges", () => {
     const night = { ...offer, startsAt: "2026-10-04", endsAt: "2026-10-04", activeDays: [0], activeFrom: "22:00", activeTo: "02:00" };

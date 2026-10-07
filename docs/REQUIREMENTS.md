@@ -70,7 +70,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 | M2 | Student Onboarding & Activation | Microsoft sign-up, profile, "collect your card", scan-to-link | MVP |
 | M3 | Wallet Pass Service | Generate, update, revoke Apple & Google Wallet passes | MVP (Google first if Apple account is late) |
 | M4 | QR Token & Validation | What the printed QR holds, how scans are validated, per-offer limits | MVP |
-| M5 | Vendor & Offer Management | Vendors, branches, offers, limits, cashier accounts | MVP |
+| M5 | Vendor & Offer Management | Vendors, offers, limits, cashier accounts | MVP |
 | M6 | Cashier Scanner App | Web app for scanning and confirming discounts | MVP |
 | M7 | Redemption Ledger | Record of every scan and redemption | MVP |
 | M8 | Admin Dashboard & Analytics | Traffic, trends, vendor health, exports | MVP core / v2 advanced |
@@ -98,7 +98,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 | M1-3d | **Choosing an area after sign-in:** if the person has access to one area they go straight there; if they have several (e.g. My SU Card + Admin panel) they see a "Where to?" choice the first time, and the last choice is remembered. |
 | M1-3e | **Switching areas:** the account menu in every area shows the other areas the person can access ("Switch to Admin panel" / "Switch to My SU Card") — one click, no second sign-in. Access is still checked on the server for every page and API. |
 | M1-4 | Roles: Student, Cashier, Vendor Manager, SU Admin, Super Admin (role-based access on every API). Student is a profile, not exclusive: it can be combined with one staff role (M1-3c). |
-| M1-5 | A cashier belongs to one vendor (optionally one branch) and can only scan for that vendor. A vendor manager only sees their own vendor's data. |
+| M1-5 | A cashier belongs to one vendor and can only scan for that vendor. A vendor manager only sees their own vendor's data. |
 | M1-6 | Cashier sessions are long-lived on the shop device (30 days), revocable by admin or vendor manager. |
 | M1-7 | Password reset by email. Admin can disable any account instantly. |
 | M1-8 | Lockout after 5 failed logins (15 min). |
@@ -169,7 +169,7 @@ Cashier scans physical card OR wallet pass ──► Server validates (card link
 | ID | Requirement |
 |---|---|
 | M5-1 | CRUD vendors: name, logo, category (food, coffee, fitness, books, services…), contact person, phone, email, location, contract start/end, status (`active`, `paused`, `ended`), internal notes. |
-| M5-2 | Vendors can have multiple **branches**; redemptions record the branch. |
+| M5-2 | Vendors can have multiple offers; redemptions record the vendor and offer. |
 | M5-3 | CRUD **offers** per vendor: title, description, discount type (% / fixed EGP / free item / custom text), terms, start/end date, active days & hours, visibility (shown in deals list or hidden). |
 | M5-4 | **Limit settings per offer:** count + period (M4-3). Editable anytime; changes apply to future scans only. |
 | M5-5 | CRUD cashier and vendor-manager accounts; reset password; disable. |
@@ -197,7 +197,7 @@ Mobile-first web app (PWA, installable to home screen).
 
 | ID | Requirement |
 |---|---|
-| M7-1 | Every scan attempt logged: time, cashier, vendor, branch, card/student, result + reason, offer, confirmed (y/n), bill amount, device info. |
+| M7-1 | Every scan attempt logged: time, cashier, vendor, card/student, result + reason, offer, confirmed (y/n), bill amount, device info. |
 | M7-2 | Append-only. Admin can **void** a redemption with a reason (kept in audit trail); nothing is deleted. Voided redemptions don't count toward limits. |
 | M7-3 | Failed scans are kept (fraud detection, cashier training). |
 
@@ -211,7 +211,7 @@ Mobile-first web app (PWA, installable to home screen).
 | M8-2 | **Vendor leaderboard:** redemptions, unique students, change vs previous period. Sortable. |
 | M8-3 | **"At risk" vendors:** below a configurable threshold (e.g. < 10 redemptions in 30 days) highlighted for review. |
 | M8-4 | Redemptions over time (day/week/month), overall and per vendor. |
-| M8-5 | Vendor detail: trend, branches, offers breakdown, peak days/hours, recent redemptions, total bill amount (when entered). |
+| M8-5 | Vendor detail: trend, offers breakdown, peak days/hours, recent redemptions, total bill amount (when entered). |
 | M8-6 | **User management (Students page):** search by name, email, or university ID (partial match, instant results), with filters by status and sign-up date. Each row shows name, email, university ID, status, sign-up date, last redemption. |
 | M8-6a | Student detail: profile, linked card (internal serial) and link date, card history (replaced cards), wallet(s) added, full redemption history. Admin can edit name / university ID (corrections). |
 | M8-6b | **Suspend / reactivate:** one click with a reason. Suspended cards fail at scan immediately ("Card suspended") and the wallet pass updates. A suspended student **cannot** sign up again with the same email. |
@@ -235,7 +235,7 @@ Mobile-first web app (PWA, installable to home screen).
 
 | ID | Requirement |
 |---|---|
-| M9-1 | Vendor managers log in and see **only their vendor**: redemptions over time, unique students, per-branch and per-offer counts, peak hours, total bill amount (if entered). |
+| M9-1 | Vendor managers log in and see **only their vendor**: redemptions over time, unique students, per-offer counts, peak hours, total bill amount (if entered). |
 | M9-2 | They **don't** see student names/IDs (privacy), only aggregate numbers. **[confirm — Q4]** |
 | M9-3 | Manage their own cashier accounts (add, disable, reset password). |
 | M9-4 | View (not edit) their active offers and limits. Offer changes go through SU admin. |
@@ -385,12 +385,11 @@ QrStyleVersion(id, style_id, version, config JSON, scan_score, published_by, pub
 Card(id, type (physical|digital), batch_id?, serial UNIQUE, token UNIQUE, status, student_id?, linked_at?, linked_by?,
      void_reason?, apple_serial?, google_object_id?)   -- unique (student_id) WHERE status = 'active'
 Vendor(id, name, logo_url, category, contact_*, status, contract_start, contract_end, notes)
-Branch(id, vendor_id, name, address, lat, lng)
 Offer(id, vendor_id, title, description, discount_type, discount_value, terms,
       starts_at, ends_at, active_days, active_hours, visible,
       limit_count, limit_period)            -- limit_period: day|week|month|semester|total|unlimited
-User(id, email, password_hash, role, vendor_id?, branch_id?, totp_secret?, status, last_login_at)
-ScanEvent(id, card_id?, vendor_id, branch_id, cashier_id, offer_id?, result, reason,
+User(id, email, password_hash, role, vendor_id?, totp_secret?, status, last_login_at)
+ScanEvent(id, card_id?, vendor_id, cashier_id, offer_id?, result, reason,
           confirmed, bill_amount?, voided, void_reason?, created_at, device_info)
 EmailLog(id, to, type, status, provider_id, created_at)
 AuditLog(id, actor_id, action, entity, entity_id, before, after, created_at)

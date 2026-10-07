@@ -1,7 +1,7 @@
 import "server-only";
 import { and, count, eq, gte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { branches, cards, offers, scanEvents, studentProfiles, user, vendors } from "@/lib/db/schema";
+import { cards, offers, scanEvents, studentProfiles, user, vendors } from "@/lib/db/schema";
 import { parseClaimQr } from "@/lib/student/rules";
 import { getSettings } from "@/lib/settings/service";
 import { confirmDecision, isOfferActiveAt, periodWindow, remainingUses, validationOutcome, vendorIsActive } from "./rules";
@@ -45,7 +45,7 @@ export async function validateScan(actor: Actor, qr: string, userAgent: string |
     status: studentProfiles.status,
     disabledAt: user.disabledAt
   }).from(studentProfiles).innerJoin(user, eq(studentProfiles.userId, user.id)).where(eq(studentProfiles.userId, card.studentId)) : [];
-  const vendorActive = vendorIsActive(actor.vendor, actor.branch!, now);
+  const vendorActive = vendorIsActive(actor.vendor, now);
   const canOffer = !!card && card.status === "active" && !!student && student.status === "active" && !student.disabledAt && vendorActive;
   const applicable = canOffer ? await activeOffers(tx, actor, card.studentId!, now) : [];
   const result = validationOutcome({
@@ -60,7 +60,6 @@ export async function validateScan(actor: Actor, qr: string, userAgent: string |
     cardId: card?.id ?? null,
     studentId: card?.studentId ?? null,
     vendorId: actor.vendor.id,
-    branchId: actor.branch!.id,
     cashierId: actor.person.id,
     result,
     reason: result === "valid" ? null : result,
@@ -88,6 +87,7 @@ export async function confirmScan(actor: Actor, scanId: string, offerId: string,
   return db.transaction(async tx => {
     const [scan] = await tx.select().from(scanEvents).where(eq(scanEvents.id, scanId)).for("update");
     if (!scan) throw new VendorError(404, "Scan not found");
+    if (scan.vendorId !== actor.vendor.id) throw new VendorError(403, "Forbidden");
     const decision = confirmDecision(scan, actor.person.id, new Date());
     if (decision === "forbidden") throw new VendorError(403, "Forbidden");
     if (decision === "existing") {
@@ -102,7 +102,7 @@ export async function confirmScan(actor: Actor, scanId: string, offerId: string,
       }, notification: null };
     }
     if (decision !== "confirm") throw new VendorError(409, decision === "expired" ? "Scan expired" : "Scan was not valid");
-    if (scan.vendorId !== actor.vendor.id || scan.branchId !== actor.branch!.id || !scan.studentId || !scan.cardId) throw new VendorError(403, "Forbidden");
+    if (!scan.studentId || !scan.cardId) throw new VendorError(403, "Forbidden");
     // Serializes limit decisions for this student and offer across every cashier.
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${scan.studentId}), hashtext(${offerId}))`);
     const [card] = await tx.select().from(cards).where(eq(cards.id, scan.cardId));
@@ -110,10 +110,9 @@ export async function confirmScan(actor: Actor, scanId: string, offerId: string,
     const [cashier] = await tx.select().from(user).where(eq(user.id, actor.person.id));
     const [offer] = await tx.select().from(offers).where(and(eq(offers.id, offerId), eq(offers.vendorId, actor.vendor.id)));
     const [vendor] = await tx.select().from(vendors).where(eq(vendors.id, actor.vendor.id));
-    const [branch] = await tx.select().from(branches).where(and(eq(branches.id, actor.branch!.id), eq(branches.vendorId, actor.vendor.id)));
     const now = new Date();
-    if (!cashier || cashier.disabledAt || cashier.role !== "cashier" || cashier.vendorId !== scan.vendorId || cashier.branchId !== scan.branchId) throw new VendorError(403, "Cashier is no longer authorized");
-    if (!card || card.status !== "active" || card.studentId !== scan.studentId || !profile || profile.status !== "active" || profile.disabledAt || !vendor || !branch || !vendorIsActive(vendor, branch, now) || !offer || !isOfferActiveAt(offer, now)) throw new VendorError(409, "Card, vendor, or offer is no longer active");
+    if (!cashier || cashier.disabledAt || cashier.role !== "cashier" || cashier.vendorId !== scan.vendorId) throw new VendorError(403, "Cashier is no longer authorized");
+    if (!card || card.status !== "active" || card.studentId !== scan.studentId || !profile || profile.status !== "active" || profile.disabledAt || !vendor || !vendorIsActive(vendor, now) || !offer || !isOfferActiveAt(offer, now)) throw new VendorError(409, "Card, vendor, or offer is no longer active");
     const allowance = await limits(tx, { studentId: scan.studentId, offer, now, semesters: (await getSettings()).semesters });
     if (allowance.remainingUses === 0) throw new VendorError(409, "Offer limit reached", "limit_reached");
     const [confirmed] = await tx.update(scanEvents).set({
@@ -146,7 +145,7 @@ export async function today(actor: Actor): Promise<TodayResponse> {
     studentName: user.name,
     universityId: studentProfiles.universityId,
     offerTitle: offers.title
-  }).from(scanEvents).innerJoin(user, eq(scanEvents.studentId, user.id)).innerJoin(studentProfiles, eq(scanEvents.studentId, studentProfiles.userId)).innerJoin(offers, eq(scanEvents.offerId, offers.id)).where(and(eq(scanEvents.cashierId, actor.person.id), eq(scanEvents.confirmed, true), eq(scanEvents.voided, false), gte(scanEvents.confirmedAt, start))).orderBy(scanEvents.confirmedAt);
+  }).from(scanEvents).innerJoin(user, eq(scanEvents.studentId, user.id)).innerJoin(studentProfiles, eq(scanEvents.studentId, studentProfiles.userId)).innerJoin(offers, eq(scanEvents.offerId, offers.id)).where(and(eq(scanEvents.vendorId, actor.vendor.id), eq(scanEvents.confirmed, true), eq(scanEvents.voided, false), gte(scanEvents.confirmedAt, start))).orderBy(scanEvents.confirmedAt);
   const redemptions = rows.map(({
     scan,
     studentName,

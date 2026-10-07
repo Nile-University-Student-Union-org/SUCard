@@ -758,7 +758,6 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                   <thead>
                     <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
                       <th className="px-4 py-3">Vendor</th>
-                      <th className="px-4 py-3">Branch</th>
                       <th className="px-4 py-3">Offer Claimed</th>
                       <th className="px-4 py-3 text-right">Bill Amount</th>
                       <th className="px-4 py-3 text-right">Time (Cairo)</th>
@@ -769,9 +768,6 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                       <tr key={r.id} className="hover:bg-muted/30 transition-colors font-mono">
                         <td className="px-4 py-3 font-sans font-bold text-foreground">
                           {r.vendorName}
-                        </td>
-                        <td className="px-4 py-3 font-sans text-foreground">
-                          {r.branchName}
                         </td>
                         <td className="px-4 py-3 font-sans text-muted-foreground">
                           {r.offerTitle || "Standard Discount"}
@@ -801,8 +797,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                         {r.billAmount ? formatCurrency(r.billAmount) : ""}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span>{r.branchName}</span>
+                    <div className="text-[11px] text-muted-foreground">
                       <span>{r.offerTitle || "Discount"}</span>
                     </div>
                     <div className="text-[10px] text-muted-foreground font-mono pt-1">

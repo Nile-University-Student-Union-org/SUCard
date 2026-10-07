@@ -3,6 +3,8 @@
 import React from "react";
 import { cn } from "cn";
 
+import { Loader2 } from "lucide-react";
+
 export interface StatusStateProps {
   icon?: React.ReactNode;
   eyebrow?: string;
@@ -10,9 +12,10 @@ export interface StatusStateProps {
   description?: string;
   actions?: React.ReactNode;
   children?: React.ReactNode;
-  variant?: "default" | "brand" | "warning" | "destructive" | "success";
+  variant?: "default" | "brand" | "warning" | "destructive" | "success" | "loading";
   layout?: "default" | "panel";
   className?: string;
+  isLoading?: boolean;
 }
 
 const variantIconStyles = {
@@ -21,6 +24,7 @@ const variantIconStyles = {
   warning: "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-900/50",
   destructive: "bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-900/50",
   success: "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50",
+  loading: "bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft border-brand/20 dark:border-brand-soft/30",
 };
 
 const variantEyebrowStyles = {
@@ -29,6 +33,7 @@ const variantEyebrowStyles = {
   warning: "text-amber-700 dark:text-amber-400",
   destructive: "text-rose-700 dark:text-rose-400",
   success: "text-emerald-700 dark:text-emerald-400",
+  loading: "text-brand dark:text-brand-soft",
 };
 
 export const StatusState: React.FC<StatusStateProps> = ({
@@ -41,23 +46,31 @@ export const StatusState: React.FC<StatusStateProps> = ({
   variant = "default",
   layout = "default",
   className,
+  isLoading = false,
 }) => {
+  const isBusy = isLoading || variant === "loading";
+  const defaultIcon = isBusy ? (
+    <Loader2 className="w-6 h-6 animate-spin motion-reduce:animate-none text-brand dark:text-brand-soft" />
+  ) : null;
   const content = (
     <div
+      role={variant === "destructive" ? "alert" : "status"}
+      aria-live="polite"
+      aria-busy={isBusy}
       className={cn(
         "w-full min-w-0 max-w-md [overflow-wrap:anywhere] text-center space-y-6 mx-auto",
         layout === "default" && className
       )}
     >
       {/* Icon Slot */}
-      {icon && (
+      {(icon || defaultIcon) && (
         <div
           className={cn(
             "inline-flex items-center justify-center w-14 h-14 rounded-2xl border shadow-xs transition-transform",
             variantIconStyles[variant]
           )}
         >
-          {icon}
+          {icon || defaultIcon}
         </div>
       )}
 

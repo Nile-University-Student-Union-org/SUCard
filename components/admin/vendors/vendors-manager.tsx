@@ -107,7 +107,7 @@ export function VendorsManager() {
             PARTNER VENDORS
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manage stores, branches, discounts, and staff scanner accounts.
+            Manage stores, discounts, and staff scanner accounts.
           </p>
         </div>
 

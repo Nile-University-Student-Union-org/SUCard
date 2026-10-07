@@ -118,9 +118,9 @@ export const Toast: React.FC<ToastProps> = ({
       role="alert"
       aria-live="polite"
       className={cn(
-        "fixed bottom-6 right-6 z-[80] max-w-md",
+        "fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[80] max-w-[calc(100vw-32px)] sm:max-w-md w-full mb-safe",
         "flex items-start gap-3 px-5 py-3.5 rounded-2xl shadow-xl border",
-        "animate-in slide-in-from-bottom-5 fade-in-0 duration-300",
+        "animate-in slide-in-from-bottom-5 fade-in-0 duration-300 motion-reduce:animate-none",
         currentVariant.bg,
         className
       )}
@@ -128,8 +128,8 @@ export const Toast: React.FC<ToastProps> = ({
       <Icon className={cn("w-5 h-5 shrink-0 mt-0.5", currentVariant.iconClass)} />
 
       <div className="flex-1 min-w-0">
-        {title && <div className="text-sm font-black leading-snug">{title}</div>}
-        <div className="text-sm font-bold leading-snug">{message}</div>
+        {title && <div className="text-sm font-black leading-snug [overflow-wrap:anywhere]">{title}</div>}
+        <div className="text-sm font-bold leading-snug [overflow-wrap:anywhere]">{message}</div>
 
         {action && (
           <button
@@ -137,7 +137,7 @@ export const Toast: React.FC<ToastProps> = ({
               action.onClick();
               onClose?.();
             }}
-            className="mt-2 text-xs font-black uppercase tracking-wider underline hover:opacity-80 cursor-pointer"
+            className="mt-2 min-h-[44px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider underline hover:opacity-80 cursor-pointer"
           >
             {action.label}
           </button>
@@ -148,9 +148,12 @@ export const Toast: React.FC<ToastProps> = ({
         <button
           onClick={onClose}
           aria-label="Dismiss notification"
-          className={cn("shrink-0 p-1 -mr-1 -mt-1 rounded-lg hover:bg-white/20 transition-colors cursor-pointer", variant === "brand" ? "text-current" : "text-white")}
+          className={cn(
+            "shrink-0 min-h-[44px] min-w-[44px] w-11 h-11 flex items-center justify-center -mr-2 -mt-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer select-none",
+            variant === "brand" ? "text-current" : "text-white"
+          )}
         >
-          <X className="w-4 h-4" />
+          <X className="w-5 h-5" />
         </button>
       )}
     </div>
@@ -233,7 +236,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         <div
           role="region"
           aria-label="Notifications"
-          className="fixed bottom-6 right-6 z-[80] flex flex-col gap-2.5 pointer-events-none max-w-md w-full sm:w-auto"
+          className="fixed bottom-4 sm:bottom-6 right-4 sm:right-6 z-[80] flex flex-col gap-2.5 pointer-events-none max-w-[calc(100vw-32px)] sm:max-w-md w-full mb-safe"
         >
           {toasts.map((item) => {
             const currentVariant = variantStyles[item.variant || "success"] || variantStyles.success;
@@ -246,15 +249,15 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 aria-live="polite"
                 className={cn(
                   "pointer-events-auto flex items-start gap-3 px-5 py-3.5 rounded-2xl shadow-xl border",
-                  "animate-in slide-in-from-bottom-5 fade-in-0 duration-300",
+                  "animate-in slide-in-from-bottom-5 fade-in-0 duration-300 motion-reduce:animate-none",
                   currentVariant.bg
                 )}
               >
                 <Icon className={cn("w-5 h-5 shrink-0 mt-0.5", currentVariant.iconClass)} />
 
                 <div className="flex-1 min-w-0">
-                  {item.title && <div className="text-sm font-black leading-snug">{item.title}</div>}
-                  <div className="text-sm font-bold leading-snug">{item.message}</div>
+                  {item.title && <div className="text-sm font-black leading-snug [overflow-wrap:anywhere]">{item.title}</div>}
+                  <div className="text-sm font-bold leading-snug [overflow-wrap:anywhere]">{item.message}</div>
 
                   {item.action && (
                     <button
@@ -262,7 +265,7 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                         item.action?.onClick();
                         dismissToast(item.id);
                       }}
-                      className="mt-2 text-xs font-black uppercase tracking-wider underline hover:opacity-80 cursor-pointer"
+                      className="mt-2 min-h-[44px] px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider underline hover:opacity-80 cursor-pointer"
                     >
                       {item.action.label}
                     </button>
@@ -272,9 +275,12 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
                 <button
                   onClick={() => dismissToast(item.id)}
                   aria-label="Dismiss notification"
-                  className={cn("shrink-0 p-1 -mr-1 -mt-1 rounded-lg hover:bg-white/20 transition-colors cursor-pointer", item.variant === "brand" ? "text-current" : "text-white")}
+                  className={cn(
+                    "shrink-0 min-h-[44px] min-w-[44px] w-11 h-11 flex items-center justify-center -mr-2 -mt-2 rounded-xl hover:bg-white/20 transition-colors cursor-pointer select-none",
+                    item.variant === "brand" ? "text-current" : "text-white"
+                  )}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             );

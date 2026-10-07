@@ -9,11 +9,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getTodayRedemptions } from "./api";
 import type { TodayResponse } from "@/lib/vendors/types";
 
-interface ScannerTodayTabProps {
-  branchName: string;
-}
 
-export function ScannerTodayTab({ branchName }: ScannerTodayTabProps) {
+export function ScannerTodayTab() {
   const [data, setData] = useState<TodayResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -79,7 +76,7 @@ export function ScannerTodayTab({ branchName }: ScannerTodayTabProps) {
             TODAY&apos;S REDEMPTIONS
           </h2>
           <p className="text-xs text-muted-foreground font-medium">
-            Recorded at {branchName} today
+            Recorded for this vendor today
           </p>
         </div>
 

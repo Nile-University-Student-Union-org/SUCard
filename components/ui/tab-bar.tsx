@@ -242,7 +242,7 @@ export function TabBar<Id extends string>({
                 size === "sm" ? "px-3 text-xs" : "px-3.5 text-sm",
                 fullWidth && "grow",
                 selected
-                  ? "text-white"
+                  ? "text-white dark:text-midnight font-bold"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-white",
                 selected && !indicator && "bg-brand shadow-xs",
               )}
@@ -262,9 +262,9 @@ export function TabBar<Id extends string>({
                 tab.badge !== 0 && (
                   <span
                     className={cn(
-                      "rounded-full px-1.5 py-0.5 text-[10px]",
+                      "rounded-full px-1.5 py-0.5 text-[10px] font-bold",
                       selected
-                        ? "bg-white/20 text-current"
+                        ? "bg-white/20 dark:bg-midnight/20 text-current"
                         : badgeTones[tab.badgeTone ?? "brand"],
                     )}
                   >

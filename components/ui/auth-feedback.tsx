@@ -45,6 +45,8 @@ export const AuthFeedback: React.FC<AuthFeedbackProps> = ({
           ? "bg-rose-50/90 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/60 text-rose-900 dark:text-rose-200"
           : isSuccess
           ? "bg-emerald-50/90 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-900/60 text-emerald-900 dark:text-emerald-200"
+          : variant === "warning"
+          ? "bg-amber-50/90 dark:bg-amber-950/30 border-amber-300 dark:border-amber-900/60 text-amber-950 dark:text-amber-200"
           : "bg-rose-50/90 dark:bg-rose-950/30 border-rose-300 dark:border-rose-900/60 text-rose-900 dark:text-rose-200",
         className
       )}
@@ -90,7 +92,16 @@ export const AuthFeedback: React.FC<AuthFeedbackProps> = ({
         </div>
 
         {displayMessage && (
-          <p className="text-xs text-rose-700 dark:text-rose-300 font-medium leading-relaxed">
+          <p
+            className={cn(
+              "text-xs font-medium leading-relaxed [overflow-wrap:anywhere]",
+              isSuccess
+                ? "text-emerald-800 dark:text-emerald-200"
+                : variant === "warning"
+                ? "text-amber-800 dark:text-amber-200"
+                : "text-rose-700 dark:text-rose-300"
+            )}
+          >
             {displayMessage}
           </p>
         )}

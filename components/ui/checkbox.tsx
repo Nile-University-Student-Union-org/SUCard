@@ -106,10 +106,10 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             {/* Custom Visual Checkbox Box */}
             <div
               className={cn(
-                "flex items-center justify-center border-2 transition-all duration-150 active:scale-90 group-hover:border-brand/70",
+                "flex items-center justify-center border-2 transition-all duration-150 motion-reduce:transition-none motion-reduce:transform-none active:scale-90 group-hover:border-brand/70",
                 currentSize.box,
                 isChecked || indeterminate
-                  ? "bg-brand border-brand dark:bg-brand dark:border-brand text-white shadow-xs"
+                  ? "bg-brand border-brand dark:bg-brand dark:border-brand text-white dark:text-midnight shadow-xs"
                   : "bg-white dark:bg-zinc-900 border-slate-300 dark:border-zinc-700",
                 "peer-focus-visible:ring-2 peer-focus-visible:ring-brand dark:peer-focus-visible:ring-brand-soft peer-focus-visible:border-brand",
                 error && "border-destructive text-destructive",
@@ -117,9 +117,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               )}
             >
               {indeterminate ? (
-                <Minus className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100")} />
+                <Minus className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100 motion-reduce:animate-none")} />
               ) : isChecked ? (
-                <Check className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100")} />
+                <Check className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100 motion-reduce:animate-none")} />
               ) : null}
             </div>
           </div>

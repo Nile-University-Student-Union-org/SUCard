@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "./server";
 import { db } from "@/lib/db";
-import { account, branches, studentProfiles, user, vendors } from "@/lib/db/schema";
+import { account, studentProfiles, user, vendors } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getSettings } from "@/lib/settings/service";
 import { matchesStudentEmail } from "@/lib/student/rules";
@@ -105,12 +105,10 @@ export async function requireOnboardingPage() {
 
 async function readVendorActor(requestHeaders: Headers, role: "cashier" | "vendor_manager") {
   const person = await getCurrentUser(requestHeaders);
-  if (!person || person.disabledAt || person.role !== role || !person.vendorId || role === "cashier" && !person.branchId) return null;
+  if (!person || person.disabledAt || person.role !== role || !person.vendorId) return null;
   const [vendor] = await db.select().from(vendors).where(eq(vendors.id, person.vendorId));
   if (!vendor) return null;
-  const [branch] = person.branchId ? await db.select().from(branches).where(and(eq(branches.id, person.branchId), eq(branches.vendorId, vendor.id))) : [];
-  if (role === "cashier" && !branch) return null;
-  return { person, vendor, branch: branch ?? null };
+  return { person, vendor };
 }
 export async function getCashierFromRequest(request: Request) { return readVendorActor(request.headers, "cashier"); }
 export async function requireCashierPage() {

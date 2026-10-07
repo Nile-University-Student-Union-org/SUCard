@@ -23,9 +23,9 @@ export type DashboardResponse = { range: DateRange; granularity: "day" | "week" 
   /** Save links issued. Google does not tell us whether the student tapped Save. */
   walletPassesIssued: number; cardholderRedemptionPercent: number;
 }; timeseries: TimePoint[]; leaderboard: VendorLeader[]; atRisk: { id: string; name: string; redemptions: number; threshold: number; days: number }[] };
-export type VendorStatsResponse = { range: DateRange; redemptions: CountComparison; uniqueStudents: CountComparison; totalBill: string; averageBill: string | null; timeseries: TimePoint[]; branches: NamedCount[]; offers: NamedCount[]; peakDays: PeakCount[]; peakHours: PeakCount[]; recent?: { id: string; studentName: string | null; universityId: string | null; branchName: string; offerTitle: string | null; billAmount: string | null; confirmedAt: string }[] };
+export type VendorStatsResponse = { range: DateRange; redemptions: CountComparison; uniqueStudents: CountComparison; totalBill: string; averageBill: string | null; timeseries: TimePoint[]; offers: NamedCount[]; peakDays: PeakCount[]; peakHours: PeakCount[]; recent?: { id: string; studentName: string | null; universityId: string | null; offerTitle: string | null; billAmount: string | null; confirmedAt: string }[] };
 export type VendorOverviewResponse = VendorStatsResponse & { vendor: { id: string; name: string; logoUrl: string | null; status: string } };
-export type StudentDetailResponse = { id: string; name: string; email: string; profile: { universityId: string; cardFlow: string; status: string; suspendReason: string | null; registeredAt: string }; cards: { id: string; type: string; serial: string; status: string; linkedAt: string | null; voidedAt: string | null; voidReason: string | null }[]; walletPasses: { platform: string; objectId: string; firstIssuedAt: string; lastSyncedAt: string }[]; redemptions: { id: string; vendorName: string; branchName: string; offerTitle: string | null; confirmedAt: string; billAmount: string | null }[]; nextCursor: string | null };
+export type StudentDetailResponse = { id: string; name: string; email: string; profile: { universityId: string; cardFlow: string; status: string; suspendReason: string | null; registeredAt: string }; cards: { id: string; type: string; serial: string; status: string; linkedAt: string | null; voidedAt: string | null; voidReason: string | null }[]; walletPasses: { platform: string; objectId: string; firstIssuedAt: string; lastSyncedAt: string }[]; redemptions: { id: string; vendorName: string; offerTitle: string | null; confirmedAt: string; billAmount: string | null }[]; nextCursor: string | null };
 /** PATCH /api/admin/students/[id]; POST suspend, reactivate, delete, and bulk. */
 export type StudentPatchRequest = { name?: string; universityId?: string; cardFlow?: "digital" | "physical" };
 export type SuspendRequest = { reason: string };
@@ -35,12 +35,12 @@ export type StudentActionResponse = { count: number };
 export type DeleteStudentResponse = { deleted: true; emailHash: string };
 export type StudentDeal = { vendorId: string; vendorName: string; logoUrl: string | null; category: string; location: string | null; offerId: string; title: string; discountLabel: string; terms: string | null; limitText: string; scheduleText: string; remainingUses: number | null; resetsAt: string | null };
 export type StudentDealsResponse = { deals: StudentDeal[] };
-export type StudentHistoryResponse = { redemptions: { id: string; vendorName: string; branchName: string; offerTitle: string | null; confirmedAt: string; billAmount: string | null }[]; nextCursor: string | null };
+export type StudentHistoryResponse = { redemptions: { id: string; vendorName: string; offerTitle: string | null; confirmedAt: string; billAmount: string | null }[]; nextCursor: string | null };
 export type VendorOffersResponse = { offers: { id: string; title: string; discountLabel: string; terms: string | null; limitCount: number | null; limitPeriod: string; startsAt: string | null; endsAt: string | null; activeDays: number[]; activeFrom: string | null; activeTo: string | null; status: string }[] };
-export type CashiersResponse = { cashiers: { id: string; email: string; name: string; branchId: string | null; branchName: string | null; status: "active" | "disabled" }[] };
+export type CashiersResponse = { cashiers: { id: string; email: string; name: string; status: "active" | "disabled" }[] };
 /** POST /api/vendor/cashiers; PATCH /api/vendor/cashiers/[id]; POST its password route. */
-export type CreateCashierRequest = { email: string; name: string; password: string; branchId: string };
-export type UpdateCashierRequest = { name?: string; branchId?: string; status?: "active" | "disabled" };
+export type CreateCashierRequest = { email: string; name: string; password: string; };
+export type UpdateCashierRequest = { name?: string; status?: "active" | "disabled" };
 export type CashierPasswordRequest = { password: string };
 /** GET /api/admin/export/redemptions; /api/admin/export/vendors. */
 export type RedemptionsExportQuery = RangeQuery & { vendorId?: string };

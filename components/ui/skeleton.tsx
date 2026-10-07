@@ -50,12 +50,12 @@ export const Skeleton: React.FC<SkeletonProps> = ({
   const getAnimationStyles = () => {
     switch (animate) {
       case "shimmer":
-        return "relative overflow-hidden bg-slate-200 dark:bg-zinc-800 after:absolute after:inset-0 after:-translate-x-full after:animate-[shimmer_1.5s_infinite] after:bg-gradient-to-r after:from-transparent after:via-white/25 dark:after:via-white/10 after:to-transparent";
+        return "relative overflow-hidden bg-slate-200 dark:bg-zinc-800 after:absolute after:inset-0 after:-translate-x-full after:animate-[shimmer_1.5s_infinite] motion-reduce:after:animate-none after:bg-gradient-to-r after:from-transparent after:via-white/25 dark:after:via-white/10 after:to-transparent";
       case "none":
         return "bg-slate-200/90 dark:bg-zinc-800/90";
       case "pulse":
       default:
-        return "animate-pulse bg-slate-200 dark:bg-zinc-800";
+        return "animate-pulse motion-reduce:animate-none bg-slate-200 dark:bg-zinc-800";
     }
   };
 

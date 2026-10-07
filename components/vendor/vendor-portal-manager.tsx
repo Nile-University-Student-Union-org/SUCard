@@ -30,7 +30,6 @@ import { TabBar, type TabBarItem } from "@/components/ui/tab-bar";
 import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Input } from "@/components/ui/input";
-import { Dropdown } from "@/components/ui/dropdown";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,7 +91,6 @@ export function VendorPortalManager() {
   const [isAddCashierOpen, setIsAddCashierOpen] = useState(false);
   const [cashierName, setCashierName] = useState("");
   const [cashierEmail, setCashierEmail] = useState("");
-  const [cashierBranchId, setCashierBranchId] = useState("");
   const [cashierPassword, setCashierPassword] = useState("");
   const [isAddingCashier, setIsAddingCashier] = useState(false);
   const [addCashierError, setAddCashierError] = useState<string | null>(null);
@@ -126,15 +124,12 @@ export function VendorPortalManager() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as VendorOverviewResponse;
       setOverview(data);
-      if (data.branches && data.branches.length > 0 && !cashierBranchId) {
-        setCashierBranchId(data.branches[0].id);
-      }
     } catch (err) {
       setOverviewError(err instanceof Error ? err.message : "Failed to load overview");
     } finally {
       setIsOverviewLoading(false);
     }
-  }, [dateRange, cashierBranchId]);
+  }, [dateRange]);
 
   // Fetch Offers
   const fetchOffers = useCallback(async () => {
@@ -197,9 +192,6 @@ export function VendorPortalManager() {
         const data = (await res.json()) as VendorOverviewResponse;
         if (!ignore) {
           setOverview(data);
-          if (data.branches && data.branches.length > 0 && !cashierBranchId) {
-            setCashierBranchId(data.branches[0].id);
-          }
           setIsOverviewLoading(false);
         }
       } catch (err) {
@@ -212,7 +204,7 @@ export function VendorPortalManager() {
     return () => {
       ignore = true;
     };
-  }, [dateRange, cashierBranchId]);
+  }, [dateRange]);
 
   useEffect(() => {
     let ignore = false;
@@ -275,10 +267,6 @@ export function VendorPortalManager() {
   // Create Cashier
   const handleCreateCashier = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!cashierBranchId) {
-      setAddCashierError("Please select a branch.");
-      return;
-    }
 
     if (cashierPassword && cashierPassword.length < 8) {
       setAddCashierError("Password must be at least 8 characters");
@@ -292,7 +280,6 @@ export function VendorPortalManager() {
       const payload: Record<string, unknown> = {
         name: cashierName.trim(),
         email: cashierEmail.trim().toLowerCase(),
-        branchId: cashierBranchId,
       };
       if (cashierPassword && cashierPassword.trim()) {
         payload.password = cashierPassword.trim();
@@ -605,29 +592,6 @@ export function VendorPortalManager() {
                 </CardContent>
               </Card>
 
-              {/* TWO COLUMNS: Branches breakdown & Offers breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Branches breakdown */}
-                <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
-                  <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800">
-                    <CardTitle className="text-base sm:text-lg text-foreground">
-                      BY BRANCH
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-4 sm:p-5">
-                    <BarChart
-                      data={overview.branches.map((b) => ({
-                        id: b.id,
-                        label: b.name,
-                        value: b.redemptions,
-                      }))}
-                      barColor="#0F3056"
-                      emptyMessage="No branch activity recorded yet."
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Offers breakdown */}
                 <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
                   <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800">
                     <CardTitle className="text-base sm:text-lg text-foreground">
@@ -646,7 +610,6 @@ export function VendorPortalManager() {
                     />
                   </CardContent>
                 </Card>
-              </div>
 
               {/* PEAK ACTIVITY CARD */}
               <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
@@ -655,7 +618,7 @@ export function VendorPortalManager() {
                     PEAK ACTIVITY DISTRIBUTION
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    Busiest hours and days across all branches (Cairo time)
+                    Busiest hours and days (Cairo time)
                   </p>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-5">
@@ -783,7 +746,7 @@ export function VendorPortalManager() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-foreground">
-                Branch Cashiers
+                Cashiers
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Staff members authorized to scan student cards at store registers.
@@ -850,7 +813,6 @@ export function VendorPortalManager() {
                     <thead>
                       <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
                         <th className="px-4 py-3">Cashier</th>
-                        <th className="px-4 py-3">Branch</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3 text-right">Actions</th>
                       </tr>
@@ -865,9 +827,6 @@ export function VendorPortalManager() {
                             <div className="text-[11px] text-muted-foreground font-mono">
                               {cashier.email}
                             </div>
-                          </td>
-                          <td className="px-4 py-3.5 font-sans font-medium text-foreground">
-                            {cashier.branchName || "All Branches"}
                           </td>
                           <td className="px-4 py-3.5">
                             <span
@@ -964,9 +923,6 @@ export function VendorPortalManager() {
                         </span>
                       </div>
 
-                      <div className="text-xs text-muted-foreground">
-                        Branch: <strong className="text-foreground font-semibold">{cashier.branchName || "All Branches"}</strong>
-                      </div>
 
                       <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border">
                         <Button
@@ -1052,19 +1008,6 @@ export function VendorPortalManager() {
               onChange={(e) => setCashierEmail(e.target.value)}
               required
             />
-
-            {overview?.branches && overview.branches.length > 0 && (
-              <Dropdown
-                label="Assigned Branch"
-                value={cashierBranchId}
-                onChange={(val) => setCashierBranchId(val)}
-                options={overview.branches.map((b) => ({
-                  value: b.id,
-                  label: b.name,
-                }))}
-                className="w-full"
-              />
-            )}
 
             <div className="space-y-2">
               <Input

@@ -186,13 +186,12 @@ wallet_passes   id, student_id, apple_serial, apple_auth_token, google_object_id
                                                                 -- QR follows the active card
 apple_devices   device_id, push_token, card_id                     -- Apple web service
 vendors         id, name, logo_url, category, contact_*, status, contract_start, contract_end, notes
-branches        id, vendor_id, name, address, lat, lng
 offers          id, vendor_id, title, description, discount_type, discount_value, terms,
                 starts_at, ends_at, active_days, active_hours, visible,
                 limit_count, limit_period
-users           id, email UNIQUE, password_hash, role, vendor_id, branch_id,
+users           id, email UNIQUE, password_hash, role, vendor_id,
                 totp_secret, status, last_login_at                -- staff only
-scan_events     id, card_id, student_id, vendor_id, branch_id, cashier_id, offer_id,
+scan_events     id, card_id, student_id, vendor_id, cashier_id, offer_id,
                 result, reason, confirmed, bill_amount, voided, void_reason, created_at
 email_outbox    id, to, subject, html, created_at
 audit_log       id, actor_id, action, entity, entity_id, before, after, created_at

@@ -11,7 +11,7 @@ export async function POST(request: Request) { const actor = await cashier(reque
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${actor.person.id}), 60)`);
     const [recent] = await tx.select({ n: count() }).from(scanEvents).where(and(eq(scanEvents.cashierId, actor.person.id), gte(scanEvents.createdAt, new Date(Date.now() - 60000))));
     if (recent.n >= 60) {
-      await tx.insert(scanEvents).values({ vendorId: actor.vendor.id, branchId: actor.branch!.id, cashierId: actor.person.id, result: "rate_limited", reason: "Scan rate limit exceeded", deviceInfo: request.headers.get("user-agent")?.slice(0, 300) ?? null });
+      await tx.insert(scanEvents).values({ vendorId: actor.vendor.id, cashierId: actor.person.id, result: "rate_limited", reason: "Scan rate limit exceeded", deviceInfo: request.headers.get("user-agent")?.slice(0, 300) ?? null });
       return json({ error: "Scan rate limit exceeded" }, 429);
     }
     return json(await validateScan(actor, qr, request.headers.get("user-agent"), tx));

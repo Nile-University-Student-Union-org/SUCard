@@ -1,4 +1,4 @@
-import { bigint, boolean, check, customType, date, doublePrecision, integer, index, jsonb, numeric, pgTable, primaryKey, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, customType, date, integer, index, jsonb, numeric, pgTable, primaryKey, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 const time = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
@@ -9,9 +9,9 @@ export const user = pgTable("user", {
   role: text("role", { enum: ["super_admin", "admin", "cashier", "vendor_manager", "student"] }).notNull().default("student"),
   disabledAt: timestamp("disabled_at", { withTimezone: true }),
   twoFactorEnabled: boolean("two_factor_enabled").notNull().default(false),
-  vendorId: uuid("vendor_id").references(() => vendors.id), branchId: uuid("branch_id").references(() => branches.id),
+  vendorId: uuid("vendor_id").references(() => vendors.id),
   createdAt: time("created_at"), updatedAt: time("updated_at"),
-}, (t) => [check("user_admin_vendor_null_check", sql`${t.role} not in ('super_admin', 'admin', 'student') or (${t.vendorId} is null and ${t.branchId} is null)`) ]);
+}, (t) => [check("user_admin_vendor_null_check", sql`${t.role} not in ('super_admin', 'admin', 'student') or ${t.vendorId} is null`) ]);
 export const session = pgTable("session", {
   id: text("id").primaryKey(), expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
   token: text("token").notNull().unique(), createdAt: time("created_at"), updatedAt: time("updated_at"),
@@ -120,10 +120,6 @@ export const vendors = pgTable("vendors", {
   contractStart: date("contract_start"), contractEnd: date("contract_end"), status: text("status", { enum: ["active", "paused", "ended"] }).notNull().default("active"), notes: text("notes"),
   logoId: uuid("logo_id").references(() => vendorLogos.id), createdAt: time("created_at"), updatedAt: time("updated_at"),
 });
-export const branches = pgTable("branches", {
-  id: uuid("id").primaryKey().defaultRandom(), vendorId: uuid("vendor_id").notNull().references(() => vendors.id), name: text("name").notNull(), address: text("address").notNull(),
-  lat: doublePrecision("lat"), lng: doublePrecision("lng"), status: text("status", { enum: ["active", "inactive"] }).notNull().default("active"),
-});
 export const offers = pgTable("offers", {
   id: uuid("id").primaryKey().defaultRandom(), vendorId: uuid("vendor_id").notNull().references(() => vendors.id), title: text("title").notNull(), description: text("description"),
   discountType: text("discount_type", { enum: ["percent", "fixed", "free_item", "custom"] }).notNull(), discountValue: numeric("discount_value", { precision: 10, scale: 2 }), discountText: text("discount_text"), terms: text("terms"),
@@ -138,7 +134,7 @@ export const offerRevisions = pgTable("offer_revisions", {
 export const scanEvents = pgTable("scan_events", {
   id: uuid("id").primaryKey().defaultRandom(), cardId: uuid("card_id").references(() => cards.id), studentId: text("student_id").references(() => user.id),
   studentDeleted: boolean("student_deleted").notNull().default(false),
-  vendorId: uuid("vendor_id").notNull().references(() => vendors.id), branchId: uuid("branch_id").notNull().references(() => branches.id), cashierId: text("cashier_id").notNull().references(() => user.id),
+  vendorId: uuid("vendor_id").notNull().references(() => vendors.id), cashierId: text("cashier_id").notNull().references(() => user.id),
   offerId: uuid("offer_id").references(() => offers.id), result: text("result").notNull(), reason: text("reason"), confirmed: boolean("confirmed").notNull().default(false), confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   billAmount: numeric("bill_amount", { precision: 10, scale: 2 }), voided: boolean("voided").notNull().default(false), voidedAt: timestamp("voided_at", { withTimezone: true }), voidedBy: text("voided_by").references(() => user.id), voidReason: text("void_reason"),
   deviceInfo: text("device_info"), createdAt: time("created_at"),

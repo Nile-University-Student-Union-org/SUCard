@@ -144,7 +144,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 size="icon"
                 onClick={onClear}
                 aria-label="Clear input"
-                className="rounded-lg text-ash dark:text-zinc-400 min-h-[36px] min-w-[36px] h-9 w-9"
+                className="rounded-xl text-ash dark:text-zinc-400 min-h-[44px] min-w-[44px] h-11 w-11"
               >
                 <X className="w-4 h-4" />
               </Button>
@@ -158,7 +158,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
-                className="rounded-lg text-ash dark:text-zinc-400 min-h-[36px] min-w-[36px] h-9 w-9"
+                className="rounded-xl text-ash dark:text-zinc-400 min-h-[44px] min-w-[44px] h-11 w-11"
               >
                 {showPassword ? (
                   <EyeOff className="w-4 h-4" />

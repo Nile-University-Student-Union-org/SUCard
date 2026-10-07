@@ -431,7 +431,7 @@ export const DropdownContent: React.FC<DropdownContentProps> = ({
         items[next]?.focus();
       }}
       className={`
-        absolute z-50 ${minWidth} ${alignClass} ${placementClass}
+        absolute z-50 ${minWidth} max-w-[calc(100vw-32px)] ${alignClass} ${placementClass}
         max-h-[70dvh] overflow-y-auto overscroll-contain rounded-[14px] p-1.5
         bg-white/95 dark:bg-zinc-900/90 backdrop-blur-md backdrop-saturate-150
         border-2 border-slate-300 dark:border-zinc-800
@@ -485,13 +485,13 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       className={`
         group w-full min-h-[44px] flex items-center px-3 py-2 rounded-[10px] text-xs font-bold
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft
-        transition-all duration-150 select-none text-left cursor-pointer
+        transition-all duration-150 select-none text-left cursor-pointer motion-reduce:transition-none motion-reduce:transform-none
         ${
           active
             ? "bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft"
             : "text-charcoal dark:text-zinc-200 hover:bg-slate-100/80 dark:hover:bg-zinc-800/70 hover:text-brand dark:hover:text-white"
         }
-        ${disabled ? "opacity-40 pointer-events-none" : "active:scale-[0.99]"}
+        ${disabled ? "opacity-40 pointer-events-none" : "active:scale-[0.99] motion-reduce:active:scale-100"}
         ${className}
       `}
     >

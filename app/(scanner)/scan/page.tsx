@@ -18,10 +18,7 @@ export default async function ScanPage() {
     vendorLogoUrl: actor.vendor.logoId
       ? `/api/vendors/${actor.vendor.id}/logo`
       : null,
-    branchName: actor.branch?.name || "Main Branch",
-    vendorActive: actor.branch
-      ? vendorIsActive(actor.vendor, actor.branch, new Date())
-      : false,
+    vendorActive: vendorIsActive(actor.vendor, new Date()),
   };
 
   const user = {

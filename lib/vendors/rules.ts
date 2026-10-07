@@ -42,9 +42,9 @@ export function periodWindow(period: OfferPeriod, date: Date, semesters: Semeste
   return { start: cairoMidnight(start), resetsAt: cairoMidnight(end) };
 }
 export function remainingUses(limit: number | null, usedCount: number): number | null { return limit === null ? null : Math.max(0, limit - usedCount); }
-export function vendorIsActive(vendor: { status: string; contractStart: string | null; contractEnd: string | null }, branch: { status: string }, date: Date): boolean {
+export function vendorIsActive(vendor: { status: string; contractStart: string | null; contractEnd: string | null }, date: Date): boolean {
   const day = cairoParts(date).day;
-  return vendor.status === "active" && branch.status === "active" && (!vendor.contractStart || day >= vendor.contractStart) && (!vendor.contractEnd || day <= vendor.contractEnd);
+  return vendor.status === "active" && (!vendor.contractStart || day >= vendor.contractStart) && (!vendor.contractEnd || day <= vendor.contractEnd);
 }
 export function validationOutcome(input: { qrValid: boolean; cardStatus: "missing" | "unassigned" | "void" | "active"; studentActive: boolean; vendorActive: boolean; activeOfferCount: number; availableOfferCount: number }): ScanResultCode {
   if (!input.qrValid) return "invalid_qr";

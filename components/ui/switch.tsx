@@ -67,13 +67,13 @@ export function Switch({
       <span
         aria-hidden="true"
         className={cn(
-          "relative h-7 w-12 shrink-0 rounded-full border-2 border-slate-300 dark:border-zinc-700 bg-muted transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-brand dark:peer-focus-visible:ring-brand-soft peer-focus-visible:ring-offset-2",
+          "relative h-7 w-12 shrink-0 rounded-full border-2 border-slate-300 dark:border-zinc-700 bg-muted transition-colors motion-reduce:transition-none peer-focus-visible:ring-2 peer-focus-visible:ring-brand dark:peer-focus-visible:ring-brand-soft peer-focus-visible:ring-offset-2",
           checked && "bg-brand border-brand"
         )}
       >
         <span
           className={cn(
-            "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
+            "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none",
             checked && "translate-x-5"
           )}
         />

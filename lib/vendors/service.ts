@@ -3,11 +3,11 @@ import { createHash } from "node:crypto";
 import { and, asc, desc, eq, lt, max, or, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { account, auditLog, branches, offerRevisions, offers, scanEvents, session, user, vendorLogos, vendors } from "@/lib/db/schema";
+import { account, auditLog, offerRevisions, offers, scanEvents, session, user, vendorLogos, vendors } from "@/lib/db/schema";
 import { sendAccountWelcome } from "@/lib/email/welcome";
 import { randomBytes } from "node:crypto";
 import type { z } from "zod";
-import { offerBody, vendorBody, type accountBody, type accountPatch, type branchBody, type branchPatch, type offerPatch, type vendorPatch } from "./validation";
+import { offerBody, vendorBody, type accountBody, type accountPatch, type offerPatch, type vendorPatch } from "./validation";
 export class VendorError extends Error {
   constructor(public status: number, message: string, public code?: string) {
     super(message);
@@ -88,33 +88,6 @@ export async function setLogo(id: string, bytes: Buffer, mime: string, actorId: 
     return vendorDto(after);
   });
 }
-export async function listBranches(vendorId: string) {
-  await getVendor(vendorId);
-  return db.select().from(branches).where(eq(branches.vendorId, vendorId)).orderBy(asc(branches.name));
-}
-export async function createBranch(vendorId: string, input: z.infer<typeof branchBody>, actorId: string) {
-  return db.transaction(async tx => {
-    const [v] = await tx.select({
-      id: vendors.id
-    }).from(vendors).where(eq(vendors.id, vendorId));
-    if (!v) missing("Vendor");
-    const [row] = await tx.insert(branches).values({
-      ...input,
-      vendorId
-    }).returning();
-    await audit(tx, actorId, "branches.created", "branch", row.id, null, row);
-    return row;
-  });
-}
-export async function updateBranch(id: string, patch: z.infer<typeof branchPatch>, actorId: string) {
-  return db.transaction(async tx => {
-    const [before] = await tx.select().from(branches).where(eq(branches.id, id)).for("update");
-    if (!before) missing("Branch");
-    const [after] = await tx.update(branches).set(patch).where(eq(branches.id, id)).returning();
-    await audit(tx, actorId, "branches.updated", "branch", id, before, after);
-    return after;
-  });
-}
 export async function listOffers(vendorId: string) {
   await getVendor(vendorId);
   return (await db.select().from(offers).where(eq(offers.vendorId, vendorId)).orderBy(asc(offers.title))).map(offerDto);
@@ -179,7 +152,6 @@ const accountDto = (u: typeof user.$inferSelect) => ({
   name: u.name,
   role: u.role,
   vendorId: u.vendorId,
-  branchId: u.branchId,
   status: u.disabledAt ? "disabled" : "active"
 });
 export async function listAccounts(vendorId: string) {
@@ -188,11 +160,6 @@ export async function listAccounts(vendorId: string) {
 }
 export async function createAccount(vendorId: string, input: z.infer<typeof accountBody>, actorId: string) {
   await getVendor(vendorId);
-  if (input.role === "cashier") {
-    if (!input.branchId) throw new VendorError(400, "Cashier requires a branch");
-    const [branch] = await db.select().from(branches).where(and(eq(branches.id, input.branchId), eq(branches.vendorId, vendorId)));
-    if (!branch) throw new VendorError(400, "Branch does not belong to vendor");
-  } else if (input.branchId) throw new VendorError(400, "Vendor manager cannot have a branch");
   const ctx = await auth.$context;
   if (await ctx.internalAdapter.findUserByEmail(input.email)) throw new VendorError(409, "Email already exists");
   // Use the password the admin typed; without one the account is reachable only via the emailed set-password link.
@@ -224,14 +191,12 @@ export async function createAccount(vendorId: string, input: z.infer<typeof acco
     });
     await db.transaction(async tx => {
       await tx.update(user).set({
-        vendorId,
-        branchId: input.role === "cashier" ? input.branchId : null
+        vendorId
       }).where(eq(user.id, created.id));
       await audit(tx, actorId, "vendor_accounts.created", "user", created.id, null, {
         email: input.email,
         role: input.role,
-        vendorId,
-        branchId: input.branchId ?? null
+        vendorId
       });
     });
   } catch (error) {
@@ -246,15 +211,8 @@ export async function updateAccount(id: string, patch: z.infer<typeof accountPat
   return db.transaction(async tx => {
     const [before] = await tx.select().from(user).where(eq(user.id, id)).for("update");
     if (!before || before.role !== "cashier" && before.role !== "vendor_manager" || !before.vendorId) missing("Vendor account");
-    const vendorId = before.vendorId!;
-    if (patch.branchId !== undefined) {
-      if (before.role !== "cashier" || !patch.branchId) throw new VendorError(400, "Cashier requires a branch");
-      const [branch] = await tx.select().from(branches).where(and(eq(branches.id, patch.branchId), eq(branches.vendorId, vendorId)));
-      if (!branch) throw new VendorError(400, "Branch does not belong to vendor");
-    }
     const [after] = await tx.update(user).set({
       name: patch.name ?? before.name,
-      branchId: patch.branchId === undefined ? before.branchId : patch.branchId,
       disabledAt: patch.status === undefined ? before.disabledAt : patch.status === "disabled" ? new Date() : null,
       updatedAt: new Date()
     }).where(eq(user.id, id)).returning();
@@ -323,20 +281,18 @@ export async function listRedemptions(query: {
   const rows = await db.select({
     scan: scanEvents,
     vendorName: vendors.name,
-    branchName: branches.name,
     cashierName: user.name,
     offerTitle: offers.title,
     studentName: student,
     universityId,
     exactCreatedAt: sql<string>`to_char(${scanEvents.createdAt} at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.US"Z"')`
-  }).from(scanEvents).innerJoin(vendors, eq(scanEvents.vendorId, vendors.id)).innerJoin(branches, eq(scanEvents.branchId, branches.id)).innerJoin(user, eq(scanEvents.cashierId, user.id)).leftJoin(offers, eq(scanEvents.offerId, offers.id)).where(and(query.vendorId ? eq(scanEvents.vendorId, query.vendorId) : undefined, query.result ? eq(scanEvents.result, query.result) : undefined, query.confirmed ? eq(scanEvents.confirmed, query.confirmed === "true") : undefined, cursor ? or(sql`${scanEvents.createdAt} < ${cursor.at}::timestamptz`, and(sql`${scanEvents.createdAt} = ${cursor.at}::timestamptz`, lt(scanEvents.id, cursor.id))) : undefined)).orderBy(desc(scanEvents.createdAt), desc(scanEvents.id)).limit(51);
+  }).from(scanEvents).innerJoin(vendors, eq(scanEvents.vendorId, vendors.id)).innerJoin(user, eq(scanEvents.cashierId, user.id)).leftJoin(offers, eq(scanEvents.offerId, offers.id)).where(and(query.vendorId ? eq(scanEvents.vendorId, query.vendorId) : undefined, query.result ? eq(scanEvents.result, query.result) : undefined, query.confirmed ? eq(scanEvents.confirmed, query.confirmed === "true") : undefined, cursor ? or(sql`${scanEvents.createdAt} < ${cursor.at}::timestamptz`, and(sql`${scanEvents.createdAt} = ${cursor.at}::timestamptz`, lt(scanEvents.id, cursor.id))) : undefined)).orderBy(desc(scanEvents.createdAt), desc(scanEvents.id)).limit(51);
   const page = rows.slice(0, 50);
   const last = page.at(-1);
   return {
     redemptions: page.map(({
       scan,
       vendorName,
-      branchName,
       cashierName,
       offerTitle,
       studentName,
@@ -354,7 +310,6 @@ export async function listRedemptions(query: {
       studentName,
       universityId,
       vendorName,
-      branchName,
       cashierName,
       offerTitle
     })),

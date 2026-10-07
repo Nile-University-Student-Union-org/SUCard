@@ -90,7 +90,7 @@ export function VoidRedemptionDialog({
             <div className="p-3.5 rounded-xl bg-muted/50 border border-border text-xs space-y-1.5">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Vendor:</span>
-                <span className="font-bold text-foreground">{redemption.vendorName} ({redemption.branchName})</span>
+                <span className="font-bold text-foreground">{redemption.vendorName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Student:</span>

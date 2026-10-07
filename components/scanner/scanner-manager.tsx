@@ -189,7 +189,6 @@ export function ScannerManager({
         user={user}
         areas={areas}
         vendorName={initialContext.vendorName}
-        branchName={initialContext.branchName}
         vendorLogoUrl={initialContext.vendorLogoUrl}
         isOnline={isOnline}
       />
@@ -207,7 +206,7 @@ export function ScannerManager({
           />
         ) : (
           <div className="flex-1 overflow-y-auto">
-            <ScannerTodayTab branchName={initialContext.branchName} />
+            <ScannerTodayTab />
           </div>
         )}
 

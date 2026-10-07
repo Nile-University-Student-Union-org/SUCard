@@ -70,6 +70,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
   icon,
   className,
 }) => {
+  const cancelRef = React.useRef<HTMLButtonElement>(null);
   const IconComponent = variantIconMap[variant] || Info;
   const { iconBg, buttonVariant } = variantStyleMap[variant] || variantStyleMap.info;
 
@@ -85,10 +86,14 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
+      title={title}
+      description={description}
+      role="alertdialog"
       maxWidth="md"
       zIndex="z-[80]"
       showCloseButton={false}
       showDragHandle={true}
+      initialFocusRef={variant === "destructive" && cancelText ? cancelRef : undefined}
       className={cn("p-6 text-center sm:text-left", className)}
     >
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
@@ -104,11 +109,11 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
 
         {/* Text Details */}
         <div className="flex-1 space-y-1.5 min-w-0">
-          <h3 className="text-lg font-black text-eel-dark-blue dark:text-white leading-snug">
+          <h3 className="text-lg font-black text-eel-dark-blue dark:text-white leading-snug [overflow-wrap:anywhere]">
             {title}
           </h3>
           {description && (
-            <div className="text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed">
+            <div className="text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed [overflow-wrap:anywhere]">
               {description}
             </div>
           )}
@@ -119,6 +124,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
       <div className="mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5">
         {cancelText && (
           <Button
+            ref={cancelRef}
             type="button"
             variant="secondary"
             size="md"

@@ -10,19 +10,19 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-brand text-white shadow-xs",
+          "bg-brand text-white dark:text-midnight shadow-xs",
         brand:
-          "bg-brand text-white shadow-xs",
+          "bg-brand text-white dark:text-midnight shadow-xs",
         secondary:
           "bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 border border-slate-200 dark:border-zinc-700",
         accent:
-          "bg-macaw-blue text-white shadow-xs",
+          "bg-macaw-blue text-midnight dark:text-midnight shadow-xs",
         outline:
           "border-2 border-brand/30 text-brand dark:text-brand-soft bg-brand/5 dark:bg-brand/15",
         success:
           "bg-emerald-700 text-white dark:bg-emerald-700 shadow-xs",
         warning:
-          "bg-amber-500 text-midnight dark:bg-amber-500 shadow-xs",
+          "bg-amber-500 text-midnight dark:text-midnight shadow-xs",
         destructive:
           "bg-rose-700 text-white dark:bg-rose-700 shadow-xs",
         ghost:
@@ -38,7 +38,7 @@ const badgeVariants = cva(
         pill: "rounded-full",
       },
       interactive: {
-        true: "min-h-[44px] min-w-[44px] cursor-pointer hover:scale-105 active:scale-95",
+        true: "min-h-[44px] min-w-[44px] cursor-pointer hover:scale-105 active:scale-95 motion-reduce:transform-none",
         false: "",
       },
     },

@@ -452,7 +452,7 @@ export function VendorOverviewTab({
         isOpen={!!pendingStatus}
         onClose={() => setPendingStatus(null)}
         title={pendingStatus === "paused" ? "Pause Vendor Account?" : "End Vendor Contract?"}
-        description={`Pausing or ending a vendor stops all student card scans immediately at every branch of ${vendor.name}.`}
+        description={`Pausing or ending a vendor stops all student card scans immediately for ${vendor.name}.`}
         variant="warning"
         confirmText="Confirm Change"
         cancelText="Cancel"

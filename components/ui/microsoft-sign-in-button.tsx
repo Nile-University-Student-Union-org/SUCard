@@ -69,13 +69,14 @@ export function MicrosoftSignInButton({
           "dark:shadow-[0_4px_14px_rgba(0,0,0,0.3)] dark:hover:bg-slate-100 dark:hover:shadow-white/10 dark:hover:-translate-y-0.5",
           // Interactions & Focus
           "active:scale-[0.99] active:translate-y-0 dark:active:translate-y-0 transition-all duration-150",
+          "motion-reduce:transition-none motion-reduce:transform-none motion-reduce:hover:translate-none motion-reduce:active:scale-100",
           "flex items-center justify-center gap-3 font-semibold text-sm select-none",
           "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0F3056] dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-zinc-900",
           "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100"
         )}
       >
         {isLoading ? (
-          <Loader2 className="size-5 animate-spin text-white dark:text-[#0A1E38]" />
+          <Loader2 className="size-5 animate-spin motion-reduce:animate-none text-white dark:text-[#0A1E38]" />
         ) : (
           <span className="size-6 rounded-md bg-white flex items-center justify-center shadow-xs shrink-0">
             <MicrosoftLogo className="size-4" />

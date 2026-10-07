@@ -95,11 +95,11 @@ export function DateRangePicker({
       {isCustomOpen && (
         <form
           onSubmit={handleApplyCustom}
-          className="flex flex-wrap items-center gap-2 p-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs animate-in fade-in-0 duration-150"
+          className="flex flex-wrap items-center gap-2 p-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs animate-in fade-in-0 duration-150 motion-reduce:animate-none"
         >
           <div className="flex items-center gap-2 flex-1 min-w-[240px]">
             <div className="flex-1">
-              <label htmlFor="custom-from" className="block text-[10px] font-bold uppercase text-ash dark:text-zinc-400 mb-1">
+              <label htmlFor="custom-from" className="block text-[10px] font-bold uppercase text-stone-600 dark:text-zinc-300 mb-1">
                 From
               </label>
               <input
@@ -108,13 +108,13 @@ export function DateRangePicker({
                 value={customFrom}
                 max={customTo || undefined}
                 onChange={(e) => setCustomFrom(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full h-11 min-h-[44px] px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
                 required
               />
             </div>
-            <span className="text-muted-foreground self-end pb-2.5">&rarr;</span>
+            <span className="text-muted-foreground self-end pb-3">&rarr;</span>
             <div className="flex-1">
-              <label htmlFor="custom-to" className="block text-[10px] font-bold uppercase text-ash dark:text-zinc-400 mb-1">
+              <label htmlFor="custom-to" className="block text-[10px] font-bold uppercase text-stone-600 dark:text-zinc-300 mb-1">
                 To
               </label>
               <input
@@ -123,7 +123,7 @@ export function DateRangePicker({
                 value={customTo}
                 min={customFrom || undefined}
                 onChange={(e) => setCustomTo(e.target.value)}
-                className="w-full h-10 px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+                className="w-full h-11 min-h-[44px] px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
                 required
               />
             </div>
@@ -134,7 +134,7 @@ export function DateRangePicker({
             variant="primary"
             size="sm"
             disabled={!customFrom || !customTo || customFrom > customTo}
-            className="self-end normal-case font-bold h-10 min-h-[40px] px-4 shrink-0"
+            className="self-end normal-case font-bold h-11 min-h-[44px] px-4 shrink-0"
           >
             Apply
           </Button>

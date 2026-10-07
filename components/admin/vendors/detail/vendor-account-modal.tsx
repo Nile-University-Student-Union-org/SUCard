@@ -11,7 +11,6 @@ import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 import { createVendorAccount, updateVendorAccount } from "../api";
 import type {
   VendorAccountDto,
-  BranchDto,
   CreateVendorAccountRequest,
   UpdateVendorAccountRequest,
 } from "@/lib/vendors/types";
@@ -20,7 +19,6 @@ interface VendorAccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   vendorId: string;
-  branches: BranchDto[];
   editingAccount: VendorAccountDto | null;
   onAccountSaved: (saved: VendorAccountDto) => void;
 }
@@ -29,7 +27,6 @@ export function VendorAccountModal({
   isOpen,
   onClose,
   vendorId,
-  branches,
   editingAccount,
   onAccountSaved,
 }: VendorAccountModalProps) {
@@ -45,7 +42,6 @@ export function VendorAccountModal({
           key={editingAccount?.id ?? "new-account"}
           onClose={onClose}
           vendorId={vendorId}
-          branches={branches}
           editingAccount={editingAccount}
           onAccountSaved={onAccountSaved}
         />
@@ -57,15 +53,11 @@ export function VendorAccountModal({
 function VendorAccountForm({
   onClose,
   vendorId,
-  branches,
   editingAccount,
   onAccountSaved,
 }: Omit<VendorAccountModalProps, "isOpen">) {
   const [role, setRole] = useState<"cashier" | "vendor_manager">(
     editingAccount?.role ?? "cashier"
-  );
-  const [branchId, setBranchId] = useState<string>(
-    editingAccount?.branchId || (branches[0]?.id ?? "")
   );
   const [name, setName] = useState(editingAccount?.name ?? "");
   const [email, setEmail] = useState(editingAccount?.email ?? "");
@@ -90,11 +82,6 @@ function VendorAccountForm({
       return;
     }
 
-    if (role === "cashier" && !branchId) {
-      setError("Please select a branch for the cashier");
-      return;
-    }
-
     if (!editingAccount && password) {
       if (password.length < 8) {
         setError("Password must be at least 8 characters");
@@ -113,7 +100,6 @@ function VendorAccountForm({
       if (editingAccount) {
         const patch: UpdateVendorAccountRequest = {
           name: name.trim(),
-          branchId: role === "cashier" ? branchId : null,
           status,
         };
         const res = await updateVendorAccount(editingAccount.id, patch);
@@ -124,7 +110,6 @@ function VendorAccountForm({
           name: name.trim(),
           email: email.trim().toLowerCase(),
           password: password || undefined as unknown as string,
-          branchId: role === "cashier" ? branchId : null,
         };
         const res = await createVendorAccount(vendorId, payload);
         onAccountSaved(res.account);
@@ -160,11 +145,6 @@ function VendorAccountForm({
               onChange={(e) => {
                 const newRole = e.target.value as "cashier" | "vendor_manager";
                 setRole(newRole);
-                if (newRole === "vendor_manager") {
-                  setBranchId("");
-                } else if (!branchId && branches.length > 0) {
-                  setBranchId(branches[0].id);
-                }
               }}
               className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60"
             >
@@ -172,34 +152,6 @@ function VendorAccountForm({
               <option value="vendor_manager">Vendor Manager (Stats Portal)</option>
             </select>
           </div>
-
-          {/* Branch selector for Cashier */}
-          {role === "cashier" && (
-            <div className="space-y-1.5">
-              <Label htmlFor="account-branch" className="text-xs font-bold uppercase tracking-wider">
-                Assigned Branch <span className="text-rose-500">*</span>
-              </Label>
-              {branches.length === 0 ? (
-                <p className="text-xs text-rose-500 font-semibold">
-                  No branches found. Please create a branch in the Branches tab first.
-                </p>
-              ) : (
-                <select
-                  id="account-branch"
-                  required
-                  value={branchId}
-                  onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                >
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name} ({b.address})
-                    </option>
-                  ))}
-                </select>
-              )}
-            </div>
-          )}
 
           {/* Name */}
           <div className="space-y-1.5">

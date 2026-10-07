@@ -21,7 +21,7 @@ const accentIconStyles = {
   orange: "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20",
   green: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20",
   emerald: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20",
-  amber: "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400 border-amber-500/20",
+  amber: "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20",
   rose: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border-rose-500/20",
   violet: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/20",
   neutral: "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border-slate-200 dark:border-zinc-700",
@@ -56,7 +56,7 @@ export const StatTile: React.FC<StatTileProps> = ({
   return (
     <div
       className={cn(
-        "relative flex flex-col justify-between overflow-hidden rounded-[16px] border-2 border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200",
+        "relative flex flex-col justify-between overflow-hidden rounded-[16px] border-2 border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200 motion-reduce:transition-none",
         isHero ? "p-4 sm:p-5 border-t-4" : isCompact ? "p-3 sm:p-3.5" : "p-4 sm:p-5",
         isHero && accentBorderTop[accent],
         className
@@ -67,7 +67,7 @@ export const StatTile: React.FC<StatTileProps> = ({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "font-bold text-ash dark:text-zinc-400 leading-snug break-normal hyphens-none",
+              "font-bold text-stone-600 dark:text-zinc-300 leading-snug break-normal hyphens-none",
               isCompact ? "text-xs" : "text-xs uppercase tracking-wider"
             )}
           >
@@ -77,7 +77,7 @@ export const StatTile: React.FC<StatTileProps> = ({
         {icon && (
           <div
             className={cn(
-              "flex items-center justify-center rounded-xl border p-2 shrink-0 transition-transform",
+              "flex items-center justify-center rounded-xl border p-2 shrink-0 transition-transform motion-reduce:transition-none",
               accentIconStyles[accent],
               isCompact ? "h-7 w-7 [&>svg]:h-3.5 [&>svg]:w-3.5" : "h-9 w-9 sm:h-10 sm:w-10 [&>svg]:h-4.5 sm:[&>svg]:h-5 [&>svg]:w-4.5 sm:[&>svg]:w-5"
             )}
@@ -111,7 +111,7 @@ export const StatTile: React.FC<StatTileProps> = ({
         )}
 
         {subText && (
-          <p className="mt-1.5 text-xs text-ash dark:text-zinc-400 leading-relaxed font-medium break-words">
+          <p className="mt-1.5 text-xs text-stone-600 dark:text-zinc-400 leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
             {subText}
           </p>
         )}

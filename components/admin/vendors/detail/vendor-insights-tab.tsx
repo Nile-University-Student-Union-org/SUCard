@@ -264,29 +264,6 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
         </CardContent>
       </Card>
 
-      {/* TWO COLUMNS: Branches breakdown & Offers breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Branches breakdown */}
-        <Card className="border border-border bg-card shadow-xs">
-          <CardHeader className="p-4 sm:p-5 border-b border-border">
-            <CardTitle className="text-base sm:text-lg text-foreground">
-              REDEMPTIONS BY BRANCH
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-5">
-            <BarChart
-              data={data.branches.map((b) => ({
-                id: b.id,
-                label: b.name,
-                value: b.redemptions,
-              }))}
-              barColor="#0F3056"
-              emptyMessage="No branch activity recorded yet."
-            />
-          </CardContent>
-        </Card>
-
-        {/* Offers breakdown */}
         <Card className="border border-border bg-card shadow-xs">
           <CardHeader className="p-4 sm:p-5 border-b border-border">
             <CardTitle className="text-base sm:text-lg text-foreground">
@@ -305,7 +282,6 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
             />
           </CardContent>
         </Card>
-      </div>
 
       {/* PEAK ACTIVITY CARD */}
       <Card className="border border-border bg-card shadow-xs">
@@ -350,7 +326,6 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
                   <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
                     <th className="px-4 py-3">Student</th>
                     <th className="px-4 py-3">ID</th>
-                    <th className="px-4 py-3">Branch</th>
                     <th className="px-4 py-3">Offer</th>
                     <th className="px-4 py-3 text-right">Bill Amount</th>
                     <th className="px-4 py-3 text-right">Time (Cairo)</th>
@@ -364,9 +339,6 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
                       </td>
                       <td className="px-4 py-3 text-muted-foreground">
                         {rec.universityId || "—"}
-                      </td>
-                      <td className="px-4 py-3 font-sans text-foreground">
-                        {rec.branchName}
                       </td>
                       <td className="px-4 py-3 font-sans text-muted-foreground">
                         {rec.offerTitle || "General Discount"}
@@ -399,8 +371,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
                     </span>
                   </div>
 
-                  <div className="flex items-center justify-between text-muted-foreground text-[11px]">
-                    <span>{rec.branchName}</span>
+                  <div className="text-muted-foreground text-[11px]">
                     <span className="font-bold text-brand dark:text-brand-soft">
                       {rec.offerTitle || "Discount"}
                     </span>

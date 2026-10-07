@@ -15,6 +15,15 @@ import { Button } from "./button";
 
 const emptySubscribe = () => () => {};
 
+interface ModalContextValue {
+  titleId: string;
+  descriptionId: string;
+  setTitleRendered: (val: boolean) => void;
+  setDescriptionRendered: (val: boolean) => void;
+}
+
+const ModalContext = React.createContext<ModalContextValue | null>(null);
+
 export interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -29,6 +38,8 @@ export interface ModalProps {
   closeOnEscape?: boolean;
   className?: string;
   zIndex?: string;
+  role?: "dialog" | "alertdialog";
+  ariaLabel?: string;
   initialFocusRef?: React.RefObject<HTMLElement | null>;
 }
 
@@ -58,9 +69,13 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnEscape = true,
   className,
   zIndex = "z-50",
+  role = "dialog",
+  ariaLabel,
   initialFocusRef,
 }) => {
   const [present, setPresent] = useState(isOpen);
+  const [titleRendered, setTitleRendered] = useState(false);
+  const [descriptionRendered, setDescriptionRendered] = useState(false);
   if (isOpen && !present) setPresent(true);
   useEffect(() => {
     if (isOpen || !present) return;
@@ -71,6 +86,7 @@ export const Modal: React.FC<ModalProps> = ({
     return () => window.clearTimeout(timeout);
   }, [isOpen, present]);
   const titleId = useId();
+  const descriptionId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
   const mounted = useSyncExternalStore(
     emptySubscribe,
@@ -166,93 +182,109 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!mounted || !present) return null;
 
+  const isLabelled = Boolean(title) || titleRendered;
+  const isDescribed = Boolean(description) || descriptionRendered;
+
   const modalNode = (
-    <div
-      className={cn(
-        "fixed inset-0 flex min-w-0 items-end sm:items-center justify-center p-0 sm:p-6 md:p-10 overflow-hidden",
-        zIndex
-      )}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? titleId : undefined}
-      aria-label={title ? undefined : "Dialog"}
+    <ModalContext.Provider
+      value={{
+        titleId,
+        descriptionId,
+        setTitleRendered,
+        setDescriptionRendered,
+      }}
     >
-      {/* Backdrop */}
       <div
-        onClick={isOpen && closeOnBackdropClick ? onClose : undefined}
         className={cn(
-          "fixed inset-0 bg-black/65 backdrop-blur-sm duration-150 motion-reduce:animate-none",
-          isOpen ? "animate-in fade-in" : "animate-out fade-out"
+          "fixed inset-0 flex min-w-0 items-end sm:items-center justify-center p-0 sm:p-6 md:p-10 overflow-hidden",
+          zIndex
         )}
-        aria-hidden="true"
-      />
-
-      {/* Modal / Bottom Sheet Panel */}
-      <div
-        ref={panelRef}
-        tabIndex={-1}
-        className={cn(
-          "relative w-full min-w-0 max-w-full max-h-[92dvh] sm:max-h-[90dvh] flex flex-col bg-white dark:bg-zinc-900 rounded-t-[28px] sm:rounded-[24px] border-t-2 sm:border-2 border-slate-200 dark:border-zinc-800 shadow-2xl text-foreground overflow-hidden z-10 duration-200 motion-reduce:animate-none",
-          isOpen
-            ? "animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-96"
-            : "animate-out fade-out slide-out-to-bottom-4 sm:slide-out-to-bottom-0 sm:zoom-out-96 duration-150",
-          maxWidthMap[maxWidth],
-          className
-        )}
-        onClick={(e) => e.stopPropagation()}
+        role={role}
+        aria-modal="true"
+        aria-labelledby={isLabelled ? titleId : undefined}
+        aria-describedby={isDescribed ? descriptionId : undefined}
+        aria-label={!isLabelled ? (ariaLabel || "Dialog") : undefined}
       >
-        {/* Mobile Drag Handle */}
-        {showDragHandle && (
-          <div className="sm:hidden pt-3 pb-1 flex justify-center items-center bg-white dark:bg-zinc-900 shrink-0">
-            <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full" />
-          </div>
-        )}
+        {/* Backdrop */}
+        <div
+          onClick={isOpen && closeOnBackdropClick ? onClose : undefined}
+          className={cn(
+            "fixed inset-0 bg-black/65 backdrop-blur-sm duration-150 motion-reduce:animate-none",
+            isOpen ? "animate-in fade-in" : "animate-out fade-out"
+          )}
+          aria-hidden="true"
+        />
 
-        {/* Dedicated Top Header */}
-        {(title || showCloseButton) && (
-          <div className="px-5 py-3.5 sm:px-6 sm:py-4 border-b-2 border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-white dark:bg-zinc-900 shrink-0 z-10">
-            <div className="flex items-center gap-3 min-w-0 flex-1">
-              {icon && (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
-                  {icon}
-                </div>
-              )}
-              <div className="min-w-0 flex-1">
-                {title && (
-                  <div
-                    id={titleId}
-                    className="text-sm sm:text-base font-black text-eel-dark-blue dark:text-white leading-snug [overflow-wrap:anywhere]"
-                  >
-                    {title}
+        {/* Modal / Bottom Sheet Panel */}
+        <div
+          ref={panelRef}
+          tabIndex={-1}
+          className={cn(
+            "relative w-full min-w-0 max-w-full max-h-[92dvh] sm:max-h-[90dvh] flex flex-col bg-white dark:bg-zinc-900 rounded-t-[28px] sm:rounded-[24px] border-t-2 sm:border-2 border-slate-200 dark:border-zinc-800 shadow-2xl text-foreground overflow-hidden z-10 duration-200 motion-reduce:animate-none pb-safe sm:pb-0",
+            isOpen
+              ? "animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-96"
+              : "animate-out fade-out slide-out-to-bottom-4 sm:slide-out-to-bottom-0 sm:zoom-out-96 duration-150",
+            maxWidthMap[maxWidth],
+            className
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Mobile Drag Handle */}
+          {showDragHandle && (
+            <div className="sm:hidden pt-3 pb-1 flex justify-center items-center bg-white dark:bg-zinc-900 shrink-0">
+              <div className="w-12 h-1.5 bg-slate-300 dark:bg-zinc-700 rounded-full" />
+            </div>
+          )}
+
+          {/* Dedicated Top Header */}
+          {(title || showCloseButton) && (
+            <div className="px-5 py-3.5 sm:px-6 sm:py-4 border-b-2 border-slate-200 dark:border-zinc-800 flex items-center justify-between gap-3 bg-white dark:bg-zinc-900 shrink-0 z-10">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                {icon && (
+                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] bg-brand/10 dark:bg-brand/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
+                    {icon}
                   </div>
                 )}
-                {description && (
-                  <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed mt-0.5 [overflow-wrap:anywhere]">
-                    {description}
-                  </p>
-                )}
+                <div className="min-w-0 flex-1">
+                  {title && (
+                    <div
+                      id={titleId}
+                      className="text-sm sm:text-base font-black text-eel-dark-blue dark:text-white leading-snug [overflow-wrap:anywhere]"
+                    >
+                      {title}
+                    </div>
+                  )}
+                  {description && (
+                    <p
+                      id={descriptionId}
+                      className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed mt-0.5 [overflow-wrap:anywhere]"
+                    >
+                      {description}
+                    </p>
+                  )}
+                </div>
               </div>
+
+              {showCloseButton && (
+                <Button
+                  onClick={onClose}
+                  type="button"
+                  variant="surface"
+                  size="icon"
+                  aria-label="Close dialog"
+                  className="shrink-0 min-h-[44px] min-w-[44px] h-11 w-11 rounded-xl"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              )}
             </div>
+          )}
 
-            {showCloseButton && (
-              <Button
-                onClick={onClose}
-                type="button"
-                variant="surface"
-                size="icon"
-                aria-label="Close dialog"
-                className="shrink-0 min-h-[36px] min-w-[36px] h-9 w-9 rounded-xl"
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Modal Children Content */}
-        {children}
+          {/* Modal Children Content */}
+          {children}
+        </div>
       </div>
-    </div>
+    </ModalContext.Provider>
   );
 
   return createPortal(modalNode, document.body);
@@ -276,31 +308,49 @@ ModalHeader.displayName = "ModalHeader";
 export const ModalTitle = forwardRef<
   HTMLHeadingElement,
   React.HTMLAttributes<HTMLHeadingElement>
->(({ className, ...props }, ref) => (
-  <h2
-    ref={ref}
-    className={cn(
-      "text-xl sm:text-2xl font-black text-eel-dark-blue dark:text-white leading-tight font-heading tracking-wide uppercase",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, id, ...props }, ref) => {
+  const context = React.useContext(ModalContext);
+  useEffect(() => {
+    context?.setTitleRendered(true);
+    return () => context?.setTitleRendered(false);
+  }, [context]);
+
+  return (
+    <h2
+      ref={ref}
+      id={id || context?.titleId}
+      className={cn(
+        "text-xl sm:text-2xl font-black text-eel-dark-blue dark:text-white leading-tight font-heading tracking-wide uppercase",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 ModalTitle.displayName = "ModalTitle";
 
 export const ModalDescription = forwardRef<
   HTMLParagraphElement,
   React.HTMLAttributes<HTMLParagraphElement>
->(({ className, ...props }, ref) => (
-  <p
-    ref={ref}
-    className={cn(
-      "mt-1 text-sm text-ash dark:text-zinc-400 font-medium",
-      className
-    )}
-    {...props}
-  />
-));
+>(({ className, id, ...props }, ref) => {
+  const context = React.useContext(ModalContext);
+  useEffect(() => {
+    context?.setDescriptionRendered(true);
+    return () => context?.setDescriptionRendered(false);
+  }, [context]);
+
+  return (
+    <p
+      ref={ref}
+      id={id || context?.descriptionId}
+      className={cn(
+        "mt-1 text-sm text-ash dark:text-zinc-400 font-medium",
+        className
+      )}
+      {...props}
+    />
+  );
+});
 ModalDescription.displayName = "ModalDescription";
 
 export const ModalBody = forwardRef<
