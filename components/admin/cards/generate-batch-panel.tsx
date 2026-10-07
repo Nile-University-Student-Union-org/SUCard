@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Sparkles, Loader2, AlertCircle, Layers } from "lucide-react";
+import { Plus, Loader2, AlertCircle, Layers } from "lucide-react";
 import { BATCH_LABEL_MAX, BATCH_COUNT_MAX, type Batch } from "@/lib/cards/types";
 import { createBatch } from "./api";
 import { formatNumber, formatBatchNumber } from "./utils";
@@ -134,10 +134,6 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
                 </CardDescription>
               </div>
             </div>
-            <span className="hidden sm:inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
-              <Sparkles className="size-3 text-[#018BCE]" />
-              Auto-serialized
-            </span>
           </div>
         </CardHeader>
 
