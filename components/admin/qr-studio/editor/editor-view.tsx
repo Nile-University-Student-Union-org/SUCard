@@ -211,11 +211,11 @@ export function EditorView({ initialStyle }: EditorViewProps) {
         onOpenHistory={() => setIsHistoryOpen(true)}
       />
 
-      {/* Main 3-Panel Studio Workspace */}
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row overflow-hidden">
+      {/* 3 panels side by side from 1400px (the admin sidebar takes ~250px); below that one scrolling column, preview first */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-y-auto min-[1400px]:flex-row min-[1400px]:overflow-hidden">
         {/* Left Column: Options Sidebar */}
         <aside
-          className="w-full lg:w-[360px] xl:w-[400px] border-b lg:border-b-0 lg:border-r-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-y-auto p-4 shrink-0"
+          className="w-full min-[1400px]:w-[360px] 2xl:w-[400px] border-b min-[1400px]:border-b-0 min-[1400px]:border-r-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 min-[1400px]:overflow-y-auto p-4 shrink-0"
           aria-label="Style options"
         >
           <OptionsSidebar
@@ -227,7 +227,7 @@ export function EditorView({ initialStyle }: EditorViewProps) {
 
         {/* Center Column: Live Preview Workspace */}
         <main
-          className="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto flex flex-col"
+          className="order-first min-[1400px]:order-none flex-1 min-w-0 p-4 sm:p-6 min-[1400px]:overflow-y-auto flex flex-col"
           aria-label="Live preview"
         >
           <LivePreviewPanel
@@ -240,7 +240,7 @@ export function EditorView({ initialStyle }: EditorViewProps) {
 
         {/* Right Column: Scan Checks & Print Breakdown */}
         <aside
-          className="w-full lg:w-[320px] xl:w-[360px] border-t lg:border-t-0 lg:border-l-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-y-auto p-4 shrink-0"
+          className="w-full min-[1400px]:w-[320px] 2xl:w-[360px] border-t min-[1400px]:border-t-0 min-[1400px]:border-l-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 min-[1400px]:overflow-y-auto p-4 shrink-0"
           aria-label="Scan checks and output"
         >
           <ChecksPanel config={config} payload={payload} />
