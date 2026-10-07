@@ -8,14 +8,14 @@ import {
   CuboidCollider,
   Physics,
   RigidBody,
+  useBeforePhysicsStep,
   useRopeJoint,
   useSphericalJoint,
   type RapierRigidBody,
   type RigidBodyProps,
 } from "@react-three/rapier";
 import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/drei";
-import { MeshLineGeometry, MeshLineMaterial } from "meshline";
-import { CARD_TEX_H, CARD_TEX_W, SLOT, createCardTextures } from "./card-textures";
+import { CARD_TEX_H, CARD_TEX_W, SLOT, STRAP_TEX_H, STRAP_TEX_W, createCardTextures } from "./card-textures";
 
 // Card in world units (ISO ID-1 proportions).
 const CARD_W = 3.2;
@@ -29,22 +29,29 @@ const px = (v: number) => (v / CARD_TEX_W) * CARD_W;
 const SLOT_Y = CARD_H / 2 - px(SLOT.cy);
 const SLOT_W = px(SLOT.w);
 const SLOT_H = px(SLOT.h);
-// Hardware stack, bottom to top: split ring through the slot → swivel eye → barrel → strap end cap.
+// Hardware stack, bottom to top: split ring through the slot -> swivel eye -> barrel -> crimp on the strap.
 const STRAP_W = 0.6;
-const RING_R = 0.15;
+const RING_R = 0.14;
 const RING_Y = SLOT_Y + RING_R;
-const EYE_R = 0.055;
-const EYE_Y = SLOT_Y + RING_R * 2 + 0.028;
-const BARREL_H = 0.13;
+const EYE_R = 0.05;
+const EYE_Y = SLOT_Y + RING_R * 2 + 0.03;
+const BARREL_H = 0.1;
 const BARREL_Y = EYE_Y + EYE_R + BARREL_H / 2 - 0.008;
-const CAP_H = 0.2;
-const CAP_Y = BARREL_Y + BARREL_H / 2 + CAP_H / 2 - 0.01;
-const HANG_Y = CAP_Y + CAP_H / 2 - 0.03; // where the strap attaches, in card space
+const CRIMP_H = 0.12;
+const CRIMP_Y = BARREL_Y + BARREL_H / 2 + CRIMP_H / 2 - 0.008;
+const CRIMP_TOP = CRIMP_Y + CRIMP_H / 2;
+const HANG_Y = CRIMP_TOP - 0.01; // where the rope joins the card, in card space
 
 export const CAMERA_FOV = 25;
 
-const SEGMENT = 0.95;
-const ANCHOR_Y = 4.5;
+const SEGMENTS = 4;
+const SEGMENT = 0.72;
+const ANCHOR_Y = 4.0;
+const ANCHOR = new THREE.Vector3(0, ANCHOR_Y, 0);
+
+// Strap ribbon: sampled along a spline through the rope, lit like fabric, twisting with the card.
+const RIBBON_SAMPLES = 96;
+const STRAP_TILE = STRAP_W * (STRAP_TEX_W / STRAP_TEX_H); // world length of one texture repeat
 
 function cardShape(withSlot: boolean) {
   const s = new THREE.Shape();
@@ -100,6 +107,21 @@ function bodyGeometry() {
   return geo;
 }
 
+function ribbonGeometry() {
+  const geo = new THREE.BufferGeometry();
+  const verts = RIBBON_SAMPLES * 2;
+  geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(verts * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute("normal", new THREE.BufferAttribute(new Float32Array(verts * 3), 3).setUsage(THREE.DynamicDrawUsage));
+  geo.setAttribute("uv", new THREE.BufferAttribute(new Float32Array(verts * 2), 2).setUsage(THREE.DynamicDrawUsage));
+  const index: number[] = [];
+  for (let i = 0; i < RIBBON_SAMPLES - 1; i++) {
+    const a = i * 2;
+    index.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+  }
+  geo.setIndex(index);
+  return geo;
+}
+
 const segmentProps: RigidBodyProps = {
   type: "dynamic",
   canSleep: true,
@@ -108,18 +130,19 @@ const segmentProps: RigidBodyProps = {
   linearDamping: 4,
 };
 
-type Lerped = { current: THREE.Vector3 | null };
-
 function Band({ onGrab }: { onGrab?: () => void }) {
-  const { gl, size } = useThree();
+  const { gl } = useThree();
   const fixed = useRef<RapierRigidBody>(null!);
   const j1 = useRef<RapierRigidBody>(null!);
   const j2 = useRef<RapierRigidBody>(null!);
   const j3 = useRef<RapierRigidBody>(null!);
+  const j4 = useRef<RapierRigidBody>(null!);
   const card = useRef<RapierRigidBody>(null!);
   const cardMesh = useRef<THREE.Group>(null);
-  const lerp1 = useRef<Lerped["current"]>(null);
-  const lerp2 = useRef<Lerped["current"]>(null);
+  // Drawn (interpolated) positions of the rope bodies, so the strap moves as smoothly as the card.
+  const g1 = useRef<THREE.Group>(null);
+  const g2 = useRef<THREE.Group>(null);
+  const g3 = useRef<THREE.Group>(null);
 
   const [dragged, setDragged] = useState<THREE.Vector3 | false>(false);
   const [hovered, setHovered] = useState(false);
@@ -151,37 +174,28 @@ function Band({ onGrab }: { onGrab?: () => void }) {
       front: face(textures.front),
       back: face(textures.back),
       edge: new THREE.MeshPhysicalMaterial({ color: "#0A2240", roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.2 }),
-      metal: new THREE.MeshStandardMaterial({ color: "#DCE4EC", metalness: 1, roughness: 0.18 }),
-      cap: new THREE.MeshPhysicalMaterial({ color: "#C7D1DB", metalness: 1, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.2 }),
-      capLine: new THREE.MeshStandardMaterial({ color: "#7D8A98", metalness: 1, roughness: 0.4 }),
+      metal: new THREE.MeshStandardMaterial({ color: "#DCE4EC", metalness: 1, roughness: 0.16 }),
+      crimp: new THREE.MeshPhysicalMaterial({ color: "#B9C4CF", metalness: 1, roughness: 0.28, clearcoat: 0.5, clearcoatRoughness: 0.25 }),
+      strap: new THREE.MeshPhysicalMaterial({
+        map: textures.strap,
+        side: THREE.DoubleSide,
+        roughness: 0.78,
+        metalness: 0,
+        sheen: 0.25,
+        sheenRoughness: 0.5,
+        sheenColor: new THREE.Color("#3A6EA5"),
+      }),
     };
   }, [textures]);
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
 
-  const band = useMemo(() => {
-    const geometry = new MeshLineGeometry();
-    const material = new MeshLineMaterial({
-      map: textures.strap,
-      useMap: 1,
-      repeat: new THREE.Vector2(-1.75, 1),
-      // meshline widths are in clip space: world width = lineWidth * tan(fov / 2).
-      lineWidth: STRAP_W / Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)),
-      color: new THREE.Color("#FFFFFF"),
-      resolution: new THREE.Vector2(1, 1),
-    });
-    return new THREE.Mesh(geometry, material);
-  }, [textures]);
-  useEffect(() => () => {
-    band.geometry.dispose();
-    (band.material as THREE.Material).dispose();
-  }, [band]);
-  useEffect(() => {
-    (band.material as MeshLineMaterial).resolution.set(size.width, size.height);
-  }, [band, size]);
+  const ribbonGeo = useMemo(() => ribbonGeometry(), []);
+  useEffect(() => () => ribbonGeo.dispose(), [ribbonGeo]);
+  const ribbon = useRef<THREE.Mesh>(null);
 
   const curve = useMemo(() => {
-    const c = new THREE.CatmullRomCurve3(Array.from({ length: 5 }, () => new THREE.Vector3()));
-    c.curveType = "chordal";
+    const c = new THREE.CatmullRomCurve3(Array.from({ length: 6 }, () => new THREE.Vector3()));
+    c.curveType = "centripetal";
     return c;
   }, []);
   const tmp = useMemo(
@@ -190,6 +204,14 @@ function Band({ onGrab }: { onGrab?: () => void }) {
       dir: new THREE.Vector3(),
       ang: new THREE.Vector3(),
       rot: new THREE.Vector3(),
+      point: new THREE.Vector3(),
+      tangent: new THREE.Vector3(),
+      side: new THREE.Vector3(),
+      normal: new THREE.Vector3(),
+      cardQuat: new THREE.Quaternion(),
+      twist: new THREE.Quaternion(),
+      identity: new THREE.Quaternion(),
+      samples: Array.from({ length: RIBBON_SAMPLES }, () => new THREE.Vector3()),
     }),
     [],
   );
@@ -197,7 +219,18 @@ function Band({ onGrab }: { onGrab?: () => void }) {
   useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], SEGMENT]);
   useRopeJoint(j1, j2, [[0, 0, 0], [0, 0, 0], SEGMENT]);
   useRopeJoint(j2, j3, [[0, 0, 0], [0, 0, 0], SEGMENT]);
-  useSphericalJoint(j3, card, [[0, 0, 0], [0, HANG_Y, 0]]);
+  useRopeJoint(j3, j4, [[0, 0, 0], [0, 0, 0], SEGMENT]);
+  useSphericalJoint(j4, card, [[0, 0, 0], [0, HANG_Y, 0]]);
+
+  // Per physics step (not per rendered frame): gently turn the card back to face the viewer.
+  useBeforePhysicsStep(() => {
+    const body = card.current;
+    if (!body || dragged) return;
+    const { ang, rot } = tmp;
+    ang.copy(body.angvel() as THREE.Vector3);
+    rot.copy(body.rotation() as unknown as THREE.Vector3);
+    body.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }, false);
+  });
 
   // Release the drag even if the pointer is let go outside the canvas.
   useEffect(() => {
@@ -222,16 +255,15 @@ function Band({ onGrab }: { onGrab?: () => void }) {
     return () => el.removeEventListener("touchmove", block);
   }, [dragged, gl]);
 
-  useFrame((state, delta) => {
-    if (!fixed.current || !j1.current || !j2.current || !j3.current || !card.current) return;
-    const dt = Math.min(delta, 1 / 20);
-    const { vec, dir, ang, rot } = tmp;
+  useFrame((state) => {
+    if (!fixed.current || !j1.current || !j2.current || !j3.current || !j4.current || !card.current) return;
+    const { vec, dir, point, tangent, side, normal, cardQuat, twist, identity, samples } = tmp;
 
     if (dragged) {
       vec.set(state.pointer.x, state.pointer.y, 0.5).unproject(state.camera);
       dir.copy(vec).sub(state.camera.position).normalize();
       vec.add(dir.multiplyScalar(state.camera.position.length()));
-      [card, j1, j2, j3, fixed].forEach((r) => r.current?.wakeUp());
+      [card, j1, j2, j3, j4, fixed].forEach((r) => r.current?.wakeUp());
       card.current.setNextKinematicTranslation({
         x: vec.x - dragged.x,
         y: vec.y - dragged.y,
@@ -239,7 +271,7 @@ function Band({ onGrab }: { onGrab?: () => void }) {
       });
     }
 
-    // Safety net: anything non-finite or far away → put the card back.
+    // Safety net: anything non-finite or far away -> put the card back.
     const t = card.current.translation();
     if (!Number.isFinite(t.x + t.y + t.z) || Math.abs(t.x) > 30 || Math.abs(t.y) > 30 || Math.abs(t.z) > 30) {
       const reset = (r: RapierRigidBody, y: number) => {
@@ -247,40 +279,58 @@ function Band({ onGrab }: { onGrab?: () => void }) {
         r.setLinvel({ x: 0, y: 0, z: 0 }, true);
         r.setAngvel({ x: 0, y: 0, z: 0 }, true);
       };
-      reset(j1.current, ANCHOR_Y - SEGMENT);
-      reset(j2.current, ANCHOR_Y - SEGMENT * 2);
-      reset(j3.current, ANCHOR_Y - SEGMENT * 3);
-      reset(card.current, ANCHOR_Y - SEGMENT * 3 - HANG_Y);
+      [j1, j2, j3, j4].forEach((r, i) => reset(r.current, ANCHOR_Y - SEGMENT * (i + 1)));
+      reset(card.current, ANCHOR_Y - SEGMENT * SEGMENTS - HANG_Y);
       card.current.setRotation({ x: 0, y: 0, z: 0, w: 1 }, true);
-      lerp1.current = null;
-      lerp2.current = null;
       return;
     }
 
-    // Smooth the two middle points so the strap doesn't jitter.
-    const smooth = (ref: Lerped, body: RapierRigidBody) => {
-      const p = body.translation();
-      if (!ref.current) ref.current = new THREE.Vector3(p.x, p.y, p.z);
-      const dist = Math.max(0.1, Math.min(1, ref.current.distanceTo(p as THREE.Vector3)));
-      ref.current.lerp(p as THREE.Vector3, Math.min(1, dt * (10 + dist * 40)));
-      return ref.current;
-    };
-    // The strap leaves the top of the cap straight along the card's up axis, using the card exactly
-    // as it is drawn this frame (interpolated) rather than the raw physics pose.
+    // Spline through the drawn (interpolated) rope, ending straight out of the crimp.
     const drawn = cardMesh.current;
-    if (!drawn) return;
+    if (!drawn || !g1.current || !g2.current || !g3.current) return;
     drawn.updateWorldMatrix(true, false);
-    drawn.localToWorld(curve.points[0].set(0, CAP_Y + CAP_H / 2 - 0.004, 0));
-    drawn.localToWorld(curve.points[1].set(0, CAP_Y + CAP_H / 2 + 0.16, 0));
-    curve.points[2].copy(smooth(lerp2, j2.current));
-    curve.points[3].copy(smooth(lerp1, j1.current));
-    curve.points[4].copy(fixed.current.translation() as THREE.Vector3);
-    (band.geometry as MeshLineGeometry).setPoints(curve.getPoints(64));
+    curve.points[0].copy(ANCHOR);
+    g1.current.getWorldPosition(curve.points[1]);
+    g2.current.getWorldPosition(curve.points[2]);
+    g3.current.getWorldPosition(curve.points[3]);
+    drawn.localToWorld(curve.points[4].set(0, CRIMP_TOP + 0.22, 0));
+    drawn.localToWorld(curve.points[5].set(0, CRIMP_TOP - 0.02, 0));
 
-    // Gently turn the card back to face the viewer.
-    ang.copy(card.current.angvel() as THREE.Vector3);
-    rot.copy(card.current.rotation() as unknown as THREE.Vector3);
-    card.current.setAngvel({ x: ang.x, y: ang.y - rot.y * 0.25, z: ang.z }, true);
+    // Ribbon frame: flat side follows world X at the top and the card's X at the crimp, so it twists.
+    drawn.getWorldQuaternion(cardQuat);
+    if (!ribbon.current) return;
+    const geo = ribbon.current.geometry;
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    const nor = geo.attributes.normal as THREE.BufferAttribute;
+    const uv = geo.attributes.uv as THREE.BufferAttribute;
+    const half = STRAP_W / 2;
+    let length = 0;
+    for (let i = 0; i < RIBBON_SAMPLES; i++) {
+      curve.getPoint(i / (RIBBON_SAMPLES - 1), samples[i]);
+      if (i > 0) length += samples[i].distanceTo(samples[i - 1]);
+    }
+    let along = length;
+    for (let i = 0; i < RIBBON_SAMPLES; i++) {
+      const u = i / (RIBBON_SAMPLES - 1);
+      if (i > 0) along -= samples[i].distanceTo(samples[i - 1]);
+      curve.getTangent(u, tangent);
+      twist.slerpQuaternions(identity, cardQuat, u * u * (3 - 2 * u));
+      side.set(1, 0, 0).applyQuaternion(twist);
+      side.addScaledVector(tangent, -side.dot(tangent)).normalize();
+      normal.crossVectors(side, tangent).normalize();
+      point.copy(samples[i]).addScaledVector(side, -half);
+      pos.setXYZ(i * 2, point.x, point.y, point.z);
+      point.copy(samples[i]).addScaledVector(side, half);
+      pos.setXYZ(i * 2 + 1, point.x, point.y, point.z);
+      nor.setXYZ(i * 2, normal.x, normal.y, normal.z);
+      nor.setXYZ(i * 2 + 1, normal.x, normal.y, normal.z);
+      // Measured from the crimp, so the print stays put where the strap is fixed to the hardware.
+      uv.setXY(i * 2, along / STRAP_TILE, 1);
+      uv.setXY(i * 2 + 1, along / STRAP_TILE, 0);
+    }
+    pos.needsUpdate = true;
+    nor.needsUpdate = true;
+    uv.needsUpdate = true;
   });
 
   const grab = (e: ThreeEvent<PointerEvent>) => {
@@ -297,15 +347,21 @@ function Band({ onGrab }: { onGrab?: () => void }) {
         <RigidBody ref={fixed} {...segmentProps} type="fixed" />
         <RigidBody position={[0.5, 0, 0]} ref={j1} {...segmentProps}>
           <BallCollider args={[0.1]} />
+          <group ref={g1} />
         </RigidBody>
         <RigidBody position={[1, 0, 0]} ref={j2} {...segmentProps}>
           <BallCollider args={[0.1]} />
+          <group ref={g2} />
         </RigidBody>
         <RigidBody position={[1.5, 0, 0]} ref={j3} {...segmentProps}>
           <BallCollider args={[0.1]} />
+          <group ref={g3} />
+        </RigidBody>
+        <RigidBody position={[2, 0, 0]} ref={j4} {...segmentProps}>
+          <BallCollider args={[0.1]} />
         </RigidBody>
         <RigidBody
-          position={[2, -HANG_Y, 0]}
+          position={[2.5, -HANG_Y, 0]}
           ref={card}
           {...segmentProps}
           angularDamping={2.5}
@@ -333,28 +389,28 @@ function Band({ onGrab }: { onGrab?: () => void }) {
             />
             {/* Split ring through the slot (turned so it reads as a ring from the front) */}
             <mesh material={materials.metal} position={[0, RING_Y, 0]} rotation={[0, Math.PI * 0.32, 0]}>
-              <torusGeometry args={[RING_R, 0.019, 24, 64]} />
+              <torusGeometry args={[RING_R, 0.017, 24, 72]} />
             </mesh>
             {/* Swivel eye, interlocked with the ring */}
             <mesh material={materials.metal} position={[0, EYE_Y, 0]} rotation={[0, -Math.PI * 0.18, 0]}>
-              <torusGeometry args={[EYE_R, 0.014, 16, 40]} />
+              <torusGeometry args={[EYE_R, 0.013, 16, 48]} />
             </mesh>
             {/* Swivel barrel */}
             <mesh material={materials.metal} position={[0, BARREL_Y, 0]}>
-              <cylinderGeometry args={[0.032, 0.042, BARREL_H, 32]} />
+              <cylinderGeometry args={[0.026, 0.036, BARREL_H, 32]} />
             </mesh>
-            <mesh material={materials.metal} position={[0, BARREL_Y - BARREL_H / 2 + 0.012, 0]}>
-              <cylinderGeometry args={[0.05, 0.05, 0.024, 32]} />
-            </mesh>
-            {/* End cap crimped onto the strap */}
-            <RoundedBox args={[STRAP_W + 0.1, CAP_H, 0.08]} radius={0.03} smoothness={5} position={[0, CAP_Y, 0]} material={materials.cap} />
-            <mesh material={materials.capLine} position={[0, CAP_Y - CAP_H * 0.28, 0]}>
-              <boxGeometry args={[STRAP_W + 0.118, 0.016, 0.098]} />
-            </mesh>
+            {/* Crimp: slim, pill-shaped profile pressed onto the strap end */}
+            <RoundedBox
+              args={[STRAP_W + 0.05, CRIMP_H, 0.06]}
+              radius={0.028}
+              smoothness={6}
+              position={[0, CRIMP_Y, 0]}
+              material={materials.crimp}
+            />
           </group>
         </RigidBody>
       </group>
-      <primitive object={band} />
+      <mesh ref={ribbon} geometry={ribbonGeo} material={materials.strap} frustumCulled={false} />
     </>
   );
 }
@@ -378,7 +434,7 @@ export function LanyardScene({ onCardGrab }: { onCardGrab?: () => void }) {
       <CameraRig />
       <ambientLight intensity={Math.PI * 0.55} />
       <directionalLight position={[3, 5, 6]} intensity={1.2} />
-      <Physics gravity={[0, -40, 0]} timeStep={1 / 60} interpolate updatePriority={-50}>
+      <Physics gravity={[0, -40, 0]} timeStep={1 / 60} interpolate updatePriority={-50} numSolverIterations={8}>
         <Band onGrab={onCardGrab} />
       </Physics>
       <Environment resolution={512} frames={1}>

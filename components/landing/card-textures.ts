@@ -296,16 +296,21 @@ function paintStrap(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null
   }
   ctx.restore();
 
-  // Edge piping: sky band + thin white rule, both sides.
-  for (const top of [true, false]) {
-    const y = top ? 0 : h;
-    const dir = top ? 1 : -1;
-    ctx.fillStyle = "rgba(0,0,0,0.35)";
-    ctx.fillRect(0, top ? 0 : h - 14, w, 14);
-    ctx.fillStyle = SKY;
-    ctx.fillRect(0, top ? y + 22 * dir : y + 22 * dir - 34, w, 34);
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
-    ctx.fillRect(0, top ? y + 70 * dir : y + 70 * dir - 6, w, 6);
+  // Edges: slightly darker selvedge with a woven-in sky stripe and a stitch line.
+  const edge = ctx.createLinearGradient(0, 0, 0, h);
+  edge.addColorStop(0, "rgba(0,0,0,0.38)");
+  edge.addColorStop(0.07, "rgba(0,0,0,0)");
+  edge.addColorStop(0.93, "rgba(0,0,0,0)");
+  edge.addColorStop(1, "rgba(0,0,0,0.38)");
+  ctx.fillStyle = edge;
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = "rgba(1,139,206,0.9)";
+  ctx.fillRect(0, 34, w, 22);
+  ctx.fillRect(0, h - 56, w, 22);
+  ctx.fillStyle = "rgba(255,255,255,0.28)";
+  for (let x = 0; x < w; x += 28) {
+    ctx.fillRect(x, 74, 16, 3);
+    ctx.fillRect(x, h - 77, 16, 3);
   }
 
   // Artwork: SU icon · NUSU · SU icon · NUSU, evenly spaced so the tile repeats seamlessly.
