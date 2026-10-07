@@ -1,0 +1,78 @@
+# Production Docker Compose for SU Card
+# Architecture: Next.js standalone (app) + PostgreSQL 17 (db) + Caddy reverse proxy (caddy)
+# Usage: docker compose -f compose.prod.yml up -d --build
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: sucard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-sucard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-sucard}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-sucard} -d ${POSTGRES_DB:-sucard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - sucard-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: sucard:prod
+    container_name: sucard-app
+    restart: unless-stopped
+    env_file:
+      - path: ${ENV_FILE:-deploy/.env.production}
+        required: false
+      - path: .env.production
+        required: false
+    environment:
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-sucard}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-sucard}}
+      GOOGLE_WALLET_KEY_FILE: ${GOOGLE_WALLET_KEY_FILE:-/srv/sucard/secrets/google-wallet.json}
+    volumes:
+      - /srv/sucard/secrets:/srv/sucard/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - sucard-network
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: sucard-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-card.example.com}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks:
+      - sucard-network
+
+volumes:
+  pgdata:
+    name: sucard-pgdata
+  caddy_data:
+    name: sucard-caddy-data
+  caddy_config:
+    name: sucard-caddy-config
+
+networks:
+  sucard-network:
+    name: sucard-network
+    driver: bridge
