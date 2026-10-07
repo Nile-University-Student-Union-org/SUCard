@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useSyncExternalStore } from "react";
+import React, { useEffect, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Sun, Moon } from "lucide-react";
 import { cn } from "cn";
+import { executeThemeTransition, prewarmThemePipeline } from "./theme-beam";
 
 const emptySubscribe = () => () => {};
 
@@ -20,15 +21,14 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   );
   const { resolvedTheme, setTheme } = useTheme();
 
-  const handleToggle = () => {
+  // Pre-warm the GPU clip-path pipeline so the first toggle doesn't stutter.
+  useEffect(() => {
+    prewarmThemePipeline();
+  }, []);
+
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     const nextTheme = resolvedTheme === "dark" ? "light" : "dark";
-    if (typeof document !== "undefined" && "startViewTransition" in document) {
-      (document as unknown as { startViewTransition: (cb: () => void) => void }).startViewTransition(() => {
-        setTheme(nextTheme);
-      });
-    } else {
-      setTheme(nextTheme);
-    }
+    executeThemeTransition(nextTheme, setTheme, e);
   };
 
   if (!mounted) {

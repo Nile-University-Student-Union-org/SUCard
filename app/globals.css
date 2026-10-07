@@ -461,3 +461,28 @@ h1, h2, h3, h4, h5, h6,
     cursor: not-allowed;
   }
 }
+
+/* ==========================================================================
+   Theme switch: circular reveal from the toggle (driven by components/ui/theme-beam.ts)
+   ========================================================================== */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html[data-theme-transition="active"]::view-transition-group(root) {
+  animation-duration: var(--theme-transition-duration, 500ms);
+}
+
+html[data-theme-transition="active"]::view-transition-new(root) {
+  clip-path: var(--theme-transition-clip-from, none);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(root),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}
