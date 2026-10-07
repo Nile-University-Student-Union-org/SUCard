@@ -7,6 +7,9 @@ import {
   Save,
   AlertTriangle,
   Loader2,
+  Building2,
+  Phone,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,6 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { updateVendor, uploadVendorLogo } from "../api";
+import { cn } from "cn";
 import type { VendorDto, VendorCategory, VendorStatus } from "@/lib/vendors/types";
 
 interface VendorOverviewTabProps {
@@ -50,6 +54,10 @@ export function VendorOverviewTab({
   const [status, setStatus] = useState<VendorStatus>(vendor.status);
   const [notes, setNotes] = useState(vendor.notes || "");
 
+  // Field errors
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   // Status confirm dialog
   const [pendingStatus, setPendingStatus] = useState<VendorStatus | null>(null);
 
@@ -60,7 +68,6 @@ export function VendorOverviewTab({
 
   // Save states
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -109,19 +116,33 @@ export function VendorOverviewTab({
     }
   };
 
-  const handleSaveOverview = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {};
+
     if (!name.trim()) {
-      setSaveError("Vendor name is required");
-      return;
+      errors.name = "Vendor name is required";
+    }
+
+    if (contactEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactEmail.trim())) {
+      errors.contactEmail = "Please enter a valid contact email address";
     }
 
     if (contractStart && contractEnd && contractStart > contractEnd) {
-      setSaveError("Contract end date cannot precede start date");
+      errors.contractEnd = "Contract end date cannot precede start date";
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleSaveOverview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError(null);
+
+    if (!validate()) {
       return;
     }
 
-    setSaveError(null);
     setIsSaving(true);
 
     try {
@@ -200,7 +221,7 @@ export function VendorOverviewTab({
               size="sm"
               disabled={isUploadingLogo}
               onClick={() => fileInputRef.current?.click()}
-              className="normal-case font-bold min-h-[40px] px-4 rounded-xl"
+              className="normal-case font-bold h-11 min-h-[44px] px-4 rounded-xl border-border"
             >
               {isUploadingLogo ? (
                 <>
@@ -235,7 +256,7 @@ export function VendorOverviewTab({
               id="status-select"
               value={status}
               onChange={(e) => handleStatusChangeAttempt(e.target.value as VendorStatus)}
-              className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+              className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
             >
               <option value="active">Active (Scans Allowed)</option>
               <option value="paused">Paused (Scans Suspended)</option>
@@ -244,12 +265,12 @@ export function VendorOverviewTab({
           </div>
 
           {status !== "active" && (
-            <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-medium space-y-1">
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs font-medium space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
                 <AlertTriangle className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                 <span>Scans Blocked</span>
               </div>
-              <p>
+              <p className="leading-relaxed">
                 When a vendor is {status}, cashier scanners will decline all student discount attempts immediately.
               </p>
             </div>
@@ -264,9 +285,14 @@ export function VendorOverviewTab({
           className="p-5 sm:p-7 rounded-2xl border border-border bg-card shadow-xs space-y-6"
         >
           <div className="flex items-center justify-between pb-3 border-b border-border">
-            <h3 className="font-heading text-xl uppercase tracking-wide text-foreground">
-              OVERVIEW & DETAILS
-            </h3>
+            <div>
+              <h3 className="font-heading text-xl uppercase tracking-wide text-foreground">
+                OVERVIEW & DETAILS
+              </h3>
+              <p className="text-xs text-muted-foreground">
+                Update store branding, partner details, and contract information.
+              </p>
+            </div>
             <span className="text-xs text-muted-foreground font-mono">
               ID: {vendor.id.slice(0, 8)}…
             </span>
@@ -278,62 +304,84 @@ export function VendorOverviewTab({
             </Alert>
           )}
 
-          {/* Core Info */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5 sm:col-span-2">
-              <Label htmlFor="v-name" className="text-xs font-bold uppercase tracking-wider">
-                Vendor Name <span className="text-rose-500">*</span>
-              </Label>
-              <Input
-                id="v-name"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="h-11 rounded-xl"
-              />
+          {/* Section 1: Core Info */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 pb-1 border-b border-border">
+              <Building2 className="size-4 text-brand dark:text-brand-soft" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                1. Basic Store Information
+              </h4>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="v-category" className="text-xs font-bold uppercase tracking-wider">
-                Category <span className="text-rose-500">*</span>
-              </Label>
-              <select
-                id="v-category"
-                value={category}
-                onChange={(e) => setCategory(e.target.value as VendorCategory)}
-                className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="v-name" className="text-xs font-semibold text-foreground">
+                  Vendor Name <span className="text-rose-500">*</span>
+                </Label>
+                <Input
+                  id="v-name"
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (fieldErrors.name) {
+                      setFieldErrors((prev) => ({ ...prev, name: "" }));
+                    }
+                  }}
+                  className={cn(
+                    "h-11 min-h-[44px] rounded-xl font-medium",
+                    fieldErrors.name && "border-rose-500 focus-visible:ring-rose-500"
+                  )}
+                />
+                {fieldErrors.name && (
+                  <p className="text-xs text-rose-500 font-semibold">{fieldErrors.name}</p>
+                )}
+              </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="v-location" className="text-xs font-bold uppercase tracking-wider">
-                Main Campus Location
-              </Label>
-              <Input
-                id="v-location"
-                placeholder="e.g. Student Center, 1st Floor"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                className="h-11 rounded-xl"
-              />
+              <div className="space-y-1.5">
+                <Label htmlFor="v-category" className="text-xs font-semibold text-foreground">
+                  Category <span className="text-rose-500">*</span>
+                </Label>
+                <select
+                  id="v-category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value as VendorCategory)}
+                  className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                >
+                  {CATEGORIES.map((cat) => (
+                    <option key={cat.value} value={cat.value}>
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="v-location" className="text-xs font-semibold text-foreground">
+                  Main Campus Location
+                </Label>
+                <Input
+                  id="v-location"
+                  placeholder="e.g. Student Center, 1st Floor"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="h-11 min-h-[44px] rounded-xl"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Contact Details */}
-          <div className="pt-4 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Contact Information
-            </h4>
+          {/* Section 2: Contact Details */}
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2 pb-1 border-b border-border">
+              <Phone className="size-4 text-brand dark:text-brand-soft" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                2. Contact Information
+              </h4>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="v-contact" className="text-xs font-semibold">
+                <Label htmlFor="v-contact" className="text-xs font-semibold text-foreground">
                   Contact Person
                 </Label>
                 <Input
@@ -341,12 +389,12 @@ export function VendorOverviewTab({
                   placeholder="e.g. Omar Hassan"
                   value={contactName}
                   onChange={(e) => setContactName(e.target.value)}
-                  className="h-11 rounded-xl"
+                  className="h-11 min-h-[44px] rounded-xl"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="v-phone" className="text-xs font-semibold">
+                <Label htmlFor="v-phone" className="text-xs font-semibold text-foreground">
                   Contact Phone
                 </Label>
                 <Input
@@ -354,12 +402,12 @@ export function VendorOverviewTab({
                   placeholder="+20 10..."
                   value={contactPhone}
                   onChange={(e) => setContactPhone(e.target.value)}
-                  className="h-11 rounded-xl"
+                  className="h-11 min-h-[44px] rounded-xl"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="v-email" className="text-xs font-semibold">
+                <Label htmlFor="v-email" className="text-xs font-semibold text-foreground">
                   Contact Email
                 </Label>
                 <Input
@@ -367,22 +415,36 @@ export function VendorOverviewTab({
                   type="email"
                   placeholder="partner@..."
                   value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  className="h-11 rounded-xl"
+                  onChange={(e) => {
+                    setContactEmail(e.target.value);
+                    if (fieldErrors.contactEmail) {
+                      setFieldErrors((prev) => ({ ...prev, contactEmail: "" }));
+                    }
+                  }}
+                  className={cn(
+                    "h-11 min-h-[44px] rounded-xl font-mono text-sm",
+                    fieldErrors.contactEmail && "border-rose-500 focus-visible:ring-rose-500"
+                  )}
                 />
+                {fieldErrors.contactEmail && (
+                  <p className="text-xs text-rose-500 font-semibold">{fieldErrors.contactEmail}</p>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Contract Period */}
-          <div className="pt-4 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Contract Period & Internal Notes
-            </h4>
+          {/* Section 3: Contract Period & Internal Notes */}
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center gap-2 pb-1 border-b border-border">
+              <Calendar className="size-4 text-brand dark:text-brand-soft" />
+              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+                3. Contract Period & Internal Notes
+              </h4>
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="v-cstart" className="text-xs font-semibold">
+                <Label htmlFor="v-cstart" className="text-xs font-semibold text-foreground">
                   Contract Start Date
                 </Label>
                 <Input
@@ -390,25 +452,36 @@ export function VendorOverviewTab({
                   type="date"
                   value={contractStart}
                   onChange={(e) => setContractStart(e.target.value)}
-                  className="h-11 rounded-xl"
+                  className="h-11 min-h-[44px] rounded-xl"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="v-cend" className="text-xs font-semibold">
+                <Label htmlFor="v-cend" className="text-xs font-semibold text-foreground">
                   Contract End Date
                 </Label>
                 <Input
                   id="v-cend"
                   type="date"
                   value={contractEnd}
-                  onChange={(e) => setContractEnd(e.target.value)}
-                  className="h-11 rounded-xl"
+                  onChange={(e) => {
+                    setContractEnd(e.target.value);
+                    if (fieldErrors.contractEnd) {
+                      setFieldErrors((prev) => ({ ...prev, contractEnd: "" }));
+                    }
+                  }}
+                  className={cn(
+                    "h-11 min-h-[44px] rounded-xl",
+                    fieldErrors.contractEnd && "border-rose-500 focus-visible:ring-rose-500"
+                  )}
                 />
+                {fieldErrors.contractEnd && (
+                  <p className="text-xs text-rose-500 font-semibold">{fieldErrors.contractEnd}</p>
+                )}
               </div>
 
               <div className="space-y-1.5 sm:col-span-2">
-                <Label htmlFor="v-notes" className="text-xs font-semibold">
+                <Label htmlFor="v-notes" className="text-xs font-semibold text-foreground">
                   Internal Notes (SU admins only)
                 </Label>
                 <Textarea
@@ -417,7 +490,7 @@ export function VendorOverviewTab({
                   placeholder="Notes about partnership agreement, commissions, special terms..."
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="rounded-xl"
+                  className="rounded-xl min-h-[88px]"
                 />
               </div>
             </div>
@@ -429,7 +502,7 @@ export function VendorOverviewTab({
               type="submit"
               variant="primary"
               disabled={isSaving}
-              className="normal-case font-bold h-11 px-6 shadow-xs"
+              className="normal-case font-bold h-11 min-h-[44px] px-6 shadow-xs"
             >
               {isSaving ? (
                 <>
@@ -451,10 +524,14 @@ export function VendorOverviewTab({
       <AlertDialog
         isOpen={!!pendingStatus}
         onClose={() => setPendingStatus(null)}
-        title={pendingStatus === "paused" ? "Pause Vendor Account?" : "End Vendor Contract?"}
-        description={`Pausing or ending a vendor stops all student card scans immediately for ${vendor.name}.`}
+        title={pendingStatus === "paused" ? `Pause Vendor Account — ${vendor.name}?` : `End Vendor Contract — ${vendor.name}?`}
+        description={
+          pendingStatus === "paused"
+            ? `Pausing ${vendor.name} will immediately suspend student card scans and discounts at this store until reactivated.`
+            : `Ending the contract for ${vendor.name} terminates partnership status and disables discount validation for all student cards.`
+        }
         variant="warning"
-        confirmText="Confirm Change"
+        confirmText={pendingStatus === "paused" ? "Pause vendor" : "End contract"}
         cancelText="Cancel"
         onConfirm={confirmStatusChange}
       />

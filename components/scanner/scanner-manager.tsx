@@ -71,7 +71,7 @@ export function ScannerManager({
   } | null>(null);
 
   const [invalidResult, setInvalidResult] = useState<{
-    code: ScanResultCode | "rate_limited" | string;
+    code: ScanResultCode | "rate_limited" | "network_error" | string;
     resetsAt: string | null;
   } | null>(null);
 
@@ -121,17 +121,12 @@ export function ScannerManager({
             resetsAt: res.resetsAt,
           });
         }
-      } catch (err: unknown) {
+      } catch {
         notifyError();
-        const msg =
-          err instanceof Error
-            ? err.message
-            : "Network error validating card. Please check internet connection.";
         setInvalidResult({
-          code: "invalid_qr",
+          code: "network_error",
           resetsAt: null,
         });
-        toast.error(msg);
       } finally {
         setIsValidating(false);
       }
@@ -183,7 +178,7 @@ export function ScannerManager({
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground select-none">
+    <div className="min-h-[100dvh] flex flex-col bg-background text-foreground select-none">
       {/* Top Navigation Bar */}
       <ScannerHeader
         user={user}

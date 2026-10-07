@@ -24,7 +24,7 @@ export default async function AdminLayout({
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0">
         <AdminHeader user={user} areas={areas} />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
+        <main className="flex-1 p-3.5 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto min-w-0">
           {children}
         </main>
       </div>

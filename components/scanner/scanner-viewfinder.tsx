@@ -58,7 +58,7 @@ export function ScannerViewfinder({
   // 1. Inactive Vendor Blocking State
   if (!vendorActive) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
         <div className="max-w-md w-full">
           <StatusState
             icon={<Store className="size-6" />}
@@ -74,7 +74,7 @@ export function ScannerViewfinder({
   // 2. Camera Permission Denied / Unavailable State
   if (permissionError) {
     return (
-      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 bg-slate-950 text-white">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-slate-950 text-white">
         <div className="max-w-md w-full space-y-6 text-center">
           <div className="size-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg">
             <ShieldAlert className="size-8" />
@@ -102,7 +102,7 @@ export function ScannerViewfinder({
             variant="primary"
             size="lg"
             onClick={startCamera}
-            className="w-full font-heading text-base uppercase tracking-wider h-13"
+            className="w-full font-heading text-base uppercase tracking-wider min-h-[48px] h-13"
           >
             <RotateCcw className="size-4 mr-2" />
             <span>Try again</span>
@@ -113,7 +113,7 @@ export function ScannerViewfinder({
   }
 
   return (
-    <div className="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center min-h-[420px]">
+    <div className="relative flex-1 w-full bg-black overflow-hidden flex items-center justify-center min-h-[380px]">
       {/* Hidden Canvas for QR decoding fallback */}
       <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
 
@@ -128,23 +128,23 @@ export function ScannerViewfinder({
       {/* Vignette Shadow Overlay */}
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
-      {/* Viewfinder Aim Target Frame */}
-      <div className="relative size-68 sm:size-76 rounded-3xl border-2 border-white/25 flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all">
+      {/* Viewfinder Aim Target Frame — responsive for 360px viewports */}
+      <div className="relative size-60 xs:size-68 sm:size-76 max-w-[calc(100vw-2.5rem)] max-h-[calc(100vw-2.5rem)] rounded-3xl border-2 border-white/25 flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all">
         {/* 4 Brand Corner Brackets */}
         <div className="absolute top-0 left-0 size-8 border-t-4 border-l-4 border-[#018BCE] rounded-tl-2xl -mt-1 -ml-1 shadow-[0_0_10px_#018BCE]" />
         <div className="absolute top-0 right-0 size-8 border-t-4 border-r-4 border-[#018BCE] rounded-tr-2xl -mt-1 -mr-1 shadow-[0_0_10px_#018BCE]" />
         <div className="absolute bottom-0 left-0 size-8 border-b-4 border-l-4 border-[#018BCE] rounded-bl-2xl -mb-1 -ml-1 shadow-[0_0_10px_#018BCE]" />
         <div className="absolute bottom-0 right-0 size-8 border-b-4 border-r-4 border-[#018BCE] rounded-br-2xl -mb-1 -mr-1 shadow-[0_0_10px_#018BCE]" />
 
-        {/* Animated Laser Scanning Line */}
+        {/* Animated Laser Scanning Line (motion-safe) */}
         {isCameraReady && !isValidating && (
-          <div className="absolute left-3 right-3 h-0.5 bg-gradient-to-r from-transparent via-[#018BCE] to-transparent shadow-[0_0_14px_#018BCE] animate-pulse" />
+          <div className="absolute left-3 right-3 h-0.5 bg-gradient-to-r from-transparent via-[#018BCE] to-transparent shadow-[0_0_14px_#018BCE] motion-safe:animate-pulse motion-reduce:opacity-80" />
         )}
 
         {/* Validating Spinner Inside Frame */}
         {isValidating && (
-          <div className="p-4 rounded-2xl bg-black/80 backdrop-blur-md flex flex-col items-center gap-2 border border-white/20 animate-in fade-in zoom-in-95 duration-150">
-            <div className="size-8 rounded-full border-3 border-sky-400 border-t-transparent animate-spin" />
+          <div className="p-4 rounded-2xl bg-black/85 backdrop-blur-md flex flex-col items-center gap-2 border border-white/20 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 duration-150">
+            <div className="size-8 rounded-full border-3 border-sky-400 border-t-transparent motion-safe:animate-spin" />
             <span className="text-xs font-bold text-white uppercase tracking-wider">
               Checking card…
             </span>
@@ -159,6 +159,7 @@ export function ScannerViewfinder({
             type="button"
             onClick={toggleTorch}
             aria-label={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
+            aria-pressed={torchOn}
             className={cn(
               "p-3 rounded-2xl backdrop-blur-xl transition-all cursor-pointer min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-95 shadow-lg",
               torchOn
@@ -178,7 +179,8 @@ export function ScannerViewfinder({
 
         {/* Live Scan Pill */}
         <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-xs font-bold text-white shadow-lg">
-          <span className="size-2 rounded-full bg-emerald-400 animate-ping" />
+          <span className="size-2 rounded-full bg-emerald-400 motion-safe:animate-ping motion-reduce:hidden" />
+          <span className="size-2 rounded-full bg-emerald-400 motion-safe:hidden motion-reduce:inline-block" />
           <span>Point at QR</span>
         </div>
       </div>
@@ -186,7 +188,10 @@ export function ScannerViewfinder({
       {/* Bottom Floating Guidelines & Offline Banner */}
       <div className="absolute bottom-6 inset-x-4 z-20 text-center space-y-2 pointer-events-none">
         {!isOnline && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-rose-600 text-white font-bold text-xs shadow-xl border border-rose-400 animate-bounce pointer-events-auto">
+          <div
+            role="status"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs sm:text-sm shadow-xl border border-rose-400 pointer-events-auto"
+          >
             <WifiOff className="size-4 shrink-0" />
             <span>Device is offline — scans require internet connection</span>
           </div>

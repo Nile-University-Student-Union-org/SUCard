@@ -133,7 +133,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
         <Button
           variant="primary"
           onClick={() => setIsCreateOpen(true)}
-          className="normal-case font-bold h-10 px-4 shadow-xs"
+          className="normal-case font-bold h-11 min-h-[44px] px-5 shadow-xs"
         >
           <Plus className="size-4 mr-1.5 stroke-[2.5]" />
           <span>Add offer</span>
@@ -157,7 +157,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
           title="Could not load offers"
           description={error}
           actions={
-            <Button variant="primary" onClick={fetchOffersList} className="normal-case font-bold mt-2">
+            <Button variant="primary" onClick={fetchOffersList} className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5">
               Retry
             </Button>
           }
@@ -169,7 +169,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
           title="No offers configured"
           description="Create at least one offer so student cards can be scanned for discounts at this store."
           actions={
-            <Button variant="primary" onClick={() => setIsCreateOpen(true)} className="normal-case font-bold mt-2">
+            <Button variant="primary" onClick={() => setIsCreateOpen(true)} className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5">
               Create first offer
             </Button>
           }
@@ -269,13 +269,13 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                 </div>
 
                 {/* Right: Actions */}
-                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border">
+                <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-border flex-wrap">
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleToggleStatus(offer)}
                     className={cn(
-                      "normal-case font-bold text-xs h-9 px-3",
+                      "normal-case font-bold text-xs h-11 min-h-[44px] px-3.5",
                       offer.status === "active"
                         ? "text-amber-600 dark:text-amber-400 hover:bg-amber-500/10"
                         : "text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
@@ -288,7 +288,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => setHistoryOffer(offer)}
-                    className="normal-case font-bold text-xs h-9 px-3 rounded-xl border-border"
+                    className="normal-case font-bold text-xs h-11 min-h-[44px] px-3.5 rounded-xl border-border"
                   >
                     <History className="size-3.5 mr-1" />
                     <span>History</span>
@@ -298,7 +298,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingOffer(offer)}
-                    className="normal-case font-bold text-xs h-9 px-3 rounded-xl border-border"
+                    className="normal-case font-bold text-xs h-11 min-h-[44px] px-3.5 rounded-xl border-border"
                   >
                     <Edit2 className="size-3.5 mr-1" />
                     <span>Edit</span>

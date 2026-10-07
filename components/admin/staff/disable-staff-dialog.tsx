@@ -55,8 +55,8 @@ export function DisableStaffDialog({
       title={isDisabling ? `Disable ${staff.name}?` : `Enable ${staff.name}?`}
       description={
         isDisabling
-          ? `Disabling this account will immediately sign out ${staff.name} from all active sessions and block them from signing in to the SU Card admin panel.`
-          : `Enabling this account will restore access for ${staff.name} to sign in to the SU Card admin panel.`
+          ? `Disabling this account will immediately revoke all active sessions for ${staff.name} (${staff.email}) and block them from signing in to the SU Card admin console.`
+          : `Enabling this account will restore administrator access for ${staff.name} (${staff.email}) to sign in to the SU Card admin console.`
       }
       confirmText={
         isSubmitting

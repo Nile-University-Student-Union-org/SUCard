@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
-import { RotateCcw, Receipt, CheckCircle2, DollarSign, Clock, Tag } from "lucide-react";
+import { RotateCcw, Receipt, CheckCircle2, DollarSign, Clock, Tag, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatTile } from "@/components/ui/stat-tile";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getTodayRedemptions } from "./api";
 import type { TodayResponse } from "@/lib/vendors/types";
-
 
 export function ScannerTodayTab() {
   const [data, setData] = useState<TodayResponse | null>(null);
@@ -67,15 +66,20 @@ export function ScannerTodayTab() {
     }
   };
 
+  // Determine KPI tile states based on load and error status
+  const isInitialLoading = isLoading && !data;
+  const isErrorWithoutData = !isLoading && !!error && !data;
+  const isStaleData = !isLoading && !!error && !!data;
+
   return (
-    <div className="flex-1 w-full max-w-xl mx-auto p-4 sm:p-6 space-y-6 animate-in fade-in-0 duration-200">
+    <div className="flex-1 w-full max-w-xl mx-auto p-4 sm:p-6 space-y-6 motion-safe:animate-in motion-safe:fade-in-0 duration-200">
       {/* Top Title & Refresh Button */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-heading text-2xl uppercase tracking-wide text-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h2 className="font-heading text-xl sm:text-2xl uppercase tracking-wide text-foreground truncate">
             TODAY&apos;S REDEMPTIONS
           </h2>
-          <p className="text-xs text-muted-foreground font-medium">
+          <p className="text-xs text-muted-foreground font-medium truncate">
             Recorded for this vendor today
           </p>
         </div>
@@ -85,12 +89,13 @@ export function ScannerTodayTab() {
           size="sm"
           onClick={() => fetchData(true)}
           disabled={isLoading || isRefreshing}
-          className="normal-case font-bold min-h-[44px] px-3.5 rounded-xl border-border"
+          aria-label="Refresh today's redemptions"
+          className="normal-case font-bold min-h-[44px] px-3.5 rounded-xl border-border shrink-0"
         >
           <RotateCcw
             className={`size-4 mr-1.5 ${isRefreshing ? "animate-spin" : ""}`}
           />
-          <span>Refresh</span>
+          <span>{isRefreshing ? "Updating…" : "Refresh"}</span>
         </Button>
       </div>
 
@@ -98,35 +103,107 @@ export function ScannerTodayTab() {
       <div className="grid grid-cols-2 gap-3">
         <StatTile
           label="DISCOUNTS GIVEN"
-          value={isLoading ? <Skeleton className="h-8 w-16" /> : data?.count ?? 0}
+          value={
+            isInitialLoading ? (
+              <Skeleton className="h-8 w-16" />
+            ) : isErrorWithoutData ? (
+              "—"
+            ) : (
+              data?.count ?? 0
+            )
+          }
+          subText={
+            isErrorWithoutData
+              ? "Data unavailable"
+              : isStaleData
+              ? "Cached data"
+              : undefined
+          }
+          badge={
+            isErrorWithoutData ? (
+              <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded-md">
+                Unavailable
+              </span>
+            ) : isStaleData ? (
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md">
+                Stale
+              </span>
+            ) : undefined
+          }
           icon={<CheckCircle2 className="size-5" />}
-          accent="brand"
+          accent={isErrorWithoutData ? "neutral" : "brand"}
           className="p-4"
         />
 
         <StatTile
           label="TOTAL BILL (EGP)"
           value={
-            isLoading ? (
+            isInitialLoading ? (
               <Skeleton className="h-8 w-24" />
+            ) : isErrorWithoutData ? (
+              "—"
             ) : (
               `EGP ${parseFloat(data?.totalBill || "0").toFixed(2)}`
             )
           }
+          subText={
+            isErrorWithoutData
+              ? "Data unavailable"
+              : isStaleData
+              ? "Cached data"
+              : undefined
+          }
+          badge={
+            isErrorWithoutData ? (
+              <span className="text-[10px] font-bold text-rose-700 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 px-1.5 py-0.5 rounded-md">
+                Unavailable
+              </span>
+            ) : isStaleData ? (
+              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded-md">
+                Stale
+              </span>
+            ) : undefined
+          }
           icon={<DollarSign className="size-5" />}
-          accent="blue"
+          accent={isErrorWithoutData ? "neutral" : "blue"}
           className="p-4"
         />
       </div>
 
       {/* List Section */}
       <div className="space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          Recent Scans ({data?.redemptions.length ?? 0})
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            Recent Scans {data ? `(${data.redemptions.length})` : ""}
+          </h3>
+          {isStaleData && (
+            <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 flex items-center gap-1">
+              <AlertTriangle className="size-3" />
+              Offline / Stale view
+            </span>
+          )}
+        </div>
 
-        {isLoading ? (
-          <div className="space-y-2.5">
+        {/* Stale data warning banner when refresh failed with existing data */}
+        {isStaleData && (
+          <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <AlertTriangle className="size-4 shrink-0 text-amber-600 dark:text-amber-400" />
+              <span className="truncate">Could not update recent scans: {error}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => fetchData(true)}
+              className="h-8 px-2.5 text-xs font-bold shrink-0 min-h-[36px]"
+            >
+              Retry
+            </Button>
+          </div>
+        )}
+
+        {isInitialLoading ? (
+          <div className="space-y-2.5" aria-busy="true">
             {[1, 2, 3, 4].map((i) => (
               <div
                 key={i}
@@ -140,17 +217,17 @@ export function ScannerTodayTab() {
               </div>
             ))}
           </div>
-        ) : error ? (
+        ) : isErrorWithoutData ? (
           <StatusState
             icon={<Receipt className="size-6" />}
             variant="warning"
-            title="Could not load list"
-            description={error}
+            title="Could not load redemptions"
+            description={error || "Failed to load recent redemptions from the server."}
             actions={
               <Button
                 variant="primary"
                 onClick={() => fetchData()}
-                className="normal-case font-bold mt-2"
+                className="normal-case font-bold mt-2 min-h-[44px]"
               >
                 Retry
               </Button>
@@ -168,10 +245,10 @@ export function ScannerTodayTab() {
             {data.redemptions.map((item) => (
               <div
                 key={item.id}
-                className="p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex items-center justify-between gap-3 transition-all hover:border-slate-300 dark:hover:border-zinc-700"
+                className="p-3.5 sm:p-4 rounded-2xl border border-border bg-card shadow-xs flex items-center justify-between gap-3 transition-colors hover:border-border/80"
               >
                 <div className="min-w-0 space-y-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-bold text-sm text-foreground truncate">
                       {item.studentName}
                     </span>
@@ -195,7 +272,7 @@ export function ScannerTodayTab() {
                   </div>
 
                   {item.billAmount ? (
-                    <span className="inline-block px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs">
+                    <span className="inline-block px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs font-mono">
                       EGP {parseFloat(item.billAmount).toFixed(2)}
                     </span>
                   ) : (

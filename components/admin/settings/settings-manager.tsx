@@ -8,13 +8,15 @@ import {
   Mail,
   AlertTriangle,
   RotateCcw,
-  Check,
   Loader2,
   Users,
   Layers,
   ArrowRightLeft,
   ShieldAlert,
+  Sparkles,
+  Gauge,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { Settings, SettingsResponse } from "@/lib/student/types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -47,8 +49,10 @@ export function SettingsManager({ role }: SettingsManagerProps) {
   const [studentEmailPattern, setStudentEmailPattern] = useState("");
 
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  // Mode change confirmation modal
+  const [isConfirmSaveOpen, setIsConfirmSaveOpen] = useState(false);
 
   // Bulk switch dialog state
   const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
@@ -97,11 +101,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
     };
   }, [refreshTrigger]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const executeSave = async () => {
     setIsSaving(true);
     setSaveError(null);
-    setSaveSuccess(false);
 
     const parsedQuota =
       mode === "physical" && hasQuota && quotaRemaining.trim() !== ""
@@ -111,6 +113,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
     if (hasQuota && mode === "physical" && (isNaN(parsedQuota as number) || (parsedQuota as number) < 0)) {
       setSaveError("Please enter a valid non-negative quota number.");
       setIsSaving(false);
+      setIsConfirmSaveOpen(false);
       return;
     }
 
@@ -145,16 +148,30 @@ export function SettingsManager({ role }: SettingsManagerProps) {
       if (!res.ok) {
         setSaveError(resData.error || "Failed to update settings.");
         setIsSaving(false);
+        setIsConfirmSaveOpen(false);
         return;
       }
 
       setData(resData as SettingsResponse);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3500);
+      setIsConfirmSaveOpen(false);
+      toast.success("Settings updated successfully");
     } catch {
       setSaveError("Network error occurred while saving settings.");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleSaveClick = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaveError(null);
+
+    // If mode is changing, confirm with high-impact dialog
+    const isModeChanging = data && mode !== data.settings.issuance.mode;
+    if (isModeChanging) {
+      setIsConfirmSaveOpen(true);
+    } else {
+      void executeSave();
     }
   };
 
@@ -178,6 +195,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
 
       setIsSwitchModalOpen(false);
       setRefreshTrigger((prev) => prev + 1);
+      toast.success(
+        `Switched ${data?.stats.pendingPhysicalStudents ?? 0} pending students to digital issuance`
+      );
     } catch {
       setSwitchFeedback("Network error. Please try again.");
     } finally {
@@ -187,7 +207,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
 
   if (isLoading) {
     return (
-      <div className="p-8 space-y-6">
+      <div className="p-4 sm:p-8 space-y-6 max-w-4xl" aria-busy="true">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-muted animate-pulse" />
           <div className="space-y-2">
@@ -195,9 +215,10 @@ export function SettingsManager({ role }: SettingsManagerProps) {
             <div className="h-4 w-72 bg-muted rounded-md animate-pulse" />
           </div>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="h-28 rounded-2xl bg-muted animate-pulse" />
-          <div className="h-28 rounded-2xl bg-muted animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="h-28 rounded-2xl bg-muted animate-pulse" />
+          ))}
         </div>
         <div className="h-64 rounded-2xl bg-muted animate-pulse" />
       </div>
@@ -206,7 +227,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
 
   if (error || !data) {
     return (
-      <div className="p-8">
+      <div className="p-4 sm:p-8 max-w-4xl">
         <StatusState
           layout="panel"
           variant="destructive"
@@ -222,7 +243,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                 setError(null);
                 setRefreshTrigger((prev) => prev + 1);
               }}
-              className="normal-case"
+              className="normal-case min-h-[44px]"
             >
               <RotateCcw className="size-3.5 mr-1.5" />
               Try again
@@ -232,6 +253,9 @@ export function SettingsManager({ role }: SettingsManagerProps) {
       </div>
     );
   }
+
+  const currentSavedMode = data.settings.issuance.mode;
+  const currentSavedQuota = data.settings.issuance.physicalQuotaRemaining;
 
   return (
     <div className="space-y-6 max-w-4xl">
@@ -245,52 +269,103 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         </p>
       </div>
 
-      {/* Stock & Pending Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <StatTile
-          label="Pending Physical Students"
-          value={data.stats.pendingPhysicalStudents}
-          subText="Students on physical flow awaiting card link"
-          icon={<Users className="size-5" />}
-          accent={data.stats.warning ? "rose" : "brand"}
-        />
+      {/* Primary Status Hierarchy: Mode, Quota, Stock, and Queue */}
+      <section aria-label="Issuance Status & Overview" className="space-y-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Active Mode Tile */}
+          <StatTile
+            label="Active Issuance Mode"
+            value={currentSavedMode === "digital" ? "Instant Digital" : "Physical Pickup"}
+            subText={
+              currentSavedMode === "digital"
+                ? "New signups get web cards immediately"
+                : "New signups await office card collection"
+            }
+            icon={<Sparkles className="size-5" />}
+            accent={currentSavedMode === "digital" ? "brand" : "blue"}
+          />
 
-        <StatTile
-          label="Unassigned Cards in Stock"
-          value={data.stats.unassignedCardsInStock}
-          subText="Physical cards ready for issuance"
-          icon={<Layers className="size-5" />}
-          accent="blue"
-        />
-      </div>
+          {/* Physical Quota Tile */}
+          <StatTile
+            label="Physical Quota"
+            value={currentSavedQuota !== null ? `${currentSavedQuota} Left` : "Unlimited"}
+            subText={
+              currentSavedQuota !== null
+                ? "Auto-switches to digital when 0"
+                : "No registration limit enforced"
+            }
+            icon={<Gauge className="size-5" />}
+            accent="blue"
+          />
 
-      {/* Stock Deficit Warning Alert */}
-      {data.stats.warning && (
-        <Alert
-          variant="warning"
-          title="Physical Stock Warning"
-          description={`There are ${data.stats.pendingPhysicalStudents} pending physical students, but only ${data.stats.unassignedCardsInStock} unassigned cards in stock.`}
-          icon={<AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />}
-          action={
+          {/* Unassigned Cards in Stock */}
+          <StatTile
+            label="Cards in Stock"
+            value={data.stats.unassignedCardsInStock}
+            subText="Unassigned physical cards ready"
+            icon={<Layers className="size-5" />}
+            accent="blue"
+          />
+
+          {/* Pending Physical Queue */}
+          <StatTile
+            label="Pending Students"
+            value={data.stats.pendingPhysicalStudents}
+            subText={
+              data.stats.pendingPhysicalStudents > 0
+                ? "Awaiting physical card link"
+                : "Queue is empty"
+            }
+            icon={<Users className="size-5" />}
+            accent={data.stats.warning ? "rose" : "brand"}
+          />
+        </div>
+
+        {/* Single Bulk Switch Entry Point / Stock Warning */}
+        {data.stats.pendingPhysicalStudents > 0 && (
+          <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="space-y-1 min-w-0">
+              <div className="flex items-center gap-2">
+                {data.stats.warning ? (
+                  <AlertTriangle className="size-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                ) : (
+                  <ArrowRightLeft className="size-4 text-brand dark:text-brand-soft shrink-0" />
+                )}
+                <h3 className="text-sm font-bold text-foreground">
+                  {data.stats.warning ? "Physical Card Stock Shortage" : "Pending Physical Students Queue"}
+                </h3>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {data.stats.warning
+                  ? `There are ${data.stats.pendingPhysicalStudents} pending physical students, but only ${data.stats.unassignedCardsInStock} unassigned cards in stock.`
+                  : `${data.stats.pendingPhysicalStudents} student${data.stats.pendingPhysicalStudents === 1 ? "" : "s"} currently waiting for physical card pickup.`}
+              </p>
+            </div>
+
             <Button
-              variant="outline"
+              type="button"
+              variant={data.stats.warning ? "primary" : "outline"}
               size="sm"
               onClick={() => setIsSwitchModalOpen(true)}
-              className="text-xs font-bold border-amber-300 dark:border-amber-800 text-amber-900 dark:text-amber-200 normal-case"
+              className="shrink-0 font-bold normal-case text-xs min-h-[44px] px-4"
             >
-              Switch pending to digital
+              <ArrowRightLeft className="size-3.5 mr-1.5" />
+              Switch {data.stats.pendingPhysicalStudents} to Digital
             </Button>
-          }
-        />
-      )}
+          </div>
+        )}
+      </section>
 
       {/* Settings Form */}
-      <form onSubmit={handleSave} className="space-y-6">
+      <form onSubmit={handleSaveClick} className="space-y-6">
         {saveError && (
-          <Alert variant="destructive" title="Error" description={saveError} dismissible onDismiss={() => setSaveError(null)} />
-        )}
-        {saveSuccess && (
-          <Alert variant="success" title="Success" description="Settings updated successfully." icon={<Check className="size-4" />} />
+          <Alert
+            variant="destructive"
+            title="Error"
+            description={saveError}
+            dismissible
+            onDismiss={() => setSaveError(null)}
+          />
         )}
 
         {/* Section 1: Card Issuance Mode (M2a) */}
@@ -298,7 +373,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
           <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
             <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
               <CreditCard className="size-5 text-brand dark:text-brand-soft shrink-0" />
-              <span>CARD ISSUANCE</span>
+              <span>CARD ISSUANCE RULES</span>
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground">
               Define whether new students receive instant digital cards or collect physical cards at the office.
@@ -308,15 +383,15 @@ export function SettingsManager({ role }: SettingsManagerProps) {
           <CardContent className="p-5 sm:p-6 space-y-5">
             <div>
               <label className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400 block mb-2">
-                Default Issuance Flow
+                Default Issuance Flow for New Sign-ups
               </label>
               <SegmentedControl
                 ariaLabel="Card issuance mode"
                 value={mode}
                 onChange={(val) => setMode(val as "digital" | "physical")}
                 options={[
-                  { value: "digital", label: "Digital Card (Instant)" },
-                  { value: "physical", label: "Physical Card (Office Pickup)" },
+                  { value: "digital", label: "Digital Card (Instant Pass)" },
+                  { value: "physical", label: "Physical Card (Office Collection)" },
                 ]}
               />
             </div>
@@ -360,30 +435,6 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                 description="Allow students with active digital cards to claim a physical card later at the SU desk."
               />
             </div>
-
-            {/* Quick Action: Bulk Switch Pending to Digital */}
-            {data.stats.pendingPhysicalStudents > 0 && (
-              <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <p className="text-xs font-bold text-foreground">
-                    Switch All Pending Physical Students
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    Instantly issue digital cards to all {data.stats.pendingPhysicalStudents} students waiting for physical cards.
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsSwitchModalOpen(true)}
-                  className="shrink-0 font-bold normal-case text-xs"
-                >
-                  <ArrowRightLeft className="size-3.5 mr-1.5" />
-                  Switch to Digital
-                </Button>
-              </div>
-            )}
           </CardContent>
         </Card>
 
@@ -478,6 +529,67 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         </div>
       </form>
 
+      {/* Confirmation Dialog: High-impact Mode Change */}
+      <Modal
+        isOpen={isConfirmSaveOpen}
+        onClose={() => {
+          if (!isSaving) setIsConfirmSaveOpen(false);
+        }}
+        title="Confirm Issuance Mode Change"
+        icon={<AlertTriangle className="size-5 text-amber-600 dark:text-amber-400" />}
+        maxWidth="md"
+        role="alertdialog"
+      >
+        <ModalBody className="space-y-3">
+          <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-2">
+            <p className="font-bold text-amber-900 dark:text-amber-200">
+              You are changing the default issuance mode from{" "}
+              <span className="uppercase font-mono">{currentSavedMode}</span> to{" "}
+              <span className="uppercase font-mono">{mode}</span>.
+            </p>
+            <div className="text-muted-foreground space-y-1">
+              <p>
+                <strong>Consequence:</strong> All future Nile University students registering via Microsoft SSO will immediately follow the <strong>{mode}</strong> issuance path.
+              </p>
+              {mode === "physical" ? (
+                <p>
+                  New students will be required to visit the SU Office to collect a physical card before their account becomes active.
+                </p>
+              ) : (
+                <p>
+                  New students will receive instant digital membership cards upon signup. Existing pending students will remain pending until individually or bulk switched.
+                </p>
+              )}
+            </div>
+          </div>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="secondary"
+            disabled={isSaving}
+            onClick={() => setIsConfirmSaveOpen(false)}
+            className="normal-case font-semibold min-h-[44px]"
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="primary"
+            disabled={isSaving}
+            onClick={() => void executeSave()}
+            className="normal-case font-bold min-h-[44px]"
+          >
+            {isSaving ? (
+              <>
+                <Loader2 className="size-4 mr-1.5 animate-spin" />
+                Saving…
+              </>
+            ) : (
+              "Confirm & Save"
+            )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
       {/* Confirmation Dialog: Switch All Pending to Digital */}
       <Modal
         isOpen={isSwitchModalOpen}
@@ -485,18 +597,22 @@ export function SettingsManager({ role }: SettingsManagerProps) {
           if (!isSwitching) setIsSwitchModalOpen(false);
         }}
         title="Switch Pending Students to Digital?"
-        icon={<ArrowRightLeft className="size-5" />}
+        icon={<ArrowRightLeft className="size-5 text-brand" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <ModalBody className="space-y-3">
-          <p className="text-sm text-foreground">
-            This will switch all <strong>{data.stats.pendingPhysicalStudents}</strong> students currently on the physical flow to the digital flow and immediately issue them digital membership cards.
-          </p>
-          <p className="text-xs text-muted-foreground">
-            They will be able to access their cards immediately upon opening the SU Card portal.
-          </p>
+          <div className="p-3.5 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-2">
+            <p className="text-sm font-semibold text-foreground">
+              Target: <strong>{data.stats.pendingPhysicalStudents}</strong> pending student{data.stats.pendingPhysicalStudents === 1 ? "" : "s"}
+            </p>
+            <p className="text-muted-foreground leading-relaxed">
+              <strong>Consequence:</strong> All students currently in the physical pickup queue will immediately receive active digital membership passes. Their status will change to digital and they can open the SU Card portal to access partner discounts right away.
+            </p>
+          </div>
+
           {switchFeedback && (
-            <p className="text-xs text-destructive font-bold">{switchFeedback}</p>
+            <Alert variant="destructive" size="sm" description={switchFeedback} />
           )}
         </ModalBody>
         <ModalFooter>
@@ -504,7 +620,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
             variant="secondary"
             disabled={isSwitching}
             onClick={() => setIsSwitchModalOpen(false)}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             Cancel
           </Button>
@@ -512,7 +628,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
             variant="primary"
             disabled={isSwitching}
             onClick={handleBulkSwitchToDigital}
-            className="normal-case font-bold"
+            className="normal-case font-bold min-h-[44px]"
           >
             {isSwitching ? (
               <>
@@ -520,7 +636,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                 Switching…
               </>
             ) : (
-              "Confirm & Switch All"
+              `Confirm & Switch ${data.stats.pendingPhysicalStudents} Students`
             )}
           </Button>
         </ModalFooter>

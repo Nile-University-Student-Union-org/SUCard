@@ -10,6 +10,8 @@ import {
   AlertTriangle,
   RotateCcw,
   Sparkles,
+  Loader2,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +37,10 @@ interface VendorInsightsTabProps {
 export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
   const [data, setData] = useState<VendorStatsResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = React.useRef(false);
 
   // Date range filter
   const [dateRange, setDateRange] = useState<{ from?: string; to?: string }>({});
@@ -44,8 +49,14 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
   useEffect(() => {
     let ignore = false;
     void (async () => {
-      setIsLoading(true);
+      // Preserve existing data during refetch
+      if (!hasLoadedRef.current) {
+        setIsLoading(true);
+      } else {
+        setIsUpdating(true);
+      }
       setError(null);
+
       try {
         const params = new URLSearchParams();
         if (dateRange.from) params.set("from", dateRange.from);
@@ -67,6 +78,8 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
         const json = (await res.json()) as VendorStatsResponse;
         if (!ignore) {
           setData(json);
+          hasLoadedRef.current = true;
+          setLastUpdated(new Date());
         }
       } catch (err) {
         if (!ignore) {
@@ -77,15 +90,17 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
       } finally {
         if (!ignore) {
           setIsLoading(false);
+          setIsUpdating(false);
         }
       }
     })();
+
     return () => {
       ignore = true;
     };
   }, [vendorId, dateRange, refreshKey]);
 
-  if (error) {
+  if (error && !data) {
     return (
       <div className="p-8">
         <StatusState
@@ -99,7 +114,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
               variant="outline"
               size="sm"
               onClick={() => setRefreshKey((k) => k + 1)}
-              className="normal-case font-bold"
+              className="normal-case font-bold h-11 min-h-[44px] px-5"
             >
               <RotateCcw className="size-3.5 mr-1.5" />
               Try again
@@ -112,8 +127,8 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
 
   if (isLoading && !data) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-16 rounded-2xl" />
+      <div className="space-y-6" aria-busy="true" aria-label="Loading analytics">
+        <Skeleton className="h-20 rounded-2xl" />
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-28 rounded-2xl" />
@@ -134,13 +149,27 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
   const studentChange = formatChangePercent(data.uniqueStudents.changePercent);
 
   return (
-    <div className="space-y-6">
-      {/* Date Range Picker Bar */}
+    <div
+      className={cn(
+        "space-y-6 transition-opacity duration-200",
+        isUpdating && "opacity-80"
+      )}
+      aria-busy={isUpdating}
+    >
+      {/* Date Range Picker Bar & Update Status */}
       <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 mb-1.5">
-            Filter Insights Range
-          </span>
+          <div className="flex items-center gap-2 mb-1.5">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+              Filter Insights Range
+            </span>
+            {isUpdating && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse">
+                <Loader2 className="size-3 animate-spin" />
+                <span>Updating stats…</span>
+              </span>
+            )}
+          </div>
           <DateRangePicker
             from={data.range.from}
             to={data.range.to}
@@ -148,13 +177,33 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
           />
         </div>
 
-        <div className="text-left md:text-right text-xs text-muted-foreground font-mono">
-          <span className="font-bold text-foreground">
-            {formatCairoDateOnly(data.range.from)} &rarr; {formatCairoDateOnly(data.range.to)}
-          </span>
-          <span className="block text-[11px] text-ash dark:text-zinc-400 font-sans">
-            vs prev ({formatCairoDateOnly(data.range.previousFrom)} – {formatCairoDateOnly(data.range.previousTo)})
-          </span>
+        <div className="flex items-center justify-between md:justify-end gap-3 text-left md:text-right">
+          <div className="text-xs text-muted-foreground font-mono">
+            <span className="font-bold text-foreground block">
+              {formatCairoDateOnly(data.range.from)} &rarr; {formatCairoDateOnly(data.range.to)}
+            </span>
+            <span className="block text-[11px] text-ash dark:text-zinc-400 font-sans">
+              vs prev ({formatCairoDateOnly(data.range.previousFrom)} – {formatCairoDateOnly(data.range.previousTo)})
+            </span>
+            {lastUpdated && (
+              <span className="inline-flex items-center gap-1 text-[10px] text-ash dark:text-zinc-400 mt-0.5">
+                <Clock className="size-2.5" />
+                <span>Updated: {lastUpdated.toLocaleTimeString("en-GB", { timeZone: "Africa/Cairo", hour: "2-digit", minute: "2-digit" })}</span>
+              </span>
+            )}
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setRefreshKey((k) => k + 1)}
+            disabled={isUpdating}
+            className="size-11 min-h-[44px] min-w-[44px] p-0 rounded-xl hover:bg-muted shrink-0"
+            title="Refresh insights data"
+            aria-label="Refresh insights"
+          >
+            <RotateCcw className={cn("size-4", isUpdating && "animate-spin text-brand")} />
+          </Button>
         </div>
       </div>
 
@@ -264,24 +313,25 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
         </CardContent>
       </Card>
 
-        <Card className="border border-border bg-card shadow-xs">
-          <CardHeader className="p-4 sm:p-5 border-b border-border">
-            <CardTitle className="text-base sm:text-lg text-foreground">
-              REDEMPTIONS BY OFFER
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4 sm:p-5">
-            <BarChart
-              data={data.offers.map((o) => ({
-                id: o.id,
-                label: o.name,
-                value: o.redemptions,
-              }))}
-              barColor="#018BCE"
-              emptyMessage="No offer redemptions recorded yet."
-            />
-          </CardContent>
-        </Card>
+      {/* REDEMPTIONS BY OFFER */}
+      <Card className="border border-border bg-card shadow-xs">
+        <CardHeader className="p-4 sm:p-5 border-b border-border">
+          <CardTitle className="text-base sm:text-lg text-foreground">
+            REDEMPTIONS BY OFFER
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-4 sm:p-5">
+          <BarChart
+            data={data.offers.map((o) => ({
+              id: o.id,
+              label: o.name,
+              value: o.redemptions,
+            }))}
+            barColor="#018BCE"
+            emptyMessage="No offer redemptions recorded yet."
+          />
+        </CardContent>
+      </Card>
 
       {/* PEAK ACTIVITY CARD */}
       <Card className="border border-border bg-card shadow-xs">

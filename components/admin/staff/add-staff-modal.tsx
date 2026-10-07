@@ -109,7 +109,6 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
 
     navigator.clipboard.writeText(text).then(() => {
       setIsCopied(true);
-      toast.success("Credentials copied to clipboard");
       setTimeout(() => setIsCopied(false), 2500);
     });
   };
@@ -146,7 +145,6 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
         staff: res.staff,
         password: values.password && values.password.trim() ? values.password.trim() : undefined,
       });
-      toast.success(`Staff member ${res.staff.name} added successfully`);
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Failed to add staff member";
@@ -165,7 +163,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
       maxWidth="md"
     >
       {createdStaffData ? (
-        /* Success Pane */
+        /* Success Pane with Next Steps */
         <>
           <ModalBody className="space-y-4">
             <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-200 dark:border-emerald-800 text-emerald-950 dark:text-emerald-200 space-y-2">
@@ -175,8 +173,8 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               </div>
               <p className="text-xs text-emerald-800 dark:text-emerald-300 leading-relaxed font-medium">
                 {createdStaffData.password
-                  ? "Make sure to copy these credentials now. For security reasons, the password cannot be retrieved once you close this dialog."
-                  : `A secure set-password link has been queued to email ${createdStaffData.staff.email}.`}
+                  ? "Make sure to copy these credentials now. For security reasons, the initial password cannot be retrieved once you close this dialog."
+                  : `A secure set-password link has been emailed to ${createdStaffData.staff.email}.`}
               </p>
             </div>
 
@@ -210,6 +208,16 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 </div>
               )}
             </div>
+
+            {/* Next Steps Guidance */}
+            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 text-xs text-muted-foreground space-y-1">
+              <p className="font-bold text-foreground">Next steps:</p>
+              <ul className="list-disc list-inside space-y-0.5 text-[11px] leading-relaxed">
+                <li>Share credentials securely with the staff member.</li>
+                <li>They can sign in to the SU Card admin console at <strong className="text-foreground">/login</strong>.</li>
+                <li>They will be prompted to set up two-factor authentication on first sign-in.</li>
+              </ul>
+            </div>
           </ModalBody>
 
           <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -218,7 +226,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 type="button"
                 variant="outline"
                 onClick={handleCopyCredentials}
-                className="normal-case text-xs font-bold"
+                className="normal-case text-xs font-bold h-11 min-h-[44px] px-4"
               >
                 {isCopied ? (
                   <>
@@ -237,16 +245,16 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               type="button"
               variant="primary"
               onClick={handleModalClose}
-              className="normal-case text-xs font-bold"
+              className="normal-case text-xs font-bold h-11 min-h-[44px] px-6"
             >
               Done
             </Button>
           </ModalFooter>
         </>
       ) : (
-        /* Add Staff Input Form */
+        /* Add Staff Input Form with Structured Sections */
         <form onSubmit={handleSubmit(onSubmit)} noValidate>
-          <ModalBody className="space-y-4">
+          <ModalBody className="space-y-5 max-h-[72vh] overflow-y-auto pr-1">
             {submitError && (
               <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-start gap-2">
                 <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
@@ -254,72 +262,78 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               </div>
             )}
 
-            {/* Name */}
-            <Input
-              id="staff-name"
-              label="Full Name"
-              placeholder="e.g. Omar Farouk"
-              disabled={isSubmitting}
-              maxLength={STAFF_NAME_MAX}
-              error={errors.name?.message}
-              {...register("name")}
-            />
-
-            {/* Email */}
-            <Input
-              id="staff-email"
-              type="email"
-              label="Staff Email"
-              placeholder="name@nu.edu.eg"
-              disabled={isSubmitting}
-              error={errors.email?.message}
-              {...register("email")}
-            />
-
-            {/* Role Segmented Control */}
-            <div className="space-y-1.5 text-left">
-              <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-                Staff Role
-              </label>
-              <SegmentedControl<StaffRole>
-                ariaLabel="Staff Role Selection"
-                fullWidth
-                value={currentRole}
-                onChange={(val) => setValue("role", val, { shouldValidate: true })}
-                options={[
-                  {
-                    value: "admin",
-                    label: "Admin",
-                    icon: <Shield className="size-4" />,
-                  },
-                  {
-                    value: "super_admin",
-                    label: "Super Admin",
-                    icon: <ShieldCheck className="size-4" />,
-                  },
-                ]}
+            {/* Section 1: Identity */}
+            <div className="space-y-3">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                1. Staff Identity
+              </h4>
+              <Input
+                id="staff-name"
+                label="Full Name *"
+                placeholder="e.g. Omar Farouk"
+                disabled={isSubmitting}
+                maxLength={STAFF_NAME_MAX}
+                error={errors.name?.message}
+                {...register("name")}
               />
-              <p className="text-[11px] text-ash dark:text-zinc-400 leading-relaxed pt-0.5">
-                {currentRole === "super_admin"
-                  ? "Super admins can manage staff accounts, audit logs, and card batches."
-                  : "Admins can manage cards and scan/claim cards."}
-              </p>
+
+              <Input
+                id="staff-email"
+                type="email"
+                label="Staff Email *"
+                placeholder="name@nu.edu.eg"
+                disabled={isSubmitting}
+                error={errors.email?.message}
+                {...register("email")}
+              />
             </div>
 
-            {/* Password (Optional) */}
-            <div className="space-y-2">
+            {/* Section 2: Role Selection */}
+            <div className="pt-3 border-t border-border space-y-2">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                2. Permissions & Role *
+              </h4>
+              <div className="space-y-1.5 text-left">
+                <SegmentedControl<StaffRole>
+                  ariaLabel="Staff Role Selection"
+                  fullWidth
+                  value={currentRole}
+                  onChange={(val) => setValue("role", val, { shouldValidate: true })}
+                  options={[
+                    {
+                      value: "admin",
+                      label: "Admin",
+                      icon: <Shield className="size-4" />,
+                    },
+                    {
+                      value: "super_admin",
+                      label: "Super Admin",
+                      icon: <ShieldCheck className="size-4" />,
+                    },
+                  ]}
+                />
+                <p className="text-[11px] text-ash dark:text-zinc-400 leading-relaxed pt-0.5">
+                  {currentRole === "super_admin"
+                    ? "Super admins have full system control, managing staff, audit logs, and batch exports."
+                    : "Admins can manage partner vendors, offers, and student cards."}
+                </p>
+              </div>
+            </div>
+
+            {/* Section 3: Initial Password */}
+            <div className="pt-3 border-t border-border space-y-3">
               <div className="flex items-center justify-between">
-                <label htmlFor="staff-password" className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-                  Initial Password <span className="text-ash dark:text-zinc-500 font-normal">(Optional)</span>
-                </label>
+                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                  3. Initial Password
+                </h4>
                 <button
                   type="button"
                   onClick={handleGeneratePassword}
                   disabled={isSubmitting}
-                  className="text-xs font-bold text-brand dark:text-brand-soft hover:underline inline-flex items-center gap-1 cursor-pointer select-none"
+                  className="text-xs font-bold text-brand dark:text-brand-soft hover:underline inline-flex items-center gap-1 cursor-pointer select-none min-h-[32px] px-1"
                 >
                   <Key className="size-3.5" />
-                  <span>Generate</span>
+                  <span>Generate strong password</span>
                 </button>
               </div>
 
@@ -330,7 +344,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 disabled={isSubmitting}
                 showPasswordToggle
                 error={errors.password?.message}
-                helperText="Leave empty to email them a link to set their own password"
+                helperText="Leave empty to email them a secure link to set their own password"
                 {...register("password")}
               />
 
@@ -350,7 +364,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               variant="secondary"
               onClick={handleModalClose}
               disabled={isSubmitting}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold h-11 min-h-[44px]"
             >
               Cancel
             </Button>
@@ -358,7 +372,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
               type="submit"
               variant="primary"
               disabled={isSubmitting}
-              className="normal-case font-bold"
+              className="normal-case font-bold h-11 min-h-[44px]"
             >
               {isSubmitting ? (
                 <>

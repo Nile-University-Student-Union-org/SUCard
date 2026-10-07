@@ -210,9 +210,10 @@ export function VendorOfferHistoryModal({
 
       <ModalFooter>
         <Button
+          type="button"
           variant="secondary"
           onClick={onClose}
-          className="normal-case font-semibold"
+          className="normal-case font-semibold h-11 min-h-[44px] px-5"
         >
           Close
         </Button>

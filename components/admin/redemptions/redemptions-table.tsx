@@ -63,7 +63,7 @@ export function RedemptionsTable({
         title="Could not load redemptions ledger"
         description={error}
         actions={
-          <Button variant="primary" onClick={onRetry} className="normal-case font-bold mt-2">
+          <Button variant="primary" onClick={onRetry} className="normal-case font-bold mt-2 min-h-[44px] h-11 px-5">
             Retry
           </Button>
         }
@@ -329,9 +329,9 @@ export function RedemptionsTable({
                     variant="ghost"
                     size="sm"
                     onClick={() => onVoidClick(r)}
-                    className="h-8 px-3 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 normal-case font-bold text-xs"
+                    className="min-h-[44px] h-11 px-4 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 normal-case font-bold text-xs inline-flex items-center"
                   >
-                    <Ban className="size-3.5 mr-1" />
+                    <Ban className="size-4 mr-1.5" />
                     <span>Void</span>
                   </Button>
                 )}

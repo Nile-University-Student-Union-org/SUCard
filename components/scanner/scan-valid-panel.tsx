@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Check, Loader2, Sparkles, X } from "lucide-react";
+import { Check, CheckCircle2, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
@@ -58,23 +58,51 @@ export function ScanValidPanel({
 
   const [billAmount, setBillAmount] = useState<string>("");
   const [billError, setBillError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const confirmBtnRef = useRef<HTMLButtonElement>(null);
+  const firstUsableOfferRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus confirm button if single offer available
+  // Auto-focus confirm button if single offer available, else focus the selected/first offer
   useEffect(() => {
     if (usableOffers.length === 1 && selectedOfferId) {
       confirmBtnRef.current?.focus();
+    } else {
+      firstUsableOfferRef.current?.focus();
     }
   }, [usableOffers.length, selectedOfferId]);
 
-  // Handle keyboard Escape to cancel
+  // Focus trap and keyboard navigation (Escape to cancel)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape" && !isConfirming) {
         e.preventDefault();
         onCancel();
+        return;
+      }
+
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isConfirming, onCancel]);
@@ -102,7 +130,7 @@ export function ScanValidPanel({
       aria-modal="true"
       aria-labelledby="valid-student-name"
       aria-describedby="valid-card-badge"
-      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 overflow-hidden animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex flex-col justify-end sm:justify-center sm:items-center sm:p-4 overflow-hidden motion-safe:animate-in motion-safe:fade-in-0 duration-200"
     >
       {/* Screen reader live announcement */}
       <div aria-live="polite" className="sr-only">
@@ -110,7 +138,10 @@ export function ScanValidPanel({
       </div>
 
       {/* Main Bottom Sheet on Mobile / Centered Card on sm+ */}
-      <div className="h-full sm:h-auto sm:max-h-[90vh] sm:max-w-lg w-full bg-card text-card-foreground flex flex-col rounded-t-[28px] sm:rounded-[24px] shadow-2xl overflow-hidden border-t sm:border border-border motion-safe:animate-in motion-safe:slide-in-from-bottom-6 sm:motion-safe:zoom-in-95 duration-250">
+      <div
+        ref={dialogRef}
+        className="h-[100dvh] sm:h-auto sm:max-h-[90vh] sm:max-w-lg w-full bg-card text-card-foreground flex flex-col rounded-t-[28px] sm:rounded-[24px] shadow-2xl overflow-hidden border-t sm:border border-border motion-safe:animate-in motion-safe:slide-in-from-bottom-6 sm:motion-safe:zoom-in-95 duration-250 motion-reduce:transform-none motion-reduce:transition-none"
+      >
         {/* Top Header with Safe Area Inset */}
         <header className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/95 backdrop-blur-md shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <div
@@ -126,7 +157,7 @@ export function ScanValidPanel({
             onClick={onCancel}
             disabled={isConfirming}
             aria-label="Cancel scan"
-            className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 disabled:opacity-50"
+            className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <X className="size-5" />
           </button>
@@ -136,8 +167,8 @@ export function ScanValidPanel({
         <main className="flex-1 overflow-y-auto overscroll-contain px-4 py-5 sm:px-6 sm:py-6 space-y-6">
           {/* Student Identification Hero */}
           <div className="flex items-center gap-3.5 sm:gap-4 p-3.5 sm:p-4 rounded-2xl bg-muted/40 border border-border">
-            {/* High-contrast Green/Sky Success Badge */}
-            <div className="size-14 sm:size-16 rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20 flex items-center justify-center shrink-0">
+            {/* High-contrast Green Success Badge */}
+            <div className="size-14 sm:size-16 rounded-2xl bg-emerald-600 text-white shadow-md shadow-emerald-600/20 flex items-center justify-center shrink-0">
               <Check className="size-8 sm:size-9 stroke-[3.5]" />
             </div>
 
@@ -175,10 +206,12 @@ export function ScanValidPanel({
                 const isUsable =
                   offer.remainingUses === null || offer.remainingUses > 0;
                 const isSelected = selectedOfferId === offer.id;
+                const isFirstUsable = isUsable && usableOffers[0]?.id === offer.id;
 
                 return (
                   <div
                     key={offer.id}
+                    ref={isFirstUsable ? firstUsableOfferRef : undefined}
                     onClick={() => {
                       if (isUsable && !isConfirming) {
                         setSelectedOfferId(offer.id);
@@ -195,10 +228,10 @@ export function ScanValidPanel({
                       }
                     }}
                     className={cn(
-                      "min-h-[56px] p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 text-left select-none",
+                      "min-h-[56px] p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 text-left select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                       isUsable
                         ? isSelected
-                          ? "bg-sky-500/10 dark:bg-sky-500/15 border-[#018BCE] shadow-sm ring-2 ring-[#018BCE]/20 cursor-pointer"
+                          ? "bg-sky-500/10 dark:bg-sky-500/15 border-brand dark:border-brand-soft shadow-xs ring-2 ring-brand/20 dark:ring-brand-soft/20 cursor-pointer"
                           : "bg-card border-border hover:border-border/80 hover:bg-muted/40 cursor-pointer active:scale-[0.99]"
                         : "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
                     )}
@@ -210,7 +243,7 @@ export function ScanValidPanel({
                           className={cn(
                             "font-heading text-xl sm:text-2xl leading-none tracking-wide",
                             isSelected
-                              ? "text-[#0F548D] dark:text-[#38BDF8]"
+                              ? "text-brand dark:text-brand-soft"
                               : isUsable
                               ? "text-foreground"
                               : "text-muted-foreground"
@@ -223,7 +256,7 @@ export function ScanValidPanel({
                           className={cn(
                             "text-xs font-bold",
                             isSelected
-                              ? "text-[#0F548D] dark:text-[#38BDF8]"
+                              ? "text-brand dark:text-brand-soft"
                               : isUsable
                               ? "text-muted-foreground"
                               : "text-rose-500 dark:text-rose-400"
@@ -251,7 +284,7 @@ export function ScanValidPanel({
                       className={cn(
                         "size-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
                         isSelected
-                          ? "border-[#018BCE] bg-[#018BCE] text-white"
+                          ? "border-brand bg-brand dark:border-brand-soft dark:bg-brand-soft text-white dark:text-midnight"
                           : "border-muted-foreground/40 bg-transparent"
                       )}
                     >
@@ -293,7 +326,7 @@ export function ScanValidPanel({
                     handleConfirm();
                   }
                 }}
-                className="bg-background border-2 border-border text-foreground placeholder:text-muted-foreground/50 h-13 sm:h-14 text-lg font-bold font-mono rounded-xl focus:border-[#018BCE] focus:ring-2 focus:ring-[#018BCE]/20 pr-14"
+                className="bg-background border-2 border-border text-foreground placeholder:text-muted-foreground/50 h-13 sm:h-14 text-lg font-bold font-mono rounded-xl focus:border-brand focus:ring-2 focus:ring-brand/20 pr-14"
               />
               <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground pointer-events-none px-1.5 py-0.5 bg-muted rounded border border-border">
                 EGP
@@ -315,16 +348,16 @@ export function ScanValidPanel({
               size="lg"
               onClick={handleConfirm}
               disabled={!selectedOfferId || isConfirming}
-              className="w-full h-13 sm:h-14 text-base sm:text-lg font-heading uppercase tracking-wider bg-[#0F3056] dark:bg-[#018BCE] text-white hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[#0F3056]/20 font-bold border-none cursor-pointer flex items-center justify-center transition-all disabled:opacity-50"
+              className="w-full min-h-[52px] h-13 sm:h-14 text-base sm:text-lg font-heading uppercase tracking-wider font-bold cursor-pointer flex items-center justify-center transition-all disabled:opacity-50"
             >
               {isConfirming ? (
                 <>
-                  <Loader2 className="size-5 mr-2 animate-spin text-white" />
+                  <Loader2 className="size-5 mr-2 animate-spin text-current" />
                   <span>Recording discount…</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="size-5 mr-2 text-sky-300 stroke-[2.5]" />
+                  <CheckCircle2 className="size-5 mr-2 stroke-[2.5]" />
                   <span>Confirm discount</span>
                 </>
               )}

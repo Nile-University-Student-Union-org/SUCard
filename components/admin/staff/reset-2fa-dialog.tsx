@@ -86,7 +86,7 @@ export function ResetTwoFactorDialog({
           variant="secondary"
           onClick={onClose}
           disabled={isSubmitting}
-          className="normal-case font-semibold"
+          className="normal-case font-semibold h-11 min-h-[44px]"
         >
           Cancel
         </Button>
@@ -95,7 +95,7 @@ export function ResetTwoFactorDialog({
           variant="primary"
           onClick={handleReset}
           disabled={isSubmitting}
-          className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white"
+          className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white h-11 min-h-[44px]"
         >
           {isSubmitting ? (
             <>

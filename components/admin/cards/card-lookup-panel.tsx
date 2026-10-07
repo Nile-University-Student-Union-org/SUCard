@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Search, CreditCard, User, Layers, AlertCircle, Loader2, X } from "lucide-react";
+import Link from "next/link";
+import { Search, CreditCard, User, Layers, AlertCircle, Loader2, X, ExternalLink } from "lucide-react";
 import { lookupCard } from "./api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,7 +50,7 @@ export function CardLookupPanel() {
       if (res && res.card) {
         setResult(res.card);
       } else {
-        setError("Card not found.");
+        setError("Card not found. Check the serial number or QR code.");
       }
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
@@ -94,7 +95,7 @@ export function CardLookupPanel() {
               <button
                 type="button"
                 onClick={handleClear}
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-ash dark:text-zinc-400 hover:text-foreground cursor-pointer"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-2 text-ash dark:text-zinc-400 hover:text-foreground cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                 aria-label="Clear input"
               >
                 <X className="size-4" />
@@ -105,7 +106,7 @@ export function CardLookupPanel() {
             type="submit"
             variant="primary"
             disabled={isLoading || !query.trim()}
-            className="font-bold normal-case shrink-0 min-h-[44px] px-5"
+            className="font-bold normal-case shrink-0 min-h-[44px] px-6"
           >
             {isLoading ? (
               <>
@@ -164,32 +165,39 @@ export function CardLookupPanel() {
             {/* Meta Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               {/* Batch Info */}
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
                 <Layers className="size-4 text-ash dark:text-zinc-400 shrink-0" />
                 <div className="min-w-0">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground block">
                     Batch
                   </span>
                   <span className="font-semibold text-foreground truncate block">
-                    {result.batchLabel || "Individual / Digital"}
+                    {result.batchLabel || "Individual / Digital Pass"}
                   </span>
                 </div>
               </div>
 
               {/* Linked Student */}
-              <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
+              <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
                 <User className="size-4 text-ash dark:text-zinc-400 shrink-0" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] uppercase font-bold text-muted-foreground block">
                     Card Holder
                   </span>
                   {result.student ? (
-                    <span className="font-semibold text-foreground truncate block" title={result.student.email}>
-                      {result.student.name} (ID: {result.student.universityId})
-                    </span>
+                    <Link
+                      href={`/admin/students/${result.student.userId}`}
+                      className="font-bold text-brand dark:text-brand-soft hover:underline truncate inline-flex items-center gap-1"
+                      title={result.student.email}
+                    >
+                      <span>
+                        {result.student.name} ({result.student.universityId})
+                      </span>
+                      <ExternalLink className="size-3 shrink-0" />
+                    </Link>
                   ) : (
                     <span className="text-muted-foreground font-medium block">
-                      Unassigned (Not linked)
+                      Unassigned (Ready to link)
                     </span>
                   )}
                 </div>

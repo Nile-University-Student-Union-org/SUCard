@@ -81,7 +81,6 @@ export function ResetPasswordModal({
 
     navigator.clipboard.writeText(text).then(() => {
       setIsCopied(true);
-      toast.success("New credentials copied to clipboard");
       setTimeout(() => setIsCopied(false), 2500);
     });
   };
@@ -102,7 +101,6 @@ export function ResetPasswordModal({
     try {
       await resetStaffPassword(staff.id, values);
       setResetSuccessPassword(values.password);
-      toast.success(`Password reset for ${staff.name}`);
     } catch (err) {
       const message =
         err instanceof ApiError ? err.message : err instanceof Error ? err.message : "Failed to reset password";
@@ -116,7 +114,7 @@ export function ResetPasswordModal({
     <Modal
       isOpen={isOpen}
       onClose={handleModalClose}
-      title={resetSuccessPassword ? "Password Reset Complete" : `Reset Password for ${staff.name}`}
+      title={resetSuccessPassword ? "Password Reset Complete" : `Reset Password — ${staff.name}`}
       icon={<KeyRound className="size-5 text-brand dark:text-brand-soft" />}
       maxWidth="md"
     >
@@ -147,6 +145,14 @@ export function ResetPasswordModal({
                 </span>
               </div>
             </div>
+
+            {/* Next Step Info */}
+            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-zinc-800/50 border border-slate-200 dark:border-zinc-700 text-xs text-muted-foreground space-y-1">
+              <p className="font-bold text-foreground">Next steps:</p>
+              <p className="text-[11px] leading-relaxed">
+                Provide these temporary credentials to {staff.name}. They will be asked to complete two-factor authentication when signing back in.
+              </p>
+            </div>
           </ModalBody>
 
           <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -154,7 +160,7 @@ export function ResetPasswordModal({
               type="button"
               variant="outline"
               onClick={handleCopyCredentials}
-              className="normal-case text-xs font-bold"
+              className="normal-case text-xs font-bold h-11 min-h-[44px] px-4"
             >
               {isCopied ? (
                 <>
@@ -172,7 +178,7 @@ export function ResetPasswordModal({
               type="button"
               variant="primary"
               onClick={handleModalClose}
-              className="normal-case text-xs font-bold"
+              className="normal-case text-xs font-bold h-11 min-h-[44px] px-6"
             >
               Done
             </Button>
@@ -196,16 +202,16 @@ export function ResetPasswordModal({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label htmlFor="reset-staff-password" className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-                  New Password
+                  New Password *
                 </label>
                 <button
                   type="button"
                   onClick={handleGeneratePassword}
                   disabled={isSubmitting}
-                  className="text-xs font-bold text-brand dark:text-brand-soft hover:underline inline-flex items-center gap-1 cursor-pointer select-none"
+                  className="text-xs font-bold text-brand dark:text-brand-soft hover:underline inline-flex items-center gap-1 cursor-pointer select-none min-h-[32px] px-1"
                 >
                   <Key className="size-3.5" />
-                  <span>Generate</span>
+                  <span>Generate strong password</span>
                 </button>
               </div>
 
@@ -232,7 +238,7 @@ export function ResetPasswordModal({
               variant="secondary"
               onClick={handleModalClose}
               disabled={isSubmitting}
-              className="normal-case"
+              className="normal-case font-semibold h-11 min-h-[44px]"
             >
               Cancel
             </Button>
@@ -240,7 +246,7 @@ export function ResetPasswordModal({
               type="submit"
               variant="destructive"
               disabled={isSubmitting}
-              className="normal-case font-bold"
+              className="normal-case font-bold h-11 min-h-[44px]"
             >
               {isSubmitting ? (
                 <>

@@ -14,8 +14,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
   themeColor: "#0F3056",
 };
 
@@ -25,7 +23,7 @@ export default function ScannerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col antialiased">
+    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col antialiased">
       {children}
     </div>
   );

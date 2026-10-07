@@ -53,7 +53,7 @@ export default function HomePage() {
             href="/login"
             variant="outline"
             size="sm"
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             <span>Sign in</span>
           </ButtonLink>
@@ -81,7 +81,7 @@ export default function HomePage() {
                 href="/login"
                 size="lg"
                 variant="primary"
-                className="w-full sm:w-auto h-12 px-8 text-base font-bold shadow-md"
+                className="w-full sm:w-auto min-h-[48px] px-8 text-base font-bold shadow-md"
               >
                 <span>Get your card</span>
                 <ArrowRight className="size-5 ml-1.5" />
@@ -90,24 +90,42 @@ export default function HomePage() {
                 href="#how-it-works"
                 size="lg"
                 variant="secondary"
-                className="group w-full sm:w-auto h-12 px-6 text-base font-semibold text-brand dark:text-white bg-white/70 hover:bg-white/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border-2 border-brand/20 hover:border-brand/40 dark:border-white/15 dark:hover:border-white/30 backdrop-blur-sm shadow-xs hover:shadow-sm"
+                className="group w-full sm:w-auto min-h-[48px] px-6 text-base font-semibold text-brand dark:text-white bg-white/70 hover:bg-white/90 dark:bg-white/[0.04] dark:hover:bg-white/[0.08] border-2 border-brand/20 hover:border-brand/40 dark:border-white/15 dark:hover:border-white/30 backdrop-blur-sm shadow-xs hover:shadow-sm"
               >
                 <span>How it works</span>
-                <ChevronDown className="size-4.5 ml-1.5 transition-transform duration-200 motion-safe:group-hover:translate-y-0.5" />
+                <ChevronDown className="size-4.5 ml-1.5 transition-transform duration-200 motion-safe:group-hover:translate-y-0.5 motion-reduce:group-hover:translate-y-0" />
               </ButtonLink>
             </div>
-
           </div>
 
-          {/* Right Column: 3D Interactive Lanyard Hero */}
-          <div className="lg:col-span-6 w-full flex items-center justify-center min-h-[480px] sm:min-h-[560px] lg:min-h-[640px]">
+          {/* Right Column: 3D Interactive Lanyard Hero / Responsive Static Preview */}
+          <div className="lg:col-span-6 w-full flex items-center justify-center min-h-[320px] sm:min-h-[440px] md:min-h-[520px] lg:min-h-[600px]">
             <LanyardCard />
           </div>
         </section>
 
         <HowItWorks />
 
-        <Suspense fallback={<div aria-hidden="true" className="h-[30rem]" />}>
+        <Suspense
+          fallback={
+            <section
+              aria-hidden="true"
+              className="relative w-full max-w-7xl mx-auto py-12 sm:py-20 px-4 sm:px-6 lg:px-8"
+            >
+              <div className="h-4 w-28 rounded-full bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-3" />
+              <div className="h-9 w-64 rounded-xl bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-3" />
+              <div className="h-4 w-72 max-w-full rounded-md bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-8" />
+              <div className="flex gap-4 overflow-hidden">
+                {[1, 2, 3].map((k) => (
+                  <div
+                    key={k}
+                    className="h-48 w-64 shrink-0 rounded-2xl bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse"
+                  />
+                ))}
+              </div>
+            </section>
+          }
+        >
           <CurrentOffers />
         </Suspense>
 
@@ -127,14 +145,14 @@ export default function HomePage() {
               CLAIM YOUR SU CARD TODAY
             </h2>
             <p className="relative z-10 text-base sm:text-lg text-sky-100/90 max-w-xl mx-auto mb-8 font-normal leading-relaxed">
-              Sign in with your NU Microsoft account and your card is ready in seconds.
+              Sign in with your NU Microsoft account (@nu.edu.eg) to activate your digital pass or link your physical card in seconds.
             </p>
             <div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <ButtonLink
                 href="/login"
                 size="lg"
                 variant="accent"
-                className="w-full sm:w-auto h-12 px-8 text-base font-bold shadow-lg"
+                className="w-full sm:w-auto min-h-[48px] px-8 text-base font-bold shadow-lg"
               >
                 <span>Get started</span>
                 <ArrowRight className="size-5 ml-1.5" />
@@ -171,3 +189,4 @@ export default function HomePage() {
     </div>
   );
 }
+

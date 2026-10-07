@@ -66,6 +66,7 @@ export function VoidRedemptionDialog({
         }
       }}
       title="Void Redemption Record"
+      description="Mark scan as voided and restore student quota"
       maxWidth="md"
     >
       <form onSubmit={handleSubmit}>
@@ -135,7 +136,7 @@ export function VoidRedemptionDialog({
               onClose();
             }}
             disabled={isSubmitting}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px] h-11 px-4"
           >
             Cancel
           </Button>
@@ -144,7 +145,7 @@ export function VoidRedemptionDialog({
             type="submit"
             variant="destructive"
             disabled={isSubmitting}
-            className="normal-case font-bold h-11 px-5"
+            className="normal-case font-bold min-h-[44px] h-11 px-5"
           >
             {isSubmitting ? (
               <>

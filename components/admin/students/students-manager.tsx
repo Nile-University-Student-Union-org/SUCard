@@ -19,6 +19,7 @@ import {
   Calendar,
   CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import type { StudentSearchItem, StudentSearchResponse, CardFlow } from "@/lib/student/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -207,6 +208,8 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   // Bulk action submission
   const handleBulkSubmit = async () => {
     if (!bulkAction || selectedIds.size === 0) return;
+    const targetCount = selectedIds.size;
+    const targetAction = bulkAction;
     setIsBulkExecuting(true);
     setBulkError(null);
 
@@ -218,9 +221,9 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           Accept: "application/json",
         },
         body: JSON.stringify({
-          action: bulkAction,
+          action: targetAction,
           ids: Array.from(selectedIds),
-          reason: bulkAction === "suspend" ? bulkReason.trim() : undefined,
+          reason: targetAction === "suspend" ? bulkReason.trim() : undefined,
         }),
       });
 
@@ -239,8 +242,8 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 ...s,
                 profile: {
                   ...s.profile,
-                  status: bulkAction === "suspend" ? "suspended" : "active",
-                  suspendReason: bulkAction === "suspend" ? bulkReason.trim() : null,
+                  status: targetAction === "suspend" ? "suspended" : "active",
+                  suspendReason: targetAction === "suspend" ? bulkReason.trim() : null,
                 },
               }
             : s
@@ -250,6 +253,9 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       setBulkAction(null);
       setBulkReason("");
       setSelectedIds(new Set());
+      toast.success(
+        `Successfully ${targetAction === "suspend" ? "suspended" : "reactivated"} ${targetCount} student account${targetCount === 1 ? "" : "s"}`
+      );
     } catch {
       setBulkError("Network error. Please try again.");
     } finally {
@@ -261,6 +267,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   const handleLinkCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!linkingStudent) return;
+    const student = linkingStudent;
     setIsLinking(true);
     setLinkError(null);
 
@@ -270,7 +277,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         : { qr: qrInput.trim() };
 
     try {
-      const res = await fetch(`/api/admin/students/${linkingStudent.profile.userId}/link-card`, {
+      const res = await fetch(`/api/admin/students/${student.profile.userId}/link-card`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -288,7 +295,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
       setStudents((prev) =>
         prev.map((s) =>
-          s.profile.userId === linkingStudent.profile.userId
+          s.profile.userId === student.profile.userId
             ? { ...s, card: resData.card }
             : s
         )
@@ -297,6 +304,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       setLinkingStudent(null);
       setSerialInput("");
       setQrInput("");
+      toast.success(`Card ${resData.card.serial} linked to ${student.name}`);
     } catch {
       setLinkError("Network error. Please try again.");
     } finally {
@@ -308,11 +316,15 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   const handleVoidCard = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!voidingStudent || !voidingStudent.card) return;
+    const student = voidingStudent;
+    const activeCard = voidingStudent.card;
+    const cardSerial = activeCard.serial;
+    const cardId = activeCard.id;
     setIsVoiding(true);
     setVoidError(null);
 
     try {
-      const res = await fetch(`/api/admin/cards/${voidingStudent.card.id}/void`, {
+      const res = await fetch(`/api/admin/cards/${cardId}/void`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -330,7 +342,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
       setStudents((prev) =>
         prev.map((s) =>
-          s.profile.userId === voidingStudent.profile.userId
+          s.profile.userId === student.profile.userId
             ? { ...s, card: null }
             : s
         )
@@ -338,6 +350,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
       setVoidingStudent(null);
       setVoidReason("");
+      toast.success(`Card ${cardSerial} voided for ${student.name}`);
     } catch {
       setVoidError("Network error. Please try again.");
     } finally {
@@ -348,11 +361,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   // Single Change Flow
   const handleChangeFlow = async (targetFlow: CardFlow) => {
     if (!flowStudent) return;
+    const student = flowStudent;
     setIsChangingFlow(true);
     setFlowError(null);
 
     try {
-      const res = await fetch(`/api/admin/students/${flowStudent.profile.userId}`, {
+      const res = await fetch(`/api/admin/students/${student.profile.userId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -370,13 +384,14 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
       setStudents((prev) =>
         prev.map((s) =>
-          s.profile.userId === flowStudent.profile.userId
+          s.profile.userId === student.profile.userId
             ? { ...s, profile: { ...s.profile, cardFlow: targetFlow } }
             : s
         )
       );
 
       setFlowStudent(null);
+      toast.success(`Updated ${student.name}'s issuance flow to ${targetFlow}`);
     } catch {
       setFlowError("Network error. Please try again.");
     } finally {
@@ -387,6 +402,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   // Staff promotion / revocation
   const handlePromoteAdmin = async () => {
     if (!promotingStudent) return;
+    const student = promotingStudent;
     setIsRoleChanging(true);
     setRoleError(null);
 
@@ -397,7 +413,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ email: promotingStudent.email }),
+        body: JSON.stringify({ email: student.email }),
       });
 
       const resData = await res.json().catch(() => ({}));
@@ -408,6 +424,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       }
 
       setPromotingStudent(null);
+      toast.success(`Promoted ${student.name} to SU Admin`);
     } catch {
       setRoleError("Network error. Please try again.");
     } finally {
@@ -417,11 +434,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
   const handleRevokeAdmin = async () => {
     if (!revokingStudent) return;
+    const student = revokingStudent;
     setIsRoleChanging(true);
     setRoleError(null);
 
     try {
-      const res = await fetch(`/api/admin/staff/${revokingStudent.profile.userId}/revoke`, {
+      const res = await fetch(`/api/admin/staff/${student.profile.userId}/revoke`, {
         method: "POST",
         headers: { Accept: "application/json" },
       });
@@ -434,6 +452,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       }
 
       setRevokingStudent(null);
+      toast.success(`Revoked SU Admin role for ${student.name}`);
     } catch {
       setRoleError("Network error. Please try again.");
     } finally {
@@ -463,7 +482,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="surface"
             size="sm"
             onClick={handleExportCsv}
-            className="normal-case font-bold h-10 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+            className="normal-case font-bold min-h-[44px] px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
           >
             <Download className="size-3.5 mr-1.5" />
             Export Students CSV
@@ -488,7 +507,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           </div>
 
           {/* Status Filters & Date Picker Toggle */}
-          <div className="flex items-center gap-1.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <OverflowScroller className="max-w-full">
               <ToggleChip
                 pressed={statusFilter === "all"}
@@ -497,6 +516,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   setIsLoading(true);
                 }}
                 size="sm"
+                className="min-h-[40px]"
               >
                 <span>All Statuses</span>
               </ToggleChip>
@@ -507,6 +527,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   setIsLoading(true);
                 }}
                 size="sm"
+                className="min-h-[40px]"
               >
                 <span>Active</span>
               </ToggleChip>
@@ -517,6 +538,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   setIsLoading(true);
                 }}
                 size="sm"
+                className="min-h-[40px]"
               >
                 <span>Suspended</span>
               </ToggleChip>
@@ -526,7 +548,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant={signedUpFrom || signedUpTo ? "primary" : "surface"}
               size="sm"
               onClick={() => setIsDateFilterOpen(!isDateFilterOpen)}
-              className="h-9 px-3 text-xs normal-case font-bold"
+              className="min-h-[40px] px-3 text-xs normal-case font-bold"
             >
               <Calendar className="size-3.5 mr-1" />
               Sign-up Date
@@ -550,10 +572,10 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                     setSignedUpFrom(e.target.value);
                     setIsLoading(true);
                   }}
-                  className="w-full h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                  className="w-full min-h-[44px] px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
                 />
               </div>
-              <span className="text-muted-foreground self-end pb-2">&rarr;</span>
+              <span className="text-muted-foreground self-end pb-3">&rarr;</span>
               <div className="flex-1">
                 <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
                   Registered To
@@ -566,7 +588,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                     setSignedUpTo(e.target.value);
                     setIsLoading(true);
                   }}
-                  className="w-full h-9 px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                  className="w-full min-h-[44px] px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
                 />
               </div>
             </div>
@@ -580,7 +602,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   setSignedUpTo("");
                   setIsLoading(true);
                 }}
-                className="self-end text-xs font-semibold normal-case h-9"
+                className="self-end text-xs font-semibold normal-case min-h-[44px]"
               >
                 Clear Dates
               </Button>
@@ -599,7 +621,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant="destructive"
               size="sm"
@@ -608,7 +630,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 setBulkReason("");
                 setBulkError(null);
               }}
-              className="h-8 px-3 text-xs normal-case font-bold"
+              className="min-h-[44px] px-3.5 text-xs normal-case font-bold"
             >
               <Ban className="size-3 mr-1" />
               Suspend Selected
@@ -621,7 +643,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 setBulkReason("");
                 setBulkError(null);
               }}
-              className="h-8 px-3 text-xs normal-case font-bold text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+              className="min-h-[44px] px-3.5 text-xs normal-case font-bold text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
             >
               <CheckCircle2 className="size-3 mr-1" />
               Reactivate Selected
@@ -630,7 +652,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="ghost"
               size="sm"
               onClick={() => setSelectedIds(new Set())}
-              className="h-8 px-2.5 text-xs text-white/70 hover:text-white normal-case"
+              className="min-h-[44px] px-3 text-xs text-white/70 hover:text-white normal-case"
             >
               Clear
             </Button>
@@ -677,7 +699,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                           setIsLoading(false);
                         });
                     }}
-                    className="normal-case font-bold"
+                    className="normal-case font-bold min-h-[44px]"
                   >
                     <RotateCcw className="size-3.5 mr-1.5" />
                     Try again
@@ -686,7 +708,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               />
             </div>
           ) : isLoading ? (
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4" aria-busy="true">
               {Array.from({ length: 5 }).map((_, i) => (
                 <div key={i} className="flex items-center justify-between gap-4 p-3 border-b border-border/50 last:border-0">
                   <div className="flex items-center gap-3">
@@ -735,7 +757,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                       <TableHead className="w-28">Signed Up</TableHead>
                       <TableHead className="w-28">Last Scan</TableHead>
                       <TableHead className="min-w-36">Active Card</TableHead>
-                      <TableHead className="text-right pr-6 min-w-44">Actions</TableHead>
+                      <TableHead className="text-right pr-6 min-w-48">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -823,48 +845,20 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                             )}
                           </TableCell>
 
-                          {/* Actions */}
+                          {/* Grouped Actions */}
                           <TableCell className="text-right py-3.5 pr-6 whitespace-nowrap">
                             <div className="flex items-center justify-end gap-1.5">
-                              {/* View detail page */}
+                              {/* Primary: View detail page */}
                               <Link
                                 href={`/admin/students/${student.profile.userId}`}
-                                className="inline-flex items-center h-8 px-2 text-xs font-bold text-brand dark:text-brand-soft hover:bg-brand/10 rounded-lg transition-colors"
+                                className="inline-flex items-center justify-center min-h-[44px] px-2.5 text-xs font-bold text-brand dark:text-brand-soft hover:bg-brand/10 rounded-xl transition-colors"
                               >
                                 <Eye className="size-3.5 mr-1" />
                                 View
                               </Link>
 
-                              {/* Change Flow */}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setFlowStudent(student)}
-                                className="h-8 px-2 text-xs font-semibold normal-case text-muted-foreground hover:text-foreground"
-                                title="Change Flow"
-                              >
-                                <ArrowRightLeft className="size-3.5 mr-1" />
-                                Flow
-                              </Button>
-
-                              {/* Link Card */}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setLinkingStudent(student);
-                                  setSerialInput("");
-                                  setQrInput("");
-                                  setLinkError(null);
-                                }}
-                                className="h-8 px-2.5 text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 normal-case"
-                              >
-                                <LinkIcon className="size-3.5 mr-1" />
-                                Link
-                              </Button>
-
-                              {/* Void Card */}
-                              {student.card && (
+                              {/* Card Action: Link or Void */}
+                              {student.card ? (
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -873,12 +867,42 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                                     setVoidReason("");
                                     setVoidError(null);
                                   }}
-                                  className="h-8 px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10 normal-case"
+                                  className="min-h-[44px] px-2.5 text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10 normal-case"
                                 >
                                   <Ban className="size-3.5 mr-1" />
                                   Void
                                 </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setLinkingStudent(student);
+                                    setSerialInput("");
+                                    setQrInput("");
+                                    setLinkError(null);
+                                  }}
+                                  className="min-h-[44px] px-2.5 text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 normal-case"
+                                >
+                                  <LinkIcon className="size-3.5 mr-1" />
+                                  Link
+                                </Button>
                               )}
+
+                              {/* Flow Action */}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setFlowStudent(student);
+                                  setFlowError(null);
+                                }}
+                                className="min-h-[44px] px-2 text-xs font-semibold normal-case text-muted-foreground hover:text-foreground"
+                                title="Change Flow"
+                              >
+                                <ArrowRightLeft className="size-3.5 mr-1" />
+                                Flow
+                              </Button>
 
                               {/* Super Admin Staff Role Actions */}
                               {isSuperAdmin && (
@@ -890,11 +914,11 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                                       setPromotingStudent(student);
                                       setRoleError(null);
                                     }}
-                                    className="h-8 px-2 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 normal-case"
+                                    className="min-h-[44px] px-2 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 normal-case"
                                     title="Make admin"
                                   >
                                     <ShieldCheck className="size-3.5 mr-1" />
-                                    Make Admin
+                                    Admin
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -903,11 +927,11 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                                       setRevokingStudent(student);
                                       setRoleError(null);
                                     }}
-                                    className="h-8 px-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 normal-case"
+                                    className="min-h-[44px] px-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 normal-case"
                                     title="Remove admin"
                                   >
                                     <ShieldAlert className="size-3.5 mr-1" />
-                                    Remove Admin
+                                    Revoke
                                   </Button>
                                 </div>
                               )}
@@ -988,28 +1012,13 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                       <div className="flex flex-wrap items-center gap-2 pt-1">
                         <Link
                           href={`/admin/students/${student.profile.userId}`}
-                          className="flex-1 min-h-[40px] inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-zinc-800 text-xs font-bold text-foreground hover:bg-slate-200"
+                          className="flex-1 min-h-[44px] inline-flex items-center justify-center rounded-xl bg-slate-100 dark:bg-zinc-800 text-xs font-bold text-foreground hover:bg-slate-200"
                         >
                           <Eye className="size-3.5 mr-1" />
                           View Profile
                         </Link>
 
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setLinkingStudent(student);
-                            setSerialInput("");
-                            setQrInput("");
-                            setLinkError(null);
-                          }}
-                          className="min-h-[40px] text-xs font-bold normal-case text-brand dark:text-brand-soft"
-                        >
-                          <LinkIcon className="size-3.5 mr-1" />
-                          Link
-                        </Button>
-
-                        {student.card && (
+                        {student.card ? (
                           <Button
                             variant="outline"
                             size="sm"
@@ -1018,12 +1027,40 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                               setVoidReason("");
                               setVoidError(null);
                             }}
-                            className="min-h-[40px] text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 normal-case"
+                            className="min-h-[44px] text-xs font-bold text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 normal-case px-3"
                           >
                             <Ban className="size-3.5 mr-1" />
                             Void
                           </Button>
+                        ) : (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setLinkingStudent(student);
+                              setSerialInput("");
+                              setQrInput("");
+                              setLinkError(null);
+                            }}
+                            className="min-h-[44px] text-xs font-bold normal-case text-brand dark:text-brand-soft px-3"
+                          >
+                            <LinkIcon className="size-3.5 mr-1" />
+                            Link
+                          </Button>
                         )}
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setFlowStudent(student);
+                            setFlowError(null);
+                          }}
+                          className="min-h-[44px] text-xs font-semibold normal-case text-muted-foreground px-3"
+                        >
+                          <ArrowRightLeft className="size-3.5 mr-1" />
+                          Flow
+                        </Button>
                       </div>
                     </div>
                   );
@@ -1037,7 +1074,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                     variant="outline"
                     onClick={handleLoadMore}
                     disabled={isLoadingMore}
-                    className="font-bold normal-case text-xs min-h-[40px]"
+                    className="font-bold normal-case text-xs min-h-[44px] px-6"
                   >
                     {isLoadingMore ? (
                       <>
@@ -1061,7 +1098,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         onClose={() => {
           if (!isBulkExecuting) setBulkAction(null);
         }}
-        title={bulkAction === "suspend" ? "Bulk Suspend Students" : "Bulk Reactivate Students"}
+        title={bulkAction === "suspend" ? "Bulk Suspend Student Accounts" : "Bulk Reactivate Student Accounts"}
         icon={
           bulkAction === "suspend" ? (
             <Ban className="size-5 text-rose-600" />
@@ -1070,12 +1107,21 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           )
         }
         maxWidth="md"
+        role="alertdialog"
       >
         <div className="space-y-4">
           <ModalBody className="space-y-3">
-            <p className="text-xs text-foreground font-semibold">
-              You are about to {bulkAction} <strong>{selectedIds.size}</strong> selected student accounts.
-            </p>
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 text-xs space-y-2">
+              <p className="font-bold text-foreground">
+                Target: <strong>{selectedIds.size}</strong> selected student account{selectedIds.size === 1 ? "" : "s"}
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                <strong>Consequence:</strong>{" "}
+                {bulkAction === "suspend"
+                  ? "Selected students will be immediately blocked from scanning their card at vendor locations. Their mobile passes will reflect suspension."
+                  : "Selected students will immediately regain active card status and full discount privileges."}
+              </p>
+            </div>
 
             {bulkError && (
               <Alert variant="destructive" size="sm" description={bulkError} />
@@ -1099,7 +1145,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="secondary"
               disabled={isBulkExecuting}
               onClick={() => setBulkAction(null)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -1108,15 +1154,14 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant={bulkAction === "suspend" ? "destructive" : "primary"}
               disabled={isBulkExecuting || (bulkAction === "suspend" && !bulkReason.trim())}
               onClick={handleBulkSubmit}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
-              {isBulkExecuting ? "Processing…" : `Confirm ${bulkAction}`}
+              {isBulkExecuting ? "Processing…" : `Confirm & ${bulkAction === "suspend" ? "Suspend" : "Reactivate"} (${selectedIds.size})`}
             </Button>
           </ModalFooter>
         </div>
       </Modal>
 
-      {/* Single Modals: Link, Void, Flow, Admin */}
       {/* 1. Link Card Modal */}
       <Modal
         isOpen={linkingStudent !== null}
@@ -1124,16 +1169,21 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           if (!isLinking) setLinkingStudent(null);
         }}
         title="Link Membership Card"
-        icon={<LinkIcon className="size-5" />}
+        icon={<LinkIcon className="size-5 text-brand" />}
         maxWidth="md"
       >
         <form onSubmit={handleLinkCard}>
           <ModalBody className="space-y-4">
             {linkingStudent && (
-              <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
-                <p className="font-bold text-foreground">{linkingStudent.name}</p>
-                <p className="text-muted-foreground font-mono">
+              <div className="p-3.5 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-1.5">
+                <p className="font-bold text-foreground">
+                  Target Student: {linkingStudent.name}
+                </p>
+                <p className="text-muted-foreground font-mono text-[11px]">
                   ID: {linkingStudent.profile.universityId} &bull; {linkingStudent.email}
+                </p>
+                <p className="text-muted-foreground text-[11px] pt-1">
+                  <strong>Consequence:</strong> Linking a physical card activates the card serial for this student. Any subsequent vendor scan will verify against their identity.
                 </p>
               </div>
             )}
@@ -1147,7 +1197,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 <button
                   type="button"
                   onClick={() => setLinkInputMode("serial")}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  className={`flex-1 min-h-[38px] text-xs font-bold rounded-lg transition-all ${
                     linkInputMode === "serial"
                       ? "bg-white dark:bg-zinc-800 shadow-xs text-foreground"
                       : "text-muted-foreground"
@@ -1158,7 +1208,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                 <button
                   type="button"
                   onClick={() => setLinkInputMode("qr")}
-                  className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  className={`flex-1 min-h-[38px] text-xs font-bold rounded-lg transition-all ${
                     linkInputMode === "qr"
                       ? "bg-white dark:bg-zinc-800 shadow-xs text-foreground"
                       : "text-muted-foreground"
@@ -1175,7 +1225,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   placeholder="SU-000123 or 123"
                   value={serialInput}
                   onChange={(e) => setSerialInput(e.target.value)}
-                  helperText="Enter the serial printed on the card"
+                  helperText="Enter the serial printed on the physical card"
                   required
                   autoFocus
                 />
@@ -1200,7 +1250,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="secondary"
               disabled={isLinking}
               onClick={() => setLinkingStudent(null)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -1208,7 +1258,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               type="submit"
               variant="primary"
               disabled={isLinking}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isLinking ? (
                 <>
@@ -1232,16 +1282,20 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         title="Void Membership Card"
         icon={<Ban className="size-5 text-rose-600" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <form onSubmit={handleVoidCard}>
           <ModalBody className="space-y-4">
             {voidingStudent?.card && (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1">
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1.5">
                 <p className="font-bold text-rose-700 dark:text-rose-300">
-                  Card: {voidingStudent.card.serial} ({voidingStudent.card.type})
+                  Target Card: {voidingStudent.card.serial} ({voidingStudent.card.type})
                 </p>
                 <p className="text-muted-foreground">
-                  Linked to: {voidingStudent.name} (ID {voidingStudent.profile.universityId})
+                  Assigned Holder: {voidingStudent.name} (ID {voidingStudent.profile.universityId})
+                </p>
+                <p className="text-rose-600 dark:text-rose-400 text-[11px] pt-1">
+                  <strong>Consequence:</strong> This card serial will be permanently invalidated in the system. The student will have no active card until a replacement is linked.
                 </p>
               </div>
             )}
@@ -1267,15 +1321,15 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="secondary"
               disabled={isVoiding}
               onClick={() => setVoidingStudent(null)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="destructive"
-              disabled={isVoiding}
-              className="normal-case font-bold"
+              disabled={isVoiding || !voidReason.trim()}
+              className="normal-case font-bold min-h-[44px]"
             >
               {isVoiding ? (
                 <>
@@ -1297,15 +1351,23 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           if (!isChangingFlow) setFlowStudent(null);
         }}
         title="Change Student Issuance Flow"
-        icon={<ArrowRightLeft className="size-5" />}
+        icon={<ArrowRightLeft className="size-5 text-brand" />}
         maxWidth="md"
       >
         <ModalBody className="space-y-4">
           {flowStudent && (
-            <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
-              <p className="font-bold text-foreground">{flowStudent.name}</p>
+            <div className="p-3.5 rounded-xl bg-muted/60 border border-border text-xs space-y-2">
+              <p className="font-bold text-foreground">
+                Target: {flowStudent.name} ({flowStudent.email})
+              </p>
               <p className="text-muted-foreground">
-                Current Flow: <strong className="uppercase">{flowStudent.profile.cardFlow}</strong>
+                Current Flow: <strong className="uppercase font-mono">{flowStudent.profile.cardFlow}</strong>
+              </p>
+              <p className="text-muted-foreground text-[11px] leading-relaxed">
+                <strong>Consequence:</strong>{" "}
+                {flowStudent.profile.cardFlow === "physical"
+                  ? "Switching to Digital will immediately issue a digital web pass for this student to access discounts."
+                  : "Switching to Physical will mark the student as awaiting physical card collection at the SU desk."}
               </p>
             </div>
           )}
@@ -1313,10 +1375,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           {flowError && (
             <Alert variant="destructive" size="sm" description={flowError} />
           )}
-
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Select the new flow for this student. Switching to digital will allow them to access the digital card web pass immediately.
-          </p>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1324,7 +1382,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="secondary"
             disabled={isChangingFlow}
             onClick={() => setFlowStudent(null)}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             Cancel
           </Button>
@@ -1334,7 +1392,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="primary"
               disabled={isChangingFlow}
               onClick={() => handleChangeFlow("digital")}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isChangingFlow ? "Updating…" : "Switch to Digital"}
             </Button>
@@ -1344,7 +1402,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
               variant="primary"
               disabled={isChangingFlow}
               onClick={() => handleChangeFlow("physical")}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isChangingFlow ? "Updating…" : "Switch to Physical"}
             </Button>
@@ -1358,25 +1416,29 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         onClose={() => {
           if (!isRoleChanging) setPromotingStudent(null);
         }}
-        title="Promote to SU Admin"
+        title="Promote Student to SU Admin"
         icon={<ShieldCheck className="size-5 text-brand" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <ModalBody className="space-y-3">
           {promotingStudent && (
-            <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
-              <p className="font-bold text-foreground">{promotingStudent.name}</p>
-              <p className="text-muted-foreground">{promotingStudent.email}</p>
+            <div className="p-3.5 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-1.5">
+              <p className="font-bold text-foreground">
+                Target User: {promotingStudent.name}
+              </p>
+              <p className="text-muted-foreground font-mono text-[11px]">
+                {promotingStudent.email}
+              </p>
+              <p className="text-muted-foreground text-[11px] pt-1">
+                <strong>Consequence:</strong> This student will be granted full staff administrative access to the SU Card management console, including card issuance, vendor management, and audit logs.
+              </p>
             </div>
           )}
 
           {roleError && (
             <Alert variant="destructive" size="sm" description={roleError} />
           )}
-
-          <p className="text-xs text-muted-foreground">
-            This will grant this student staff access to the SU Card Admin console.
-          </p>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1384,7 +1446,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="secondary"
             disabled={isRoleChanging}
             onClick={() => setPromotingStudent(null)}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             Cancel
           </Button>
@@ -1393,9 +1455,9 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="primary"
             disabled={isRoleChanging}
             onClick={handlePromoteAdmin}
-            className="normal-case font-bold"
+            className="normal-case font-bold min-h-[44px]"
           >
-            {isRoleChanging ? "Promoting…" : "Promote to Admin"}
+            {isRoleChanging ? "Promoting…" : "Confirm Promotion"}
           </Button>
         </ModalFooter>
       </Modal>
@@ -1406,25 +1468,29 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         onClose={() => {
           if (!isRoleChanging) setRevokingStudent(null);
         }}
-        title="Remove SU Admin Role"
+        title="Revoke SU Admin Privileges"
         icon={<ShieldAlert className="size-5 text-amber-600" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <ModalBody className="space-y-3">
           {revokingStudent && (
-            <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
-              <p className="font-bold text-foreground">{revokingStudent.name}</p>
-              <p className="text-muted-foreground">{revokingStudent.email}</p>
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1.5">
+              <p className="font-bold text-foreground">
+                Target User: {revokingStudent.name}
+              </p>
+              <p className="text-muted-foreground font-mono text-[11px]">
+                {revokingStudent.email}
+              </p>
+              <p className="text-muted-foreground text-[11px] pt-1">
+                <strong>Consequence:</strong> Administrative console access will be revoked immediately. The user will retain their standard student membership and card access.
+              </p>
             </div>
           )}
 
           {roleError && (
             <Alert variant="destructive" size="sm" description={roleError} />
           )}
-
-          <p className="text-xs text-muted-foreground">
-            This will revoke admin console access for this student. They will retain their student membership.
-          </p>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1432,7 +1498,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="secondary"
             disabled={isRoleChanging}
             onClick={() => setRevokingStudent(null)}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             Cancel
           </Button>
@@ -1441,9 +1507,9 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             variant="destructive"
             disabled={isRoleChanging}
             onClick={handleRevokeAdmin}
-            className="normal-case font-bold"
+            className="normal-case font-bold min-h-[44px]"
           >
-            {isRoleChanging ? "Revoking…" : "Remove Admin Role"}
+            {isRoleChanging ? "Revoking…" : "Confirm Role Removal"}
           </Button>
         </ModalFooter>
       </Modal>

@@ -20,6 +20,8 @@ import {
   Wallet,
   Sparkles,
   Layers,
+  Loader2,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +33,7 @@ import { ToggleChip } from "@/components/ui/toggle-chip";
 import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { StatusState } from "@/components/ui/status-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert } from "@/components/ui/alert";
 import { AreaChart } from "@/components/ui/charts";
 import {
   formatCairoDateOnly,
@@ -65,8 +68,12 @@ export function AdminDashboardManager() {
 
   const [data, setData] = useState<DashboardResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+
+  const isUpdating = isLoading && data !== null;
+  const isInitialLoading = isLoading && data === null;
 
   // Sorting state for leaderboard
   const [sortField, setSortField] = useState<"redemptions" | "uniqueStudents" | "name" | "changePercent">("redemptions");
@@ -114,6 +121,8 @@ export function AdminDashboardManager() {
         const json = (await res.json()) as DashboardResponse;
         if (!ignore) {
           setData(json);
+          setLastUpdated(new Date());
+          setError(null);
         }
       } catch (err) {
         if (!ignore) {
@@ -169,14 +178,47 @@ export function AdminDashboardManager() {
     }
   };
 
+  const formatLastUpdatedTime = (d: Date) => {
+    try {
+      return new Intl.DateTimeFormat("en-GB", {
+        timeZone: "Africa/Cairo",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+      }).format(d);
+    } catch {
+      return d.toLocaleTimeString();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Top Header & Range Selection */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
-            DASHBOARD
-          </h1>
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
+              DASHBOARD
+            </h1>
+            {isUpdating ? (
+              <Badge
+                variant="secondary"
+                className="gap-1.5 py-1 px-2.5 text-[11px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse motion-reduce:animate-none"
+              >
+                <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
+                <span>Updating…</span>
+              </Badge>
+            ) : lastUpdated ? (
+              <span
+                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-ash dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/80 font-mono"
+                title="Data timestamp (Cairo)"
+              >
+                <Clock className="size-3" />
+                <span>Updated {formatLastUpdatedTime(lastUpdated)}</span>
+              </span>
+            ) : null}
+          </div>
           <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
             Real-time analytics, student adoption, vendor performance, and card usage.
           </p>
@@ -188,7 +230,7 @@ export function AdminDashboardManager() {
             variant="surface"
             size="sm"
             onClick={handleExportRedemptions}
-            className="normal-case font-bold h-10 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+            className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
           >
             <Download className="size-3.5 mr-1.5" />
             Export Scans CSV
@@ -197,7 +239,7 @@ export function AdminDashboardManager() {
             variant="surface"
             size="sm"
             onClick={handleExportVendors}
-            className="normal-case font-bold h-10 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+            className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
           >
             <Download className="size-3.5 mr-1.5" />
             Export Vendors CSV
@@ -243,6 +285,7 @@ export function AdminDashboardManager() {
                 pressed={!categoryParam}
                 onPressedChange={() => updateParams({ category: undefined })}
                 size="sm"
+                className="min-h-[36px]"
               >
                 <span>All Categories</span>
               </ToggleChip>
@@ -256,6 +299,7 @@ export function AdminDashboardManager() {
                     })
                   }
                   size="sm"
+                  className="min-h-[36px]"
                 >
                   <span>{cat.label}</span>
                 </ToggleChip>
@@ -266,7 +310,7 @@ export function AdminDashboardManager() {
       </div>
 
       {/* Main Content State */}
-      {error ? (
+      {error && !data ? (
         <div className="p-8">
           <StatusState
             layout="panel"
@@ -279,7 +323,7 @@ export function AdminDashboardManager() {
                 variant="outline"
                 size="sm"
                 onClick={() => setRefreshKey((k) => k + 1)}
-                className="normal-case font-bold"
+                className="normal-case font-bold min-h-[44px] h-11 px-5"
               >
                 <RotateCcw className="size-3.5 mr-1.5" />
                 Try again
@@ -287,8 +331,8 @@ export function AdminDashboardManager() {
             }
           />
         </div>
-      ) : isLoading && !data ? (
-        <div className="space-y-6">
+      ) : isInitialLoading ? (
+        <div className="space-y-6" aria-busy="true" aria-label="Loading dashboard analytics">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
               <Skeleton key={i} className="h-28 rounded-2xl" />
@@ -298,7 +342,32 @@ export function AdminDashboardManager() {
           <Skeleton className="h-64 rounded-2xl" />
         </div>
       ) : data ? (
-        <>
+        <div
+          className={cn(
+            "space-y-6 transition-opacity duration-200 motion-reduce:transition-none",
+            isUpdating && "opacity-75 pointer-events-auto"
+          )}
+          aria-busy={isUpdating}
+        >
+          {/* Non-blocking error notice during refresh */}
+          {error && (
+            <Alert
+              variant="destructive"
+              title="Could not refresh dashboard data"
+              description={`${error}. Showing previous analytics.`}
+              action={
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRefreshKey((k) => k + 1)}
+                  className="normal-case font-bold min-h-[44px] h-11 px-4 mt-1"
+                >
+                  <RotateCcw className="size-3.5 mr-1.5" />
+                  Retry update
+                </Button>
+              }
+            />
+          )}
           {/* M8-1: KPI TILES GRID */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {/* 1. Redemptions */}
@@ -770,7 +839,7 @@ export function AdminDashboardManager() {
               </Card>
             </div>
           </div>
-        </>
+        </div>
       ) : null}
     </div>
   );

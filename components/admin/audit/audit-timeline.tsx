@@ -48,7 +48,12 @@ export function AuditTimeline({
           title="Failed to load audit logs"
           description={error}
           actions={
-            <Button variant="outline" size="sm" onClick={onRetry} className="normal-case">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              className="normal-case font-bold min-h-[44px] h-11 px-5 cursor-pointer"
+            >
               <RotateCcw className="size-3.5 mr-1.5" />
               Try again
             </Button>
@@ -156,7 +161,7 @@ export function AuditTimeline({
                     </div>
 
                     {/* Timestamp & Inspect Details Button */}
-                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-zinc-800">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-zinc-800 shrink-0">
                       <div
                         className="flex items-center gap-1 text-[11px] text-ash dark:text-zinc-400 shrink-0 cursor-help"
                         title={formatRelativeTime(entry.createdAt)}
@@ -169,7 +174,7 @@ export function AuditTimeline({
                         variant="outline"
                         size="sm"
                         onClick={() => onSelectEntry(entry)}
-                        className="h-8 px-2.5 text-xs font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700"
+                        className="min-h-[44px] h-11 px-4 text-xs font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 hover:bg-muted inline-flex items-center cursor-pointer"
                         aria-label={`Inspect event ${entry.id}`}
                       >
                         <Eye className="size-3.5 mr-1" />

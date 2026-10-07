@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { toast } from "sonner";
 import {
   ShieldCheck,
   Shield,
@@ -65,6 +64,7 @@ export function AccountManager({ user }: AccountManagerProps) {
   const [regenError, setRegenError] = useState<string | null>(null);
   const [generatedCodes, setGeneratedCodes] = useState<string[] | null>(null);
   const [areCodesCopied, setAreCodesCopied] = useState(false);
+  const [areCodesDownloaded, setAreCodesDownloaded] = useState(false);
 
   const {
     register,
@@ -103,13 +103,12 @@ export function AccountManager({ user }: AccountManagerProps) {
       }
 
       setIsSuccess(true);
-      toast.success("Password updated successfully");
       reset({
         currentPassword: "",
         newPassword: "",
         confirmPassword: "",
       });
-      setTimeout(() => setIsSuccess(false), 5000);
+      setTimeout(() => setIsSuccess(false), 6000);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to change password. Please try again.";
@@ -143,7 +142,6 @@ export function AccountManager({ user }: AccountManagerProps) {
       const codes = res.data?.backupCodes || [];
       setGeneratedCodes(codes);
       setRegenPassword("");
-      toast.success("New backup codes generated");
     } catch (err) {
       setRegenError(err instanceof Error ? err.message : "Failed to regenerate backup codes.");
     } finally {
@@ -159,7 +157,6 @@ export function AccountManager({ user }: AccountManagerProps) {
 
     navigator.clipboard.writeText(content).then(() => {
       setAreCodesCopied(true);
-      toast.success("Backup codes copied to clipboard");
       setTimeout(() => setAreCodesCopied(false), 2500);
     });
   };
@@ -179,7 +176,8 @@ export function AccountManager({ user }: AccountManagerProps) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("Backup codes downloaded");
+    setAreCodesDownloaded(true);
+    setTimeout(() => setAreCodesDownloaded(false), 2500);
   };
 
   const handleCloseRegenerateModal = () => {
@@ -189,6 +187,7 @@ export function AccountManager({ user }: AccountManagerProps) {
     setRegenError(null);
     setGeneratedCodes(null);
     setAreCodesCopied(false);
+    setAreCodesDownloaded(false);
   };
 
   const isSuperAdmin = user.role === "super_admin";
@@ -305,7 +304,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                       variant="outline"
                       size="sm"
                       onClick={() => setIsRegenerateOpen(true)}
-                      className="w-full normal-case text-xs font-bold h-10 border-slate-200 dark:border-zinc-700"
+                      className="w-full normal-case text-xs font-bold h-11 border-slate-200 dark:border-zinc-700 min-h-[44px]"
                     >
                       <KeyRound className="size-3.5 mr-1.5" />
                       <span>Regenerate backup codes</span>
@@ -406,7 +405,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                     loadingLabel="Updating password…"
                     variant="primary"
                     size="md"
-                    className="w-full sm:w-auto px-6 font-bold"
+                    className="w-full sm:w-auto px-6 font-bold h-11 min-h-[44px]"
                   >
                     Update password
                   </AuthSubmitButton>
@@ -437,7 +436,7 @@ export function AccountManager({ user }: AccountManagerProps) {
               </div>
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 space-y-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
                   <span className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
                     Backup Codes ({generatedCodes.length})
                   </span>
@@ -447,7 +446,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                       variant="outline"
                       size="sm"
                       onClick={handleCopyBackupCodes}
-                      className="normal-case text-xs font-bold h-8 px-2.5"
+                      className="normal-case text-xs font-bold min-h-[44px] px-3.5"
                     >
                       {areCodesCopied ? (
                         <>
@@ -457,7 +456,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                       ) : (
                         <>
                           <Copy className="size-3.5 mr-1" />
-                          <span>Copy</span>
+                          <span>Copy codes</span>
                         </>
                       )}
                     </Button>
@@ -466,19 +465,28 @@ export function AccountManager({ user }: AccountManagerProps) {
                       variant="outline"
                       size="sm"
                       onClick={handleDownloadBackupCodes}
-                      className="normal-case text-xs font-bold h-8 px-2.5"
+                      className="normal-case text-xs font-bold min-h-[44px] px-3.5"
                     >
-                      <Download className="size-3.5 mr-1" />
-                      <span>.txt</span>
+                      {areCodesDownloaded ? (
+                        <>
+                          <Check className="size-3.5 mr-1 text-emerald-600" />
+                          <span>Saved!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Download className="size-3.5 mr-1" />
+                          <span>Download .txt</span>
+                        </>
+                      )}
                     </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {generatedCodes.map((code, idx) => (
                     <div
                       key={idx}
-                      className="p-2 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 font-mono text-xs font-bold text-center text-charcoal dark:text-zinc-200 select-all"
+                      className="p-2.5 rounded-lg bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 font-mono text-xs font-bold text-center text-charcoal dark:text-zinc-200 select-all"
                     >
                       {code}
                     </div>
@@ -492,7 +500,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 type="button"
                 variant="primary"
                 onClick={handleCloseRegenerateModal}
-                className="normal-case font-bold text-xs w-full sm:w-auto px-6"
+                className="normal-case font-bold text-xs w-full sm:w-auto px-6 h-11 min-h-[44px]"
               >
                 Done
               </Button>
@@ -535,7 +543,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 variant="secondary"
                 onClick={handleCloseRegenerateModal}
                 disabled={isRegenerating}
-                className="normal-case font-semibold"
+                className="normal-case font-semibold h-11 min-h-[44px]"
               >
                 Cancel
               </Button>
@@ -543,7 +551,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 type="submit"
                 variant="primary"
                 disabled={isRegenerating || !regenPassword}
-                className="normal-case font-bold"
+                className="normal-case font-bold h-11 min-h-[44px]"
               >
                 {isRegenerating ? "Generating…" : "Generate new codes"}
               </Button>

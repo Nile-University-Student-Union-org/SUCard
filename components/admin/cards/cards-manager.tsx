@@ -85,7 +85,10 @@ export function CardsManager() {
 
       {/* Batch Generation Section */}
       <section aria-label="Batch Generation">
-        <GenerateBatchPanel onBatchCreated={handleBatchCreated} />
+        <GenerateBatchPanel
+          onBatchCreated={handleBatchCreated}
+          onOpenDownloadDialog={handleOpenDownload}
+        />
       </section>
 
       {/* Batches Table Section */}

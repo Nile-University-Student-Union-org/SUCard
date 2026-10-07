@@ -35,9 +35,9 @@ export function ScannerHeader({
 
   return (
     <header className="sticky top-0 z-40 w-full bg-[#0F3056] text-white border-b border-[#0A2240] shadow-md">
-      <div className="flex items-center justify-between px-3.5 sm:px-6 py-2.5 min-h-[58px]">
+      <div className="flex items-center justify-between px-3 sm:px-6 py-2.5 min-h-[58px] gap-2">
         {/* Left: Vendor Logo + Names */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="relative size-10 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
             {vendorLogoUrl ? (
               <Image
@@ -55,18 +55,19 @@ export function ScannerHeader({
             )}
           </div>
 
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <h1 className="font-heading text-base sm:text-lg font-normal tracking-wide text-white uppercase truncate">
                 {vendorName}
               </h1>
               {!isOnline && (
                 <span
-                  title="Offline"
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0"
+                  role="status"
+                  aria-label="Device is offline"
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-rose-500/25 text-rose-200 border border-rose-400/40 shrink-0"
                 >
-                  <WifiOff className="size-3" />
-                  <span className="hidden xs:inline">Offline</span>
+                  <WifiOff className="size-3 shrink-0" />
+                  <span>Offline</span>
                 </span>
               )}
             </div>
@@ -83,11 +84,12 @@ export function ScannerHeader({
             type="button"
             onClick={handleToggleMute}
             aria-label={muted ? "Unmute scanner sound" : "Mute scanner sound"}
+            aria-pressed={muted}
             className={cn(
               "p-2 rounded-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95",
               muted
-                ? "bg-white/10 text-white/50 hover:bg-white/15"
-                : "bg-sky-500/20 text-sky-300 border border-sky-400/30 hover:bg-sky-500/30"
+                ? "bg-white/10 text-white/70 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/40"
+                : "bg-sky-500/20 text-sky-300 border border-sky-400/30 hover:bg-sky-500/30 focus-visible:ring-2 focus-visible:ring-sky-400"
             )}
           >
             {muted ? <VolumeX className="size-4.5" /> : <Volume2 className="size-4.5" />}

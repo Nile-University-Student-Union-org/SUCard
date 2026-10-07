@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { Check, Clock, QrCode, X, Sparkles, Pause, ShieldCheck } from "lucide-react";
+import { Check, Clock, QrCode, X, CheckCircle2, Pause, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "cn";
 
@@ -49,6 +49,7 @@ export function ScanSuccessPanel({
 }: ScanSuccessPanelProps) {
   const [secondsLeft, setSecondsLeft] = useState(AUTO_RETURN_SECONDS);
   const [isStayActive, setIsStayActive] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const scanNextBtnRef = useRef<HTMLButtonElement>(null);
 
   // Auto-focus the primary "Scan next" button on mount
@@ -56,14 +57,38 @@ export function ScanSuccessPanel({
     scanNextBtnRef.current?.focus();
   }, []);
 
-  // Handle keyboard shortcuts (Escape dismisses)
+  // Keyboard shortcuts and focus trap
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onDismiss();
+        return;
+      }
+
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onDismiss]);
@@ -96,11 +121,12 @@ export function ScanSuccessPanel({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="success-title"
       aria-describedby="success-details"
-      className="fixed inset-0 z-50 bg-background text-foreground flex flex-col justify-between overflow-y-auto overscroll-contain animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 bg-background text-foreground flex flex-col justify-between overflow-y-auto overscroll-contain motion-safe:animate-in motion-safe:fade-in-0 duration-200"
     >
       {/* Screen Reader Live Announcement */}
       <div aria-live="assertive" className="sr-only">
@@ -118,7 +144,7 @@ export function ScanSuccessPanel({
           type="button"
           onClick={onDismiss}
           aria-label="Close and return to scanner"
-          className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
+          className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <X className="size-5" />
         </button>
@@ -136,7 +162,7 @@ export function ScanSuccessPanel({
 
           <div
             className={cn(
-              "relative size-20 sm:size-24 rounded-3xl bg-emerald-500 text-white shadow-2xl shadow-emerald-500/30 flex items-center justify-center",
+              "relative size-20 sm:size-24 rounded-3xl bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30 flex items-center justify-center",
               "motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-reduce:transform-none"
             )}
           >
@@ -147,7 +173,7 @@ export function ScanSuccessPanel({
         {/* Heading & Student Info */}
         <div className="space-y-1.5 w-full">
           <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-            <Sparkles className="size-3.5" />
+            <CheckCircle2 className="size-3.5" />
             <span>Redemption Recorded</span>
           </div>
 
@@ -224,9 +250,9 @@ export function ScanSuccessPanel({
                 <button
                   type="button"
                   onClick={handleStay}
-                  className="px-2.5 py-1 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1 active:scale-95 border border-border"
+                  className="px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 text-foreground text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-1.5 active:scale-95 border border-border min-h-[44px]"
                 >
-                  <Pause className="size-3" />
+                  <Pause className="size-3.5" />
                   <span>Stay</span>
                 </button>
               </div>
@@ -239,7 +265,7 @@ export function ScanSuccessPanel({
               </div>
             </>
           ) : (
-            <div className="px-3 py-1.5 rounded-xl bg-muted/60 border border-border text-xs font-medium text-muted-foreground inline-flex items-center justify-center gap-1.5 w-full">
+            <div className="px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs font-medium text-muted-foreground inline-flex items-center justify-center gap-1.5 w-full min-h-[44px]">
               <Check className="size-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
               <span>Auto-return paused — tap below when ready</span>
             </div>
@@ -255,7 +281,7 @@ export function ScanSuccessPanel({
             variant="primary"
             size="lg"
             onClick={onDismiss}
-            className="w-full h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider bg-[#0F3056] dark:bg-[#018BCE] text-white hover:brightness-110 active:scale-[0.98] shadow-xl shadow-[#0F3056]/20 font-bold border-none cursor-pointer flex items-center justify-center gap-2"
+            className="w-full min-h-[52px] h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider shadow-xl font-bold cursor-pointer flex items-center justify-center gap-2"
           >
             <QrCode className="size-5.5 mr-1" />
             <span>Scan next card</span>

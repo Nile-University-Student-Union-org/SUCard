@@ -92,7 +92,7 @@ export function EditStaffModal({
     <Modal
       isOpen={isOpen}
       onClose={handleModalClose}
-      title="Edit Staff Member"
+      title={`Edit Staff Member — ${staff.name}`}
       icon={<UserCog className="size-5 text-brand dark:text-brand-soft" />}
       maxWidth="md"
     >
@@ -114,7 +114,7 @@ export function EditStaffModal({
           {/* Name */}
           <Input
             id="edit-staff-name"
-            label="Full Name"
+            label="Full Name *"
             placeholder="e.g. Omar Farouk"
             disabled={isSubmitting}
             maxLength={STAFF_NAME_MAX}
@@ -125,7 +125,7 @@ export function EditStaffModal({
           {/* Role Segmented Control */}
           <div className="space-y-1.5 text-left">
             <label className="block text-xs font-bold text-slate-700 dark:text-zinc-300">
-              Staff Role
+              Staff Role *
             </label>
             <SegmentedControl<StaffRole>
               ariaLabel="Staff Role Selection"
@@ -145,6 +145,11 @@ export function EditStaffModal({
                 },
               ]}
             />
+            <p className="text-[11px] text-ash dark:text-zinc-400 leading-relaxed pt-0.5">
+              {currentRole === "super_admin"
+                ? "Super admins have full system control, managing staff, audit logs, and batch exports."
+                : "Admins can manage partner vendors, offers, and student cards."}
+            </p>
           </div>
         </ModalBody>
 
@@ -154,7 +159,7 @@ export function EditStaffModal({
             variant="secondary"
             onClick={handleModalClose}
             disabled={isSubmitting}
-            className="normal-case"
+            className="normal-case font-semibold h-11 min-h-[44px]"
           >
             Cancel
           </Button>
@@ -162,7 +167,7 @@ export function EditStaffModal({
             type="submit"
             variant="primary"
             disabled={isSubmitting}
-            className="normal-case font-bold"
+            className="normal-case font-bold h-11 min-h-[44px]"
           >
             {isSubmitting ? (
               <>

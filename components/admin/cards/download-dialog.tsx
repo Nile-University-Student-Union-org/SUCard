@@ -57,7 +57,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
     link.click();
     document.body.removeChild(link);
 
-    toast.info("Preparing ZIP…", {
+    toast.info("Preparing ZIP export…", {
       description: `Generating QR codes for ${formatNumber(batch.count)} cards. Large batches may take a minute.`,
     });
 
@@ -73,9 +73,14 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
       maxWidth="md"
     >
       <ModalBody className="space-y-4">
-        <p className="text-xs text-muted-foreground">
-          Download a ZIP archive containing high-quality QR codes for {formatNumber(batch.count)} physical cards ({batch.firstSerial} &rarr; {batch.lastSerial}).
-        </p>
+        <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
+          <p className="font-bold text-foreground">
+            Target: {formatBatchNumber(batch.number)} — {batch.label}
+          </p>
+          <p className="text-muted-foreground">
+            Total Cards: <strong>{formatNumber(batch.count)} physical cards</strong> ({batch.firstSerial} &rarr; {batch.lastSerial})
+          </p>
+        </div>
 
         {/* Format Options */}
         <div className="space-y-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-800/40 p-3.5">
@@ -97,7 +102,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
                 className="text-xs font-bold text-charcoal dark:text-zinc-100 cursor-pointer flex items-center gap-1.5"
               >
                 <FileCode className="size-3.5 text-brand dark:text-brand-soft" />
-                SVG Vector (Recommended for printing)
+                SVG Vector (Recommended for physical card printing)
               </Label>
               <p className="text-[11px] text-ash dark:text-zinc-400">
                 Lossless vector format that can be scaled infinitely for card production.
@@ -164,7 +169,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
           type="button"
           variant="secondary"
           onClick={handleClose}
-          className="normal-case"
+          className="normal-case min-h-[44px]"
         >
           Cancel
         </Button>
@@ -173,7 +178,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
           variant="primary"
           disabled={!isFormValid}
           onClick={handleDownload}
-          className="normal-case"
+          className="normal-case min-h-[44px]"
         >
           <Download className="size-4 mr-1.5" />
           Download ZIP

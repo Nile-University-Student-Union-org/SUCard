@@ -16,11 +16,12 @@ import {
   Link as LinkIcon,
   ArrowRightLeft,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { StatusState } from "@/components/ui/status-state";
@@ -200,6 +201,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
 
       setStudent(resData as StudentDetailResponse);
       setIsEditOpen(false);
+      toast.success("Student profile updated successfully");
     } catch {
       setEditError("Network error. Please try again.");
     } finally {
@@ -239,6 +241,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
       }
       setIsSuspendOpen(false);
       setSuspendReason("");
+      toast.success(`Suspended account for ${student?.name || "student"}`);
     } catch {
       setSuspendError("Network error. Please try again.");
     } finally {
@@ -267,8 +270,9 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           },
         });
       }
+      toast.success(`Reactivated account for ${student?.name || "student"}`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Reactivation failed");
+      toast.error(err instanceof Error ? err.message : "Reactivation failed");
     } finally {
       setIsSuspending(false);
     }
@@ -299,7 +303,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         return;
       }
 
-      // Deleted successfully -> redirect to students index
+      toast.success(`Deleted student account for ${student.name}`);
       router.replace("/admin/students");
     } catch {
       setDeleteError("Network error. Please try again.");
@@ -335,6 +339,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
       setIsLinkOpen(false);
       setSerialInput("");
       setQrInput("");
+      toast.success(`Card ${resData.card?.serial || "membership card"} linked successfully`);
       fetchStudentData();
     } catch {
       setLinkError("Network error. Please try again.");
@@ -366,6 +371,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
 
       setVoidingCardId(null);
       setVoidReason("");
+      toast.success("Card voided successfully");
       fetchStudentData();
     } catch {
       setVoidError("Network error. Please try again.");
@@ -400,6 +406,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         });
       }
       setIsFlowOpen(false);
+      toast.success(`Issuance flow changed to ${targetFlow}`);
     } catch {
       setFlowError("Network error. Please try again.");
     } finally {
@@ -409,7 +416,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6" aria-busy="true">
         <Skeleton className="h-6 w-36" />
         <Skeleton className="h-44 rounded-2xl" />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -439,7 +446,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             <Button
               variant="primary"
               onClick={fetchStudentData}
-              className="normal-case font-bold mt-2"
+              className="normal-case font-bold mt-2 min-h-[44px]"
             >
               Retry
             </Button>
@@ -464,7 +471,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         </Link>
       </div>
 
-      {/* 1. PROFILE HEADER CARD */}
+      {/* 1. IDENTITY & PROFILE HEADER CARD */}
       <div className="p-5 sm:p-7 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="flex items-start sm:items-center gap-4 min-w-0">
           <UserAvatar name={student.name} size={64} shape="rounded" />
@@ -516,7 +523,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           </div>
         </div>
 
-        {/* Primary Action Buttons */}
+        {/* Identity & Status Quick Actions */}
         <div className="flex items-center gap-2 flex-wrap shrink-0">
           <Button
             variant="surface"
@@ -527,7 +534,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               setEditError(null);
               setIsEditOpen(true);
             }}
-            className="normal-case font-bold h-10 px-3.5 text-xs"
+            className="normal-case font-bold min-h-[44px] px-3.5 text-xs"
           >
             <Edit2 className="size-3.5 mr-1.5" />
             Edit Profile
@@ -542,7 +549,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                 setSuspendError(null);
                 setIsSuspendOpen(true);
               }}
-              className="normal-case font-bold h-10 px-3.5 text-xs"
+              className="normal-case font-bold min-h-[44px] px-3.5 text-xs"
             >
               <Ban className="size-3.5 mr-1.5" />
               Suspend
@@ -553,7 +560,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               size="sm"
               disabled={isSuspending}
               onClick={handleReactivate}
-              className="normal-case font-bold h-10 px-3.5 text-xs text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+              className="normal-case font-bold min-h-[44px] px-3.5 text-xs text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
             >
               <CheckCircle2 className="size-3.5 mr-1.5" />
               Reactivate
@@ -561,13 +568,13 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           )}
 
           <Button
-            variant="ghost"
+            variant="outline"
             size="sm"
             onClick={() => setIsFlowOpen(true)}
-            className="normal-case font-semibold h-10 px-3 text-xs text-muted-foreground hover:text-foreground"
+            className="normal-case font-semibold min-h-[44px] px-3.5 text-xs text-foreground"
           >
-            <ArrowRightLeft className="size-3.5 mr-1" />
-            Flow
+            <ArrowRightLeft className="size-3.5 mr-1.5 text-brand" />
+            Change Flow
           </Button>
         </div>
       </div>
@@ -593,9 +600,9 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                   setLinkError(null);
                   setIsLinkOpen(true);
                 }}
-                className="normal-case font-bold h-8 px-3 text-xs"
+                className="normal-case font-bold min-h-[40px] px-3 text-xs"
               >
-                <LinkIcon className="size-3 mr-1" />
+                <LinkIcon className="size-3.5 mr-1" />
                 Link Card
               </Button>
             )}
@@ -632,10 +639,10 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                       setVoidReason("");
                       setVoidError(null);
                     }}
-                    className="h-8 px-3 text-xs normal-case font-bold"
+                    className="min-h-[40px] px-3.5 text-xs normal-case font-bold"
                   >
-                    <Ban className="size-3 mr-1" />
-                    Void Card
+                    <Ban className="size-3.5 mr-1" />
+                    Void Active Card
                   </Button>
                 </div>
               </div>
@@ -814,7 +821,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                     variant="outline"
                     onClick={handleLoadMoreRedemptions}
                     disabled={isLoadingMore}
-                    className="font-bold normal-case text-xs min-h-[40px]"
+                    className="font-bold normal-case text-xs min-h-[44px] px-6"
                   >
                     {isLoadingMore ? "Loading more…" : "Load more redemptions"}
                   </Button>
@@ -834,9 +841,9 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               <CardTitle className="text-base sm:text-lg text-rose-900 dark:text-rose-200">
                 DANGER ZONE
               </CardTitle>
-              <p className="text-xs text-rose-700/80 dark:text-rose-400/80 mt-0.5">
+              <CardDescription className="text-xs text-rose-700/80 dark:text-rose-400/80 mt-0.5">
                 Permanent student account deletion (M8-6c)
-              </p>
+              </CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -858,7 +865,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               setDeleteError(null);
               setIsDeleteOpen(true);
             }}
-            className="normal-case font-bold h-10 px-4 shrink-0"
+            className="normal-case font-bold min-h-[44px] px-4 shrink-0"
           >
             <Trash2 className="size-4 mr-1.5" />
             Delete Student
@@ -873,11 +880,19 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           if (!isEditing) setIsEditOpen(false);
         }}
         title="Edit Student Profile"
-        icon={<Edit2 className="size-5" />}
+        icon={<Edit2 className="size-5 text-brand" />}
         maxWidth="md"
       >
         <form onSubmit={handleSaveProfile}>
           <ModalBody className="space-y-4">
+            <div className="p-3 rounded-xl bg-muted/60 border border-border text-xs space-y-1">
+              <p className="font-bold text-foreground">Target Student: {student.name}</p>
+              <p className="text-muted-foreground font-mono">{student.email}</p>
+              <p className="text-muted-foreground text-[11px] pt-1">
+                <strong>Consequence:</strong> Updates the official display name and 9-digit Nile University ID for student verification and vendor reports.
+              </p>
+            </div>
+
             {editError && (
               <Alert variant="destructive" size="sm" description={editError} />
             )}
@@ -906,7 +921,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="secondary"
               disabled={isEditing}
               onClick={() => setIsEditOpen(false)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -914,7 +929,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               type="submit"
               variant="primary"
               disabled={isEditing}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isEditing ? "Saving…" : "Save Changes"}
             </Button>
@@ -931,12 +946,18 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         title="Suspend Student Account"
         icon={<Ban className="size-5 text-rose-600" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <form onSubmit={handleSuspend}>
           <ModalBody className="space-y-4">
-            <p className="text-xs text-muted-foreground">
-              Suspending this student will immediately block all card scans and update their mobile wallet passes.
-            </p>
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1.5">
+              <p className="font-bold text-rose-700 dark:text-rose-300">
+                Target: {student.name} (ID: {student.profile.universityId})
+              </p>
+              <p className="text-muted-foreground text-[11px]">
+                <strong>Consequence:</strong> Suspending this student will immediately block all vendor card scans and update their mobile wallet passes to inactive.
+              </p>
+            </div>
 
             {suspendError && (
               <Alert variant="destructive" size="sm" description={suspendError} />
@@ -958,7 +979,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="secondary"
               disabled={isSuspending}
               onClick={() => setIsSuspendOpen(false)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -966,7 +987,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               type="submit"
               variant="destructive"
               disabled={isSuspending || !suspendReason.trim()}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isSuspending ? "Suspending…" : "Confirm Suspension"}
             </Button>
@@ -983,16 +1004,21 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         title="Permanently Delete Student"
         icon={<Trash2 className="size-5 text-rose-600" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <form onSubmit={handleDeleteStudent}>
           <ModalBody className="space-y-4">
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-800 dark:text-rose-300 space-y-1.5">
-              <p className="font-bold">Warning: This action cannot be undone.</p>
-              <ul className="list-disc pl-4 space-y-0.5 text-[11px]">
-                <li>The student&apos;s personal profile is erased.</li>
-                <li>Their active card is permanently cancelled.</li>
-                <li>Past redemption history is preserved anonymously.</li>
-              </ul>
+            <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-800 dark:text-rose-300 space-y-2">
+              <p className="font-bold text-sm">Warning: This action is permanent and irreversible.</p>
+              <p className="text-xs">Target: <strong>{student.name}</strong> ({student.email})</p>
+              <div className="text-[11px] space-y-1 pt-1 border-t border-rose-200 dark:border-rose-900/50">
+                <p><strong>Consequences:</strong></p>
+                <ul className="list-disc pl-4 space-y-0.5">
+                  <li>The student&apos;s personal profile and credentials are permanently erased.</li>
+                  <li>Their active card is immediately cancelled and cannot be linked again.</li>
+                  <li>Past redemption records are kept anonymously for partner vendor statistics.</li>
+                </ul>
+              </div>
             </div>
 
             {deleteError && (
@@ -1020,7 +1046,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="secondary"
               disabled={isDeleting}
               onClick={() => setIsDeleteOpen(false)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -1028,9 +1054,9 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               type="submit"
               variant="destructive"
               disabled={isDeleting || deleteEmailInput.trim().toLowerCase() !== student.email.toLowerCase()}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
-              {isDeleting ? "Deleting…" : "Delete Student"}
+              {isDeleting ? "Deleting…" : "Permanently Delete Student"}
             </Button>
           </ModalFooter>
         </form>
@@ -1043,11 +1069,19 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           if (!isLinking) setIsLinkOpen(false);
         }}
         title="Link Membership Card"
-        icon={<LinkIcon className="size-5" />}
+        icon={<LinkIcon className="size-5 text-brand" />}
         maxWidth="md"
       >
         <form onSubmit={handleLinkCard}>
           <ModalBody className="space-y-4">
+            <div className="p-3.5 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-1.5">
+              <p className="font-bold text-foreground">Target Student: {student.name}</p>
+              <p className="text-muted-foreground font-mono text-[11px]">ID: {student.profile.universityId}</p>
+              <p className="text-muted-foreground text-[11px] pt-1">
+                <strong>Consequence:</strong> Activates this card serial and binds it to {student.name}. The card can immediately be scanned for discounts.
+              </p>
+            </div>
+
             {linkError && (
               <Alert variant="destructive" size="sm" description={linkError} />
             )}
@@ -1056,7 +1090,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               <button
                 type="button"
                 onClick={() => setLinkInputMode("serial")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 min-h-[38px] text-xs font-bold rounded-lg transition-all ${
                   linkInputMode === "serial"
                     ? "bg-white dark:bg-zinc-800 shadow-xs text-foreground"
                     : "text-muted-foreground"
@@ -1067,7 +1101,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               <button
                 type="button"
                 onClick={() => setLinkInputMode("qr")}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                className={`flex-1 min-h-[38px] text-xs font-bold rounded-lg transition-all ${
                   linkInputMode === "qr"
                     ? "bg-white dark:bg-zinc-800 shadow-xs text-foreground"
                     : "text-muted-foreground"
@@ -1106,7 +1140,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="secondary"
               disabled={isLinking}
               onClick={() => setIsLinkOpen(false)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
@@ -1114,7 +1148,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               type="submit"
               variant="primary"
               disabled={isLinking}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isLinking ? "Linking…" : "Link Card"}
             </Button>
@@ -1131,9 +1165,24 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         title="Void Membership Card"
         icon={<Ban className="size-5 text-rose-600" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <form onSubmit={handleVoidCard}>
           <ModalBody className="space-y-4">
+            {activeCard && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1.5">
+                <p className="font-bold text-rose-700 dark:text-rose-300">
+                  Target Card: {activeCard.serial} ({activeCard.type})
+                </p>
+                <p className="text-muted-foreground">
+                  Card Holder: {student.name} (ID: {student.profile.universityId})
+                </p>
+                <p className="text-rose-600 dark:text-rose-400 text-[11px] pt-1">
+                  <strong>Consequence:</strong> The card serial is permanently voided in the system and cannot be used or rescanned at partner vendors.
+                </p>
+              </div>
+            )}
+
             {voidError && (
               <Alert variant="destructive" size="sm" description={voidError} />
             )}
@@ -1154,15 +1203,15 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="secondary"
               disabled={isVoiding}
               onClick={() => setVoidingCardId(null)}
-              className="normal-case font-semibold"
+              className="normal-case font-semibold min-h-[44px]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               variant="destructive"
-              disabled={isVoiding}
-              className="normal-case font-bold"
+              disabled={isVoiding || !voidReason.trim()}
+              className="normal-case font-bold min-h-[44px]"
             >
               {isVoiding ? "Voiding…" : "Confirm Void"}
             </Button>
@@ -1177,21 +1226,28 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           if (!isChangingFlow) setIsFlowOpen(false);
         }}
         title="Change Card Flow"
-        icon={<ArrowRightLeft className="size-5" />}
+        icon={<ArrowRightLeft className="size-5 text-brand" />}
         maxWidth="md"
       >
         <ModalBody className="space-y-4">
-          <p className="text-xs text-muted-foreground">
-            Current Flow: <strong className="uppercase">{student.profile.cardFlow}</strong>
-          </p>
+          <div className="p-3.5 rounded-xl bg-muted/60 border border-border text-xs space-y-2">
+            <p className="font-bold text-foreground">
+              Target Student: {student.name}
+            </p>
+            <p className="text-muted-foreground">
+              Current Flow: <strong className="uppercase font-mono">{student.profile.cardFlow}</strong>
+            </p>
+            <p className="text-muted-foreground text-[11px] leading-relaxed">
+              <strong>Consequence:</strong>{" "}
+              {student.profile.cardFlow === "physical"
+                ? "Switching to Digital will immediately grant access to digital web pass without needing physical card collection."
+                : "Switching to Physical will mark this student for office physical card pickup."}
+            </p>
+          </div>
 
           {flowError && (
             <Alert variant="destructive" size="sm" description={flowError} />
           )}
-
-          <p className="text-xs text-muted-foreground">
-            Select the new flow for this student. Switching to digital grants immediate pass access.
-          </p>
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1199,7 +1255,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             variant="secondary"
             disabled={isChangingFlow}
             onClick={() => setIsFlowOpen(false)}
-            className="normal-case font-semibold"
+            className="normal-case font-semibold min-h-[44px]"
           >
             Cancel
           </Button>
@@ -1209,7 +1265,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="primary"
               disabled={isChangingFlow}
               onClick={() => handleChangeFlow("digital")}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isChangingFlow ? "Switching…" : "Switch to Digital"}
             </Button>
@@ -1219,7 +1275,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               variant="primary"
               disabled={isChangingFlow}
               onClick={() => handleChangeFlow("physical")}
-              className="normal-case font-bold"
+              className="normal-case font-bold min-h-[44px]"
             >
               {isChangingFlow ? "Switching…" : "Switch to Physical"}
             </Button>

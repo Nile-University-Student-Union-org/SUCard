@@ -101,7 +101,16 @@ function VendorOfferForm({
   const [terms, setTerms] = useState(editingOffer?.terms ?? "");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{
+    title?: string;
+    discountValue?: string;
+    discountText?: string;
+    limitCount?: string;
+    activeFrom?: string;
+    activeTo?: string;
+    endsAt?: string;
+    general?: string;
+  }>({});
 
   const toggleDay = (day: number) => {
     setActiveDays((prev) =>
@@ -114,73 +123,75 @@ function VendorOfferForm({
     else setActiveDays([0, 1, 2, 3, 4, 5, 6]);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const validate = () => {
+    const errs: typeof fieldErrors = {};
+
     if (!title.trim()) {
-      setError("Offer title is required");
-      return;
+      errs.title = "Offer title is required";
     }
 
     if (startsAt && endsAt && startsAt > endsAt) {
-      setError("Offer end date cannot precede start date");
-      return;
+      errs.endsAt = "End date cannot precede start date";
     }
-
-    // Validate discount values
-    let cleanDiscountValue: string | null = null;
-    let cleanDiscountText: string | null = null;
 
     if (discountType === "percent") {
       const num = parseFloat(discountValue);
       if (isNaN(num) || num <= 0 || num > 100) {
-        setError("Percentage discount must be between 1 and 100");
-        return;
+        errs.discountValue = "Percentage must be between 1 and 100%";
       }
-      cleanDiscountValue = String(num);
     } else if (discountType === "fixed") {
       const num = parseFloat(discountValue);
       if (isNaN(num) || num <= 0 || num > 100000) {
-        setError("Fixed discount value must be positive (up to 100,000 EGP)");
-        return;
+        errs.discountValue = "Amount must be between 1 and 100,000 EGP";
       }
-      cleanDiscountValue = String(num);
     } else {
       if (!discountText.trim()) {
-        setError("Discount description text is required for free item or custom offers");
-        return;
+        errs.discountText = "Discount description text is required";
       }
+    }
+
+    if (limitPeriod !== "unlimited") {
+      const count = parseInt(limitCount, 10);
+      if (isNaN(count) || count <= 0) {
+        errs.limitCount = "Limit count must be at least 1";
+      }
+    }
+
+    if (activeFrom.trim() && !/^\d{2}:\d{2}$/.test(activeFrom.trim())) {
+      errs.activeFrom = "Time must be in HH:MM format";
+    }
+
+    if (activeTo.trim() && !/^\d{2}:\d{2}$/.test(activeTo.trim())) {
+      errs.activeTo = "Time must be in HH:MM format";
+    }
+
+    setFieldErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    let cleanDiscountValue: string | null = null;
+    let cleanDiscountText: string | null = null;
+
+    if (discountType === "percent" || discountType === "fixed") {
+      cleanDiscountValue = String(parseFloat(discountValue));
+    } else {
       cleanDiscountText = discountText.trim();
     }
 
-    // Validate limit settings
     let cleanLimitCount: number | null = null;
-    if (limitPeriod === "unlimited") {
-      cleanLimitCount = null;
-    } else {
-      const count = parseInt(limitCount, 10);
-      if (isNaN(count) || count <= 0) {
-        setError("Usage limit count must be at least 1");
-        return;
-      }
-      cleanLimitCount = count;
+    if (limitPeriod !== "unlimited") {
+      cleanLimitCount = parseInt(limitCount, 10);
     }
 
-    // Format active times
     const cleanActiveFrom = activeFrom.trim() ? activeFrom.trim() : null;
     const cleanActiveTo = activeTo.trim() ? activeTo.trim() : null;
 
-    if (cleanActiveFrom && !/^\d{2}:\d{2}$/.test(cleanActiveFrom)) {
-      setError("Active From time must be in HH:MM format");
-      return;
-    }
-
-    if (cleanActiveTo && !/^\d{2}:\d{2}$/.test(cleanActiveTo)) {
-      setError("Active To time must be in HH:MM format");
-      return;
-    }
-
     setIsSubmitting(true);
-    setError(null);
+    setFieldErrors({});
 
     const payload: CreateOfferRequest = {
       title: title.trim(),
@@ -212,9 +223,9 @@ function VendorOfferForm({
       }
       onClose();
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to save offer"
-      );
+      setFieldErrors({
+        general: err instanceof Error ? err.message : "Failed to save offer",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -228,378 +239,393 @@ function VendorOfferForm({
   });
 
   return (
-    <form onSubmit={handleSubmit}>
-      <ModalBody className="space-y-5 max-h-[72vh] overflow-y-auto pr-1">
-          {error && (
-            <Alert variant="destructive" title="Validation Error">
-              {error}
-            </Alert>
-          )}
+    <form onSubmit={handleSubmit} noValidate>
+      <ModalBody className="space-y-6 max-h-[72vh] overflow-y-auto pr-1">
+        {fieldErrors.general && (
+          <Alert variant="destructive" title="Error">
+            {fieldErrors.general}
+          </Alert>
+        )}
 
-          {/* Live Discount Preview Pill */}
-          <div className="p-3.5 rounded-2xl bg-brand/10 dark:bg-brand/20 border border-brand/20 flex items-center justify-between gap-3">
-            <div className="space-y-0.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-brand dark:text-brand-soft">
-                Live Badge Preview
-              </span>
-              <p className="text-xs font-semibold text-foreground truncate">
-                {title || "Offer title"}
-              </p>
+        {/* Live Discount Preview Pill */}
+        <div className="p-3.5 rounded-2xl bg-brand/10 dark:bg-brand/20 border border-brand/20 flex items-center justify-between gap-3">
+          <div className="space-y-0.5 min-w-0">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-brand dark:text-brand-soft">
+              Live Badge Preview
+            </span>
+            <p className="text-xs font-semibold text-foreground truncate">
+              {title || "Offer title"}
+            </p>
+          </div>
+          <div className="px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shrink-0 shadow-xs">
+            {previewDiscountLabel}
+          </div>
+        </div>
+
+        {/* Section 1: Title & Description */}
+        <div className="space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            1. Offer Title & Description
+          </h4>
+
+          <div className="space-y-1.5">
+            <Input
+              id="offer-title"
+              label="Offer Title *"
+              required
+              placeholder="e.g. 15% off any drink, Free cookie with coffee"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
+              }}
+              error={fieldErrors.title}
+              className="h-11 rounded-xl font-medium"
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Input
+              id="offer-desc"
+              label="Short Description (Optional)"
+              placeholder="e.g. Valid on hot and iced specialty beverages"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="h-11 rounded-xl"
+            />
+          </div>
+        </div>
+
+        {/* Section 2: Discount Type & Value */}
+        <div className="pt-3 border-t border-border space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            2. Discount Details
+          </h4>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="discount-type" className="text-xs font-bold uppercase tracking-wider">
+                Discount Type *
+              </Label>
+              <select
+                id="discount-type"
+                value={discountType}
+                onChange={(e) => {
+                  setDiscountType(e.target.value as typeof discountType);
+                  if (fieldErrors.discountValue || fieldErrors.discountText) {
+                    setFieldErrors((prev) => ({ ...prev, discountValue: undefined, discountText: undefined }));
+                  }
+                }}
+                className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
+              >
+                <option value="percent">Percentage (% Off)</option>
+                <option value="fixed">Fixed Amount (EGP Off)</option>
+                <option value="free_item">Free Item / Gift</option>
+                <option value="custom">Custom Text Deal</option>
+              </select>
             </div>
-            <div className="px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shrink-0 shadow-xs">
-              {previewDiscountLabel}
+
+            {discountType === "percent" && (
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <Input
+                    id="discount-val-percent"
+                    label="Discount Percentage (%) *"
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    placeholder="15"
+                    value={discountValue}
+                    onChange={(e) => {
+                      setDiscountValue(e.target.value);
+                      if (fieldErrors.discountValue) setFieldErrors((prev) => ({ ...prev, discountValue: undefined }));
+                    }}
+                    error={fieldErrors.discountValue}
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
+
+            {discountType === "fixed" && (
+              <div className="space-y-1.5">
+                <div className="relative">
+                  <Input
+                    id="discount-val-fixed"
+                    label="Amount Off (EGP) *"
+                    type="number"
+                    min="1"
+                    step="0.5"
+                    required
+                    placeholder="20"
+                    value={discountValue}
+                    onChange={(e) => {
+                      setDiscountValue(e.target.value);
+                      if (fieldErrors.discountValue) setFieldErrors((prev) => ({ ...prev, discountValue: undefined }));
+                    }}
+                    error={fieldErrors.discountValue}
+                    className="h-11 rounded-xl"
+                  />
+                </div>
+              </div>
+            )}
+
+            {(discountType === "free_item" || discountType === "custom") && (
+              <div className="space-y-1.5">
+                <Input
+                  id="discount-text"
+                  label="Discount Label Text *"
+                  required
+                  placeholder={discountType === "free_item" ? "e.g. Free Cookie" : "e.g. Buy 1 Get 1"}
+                  value={discountText}
+                  onChange={(e) => {
+                    setDiscountText(e.target.value);
+                    if (fieldErrors.discountText) setFieldErrors((prev) => ({ ...prev, discountText: undefined }));
+                  }}
+                  error={fieldErrors.discountText}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Section 3: Usage Limits */}
+        <div className="pt-3 border-t border-border space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            3. Usage Limits (Per Student)
+          </h4>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="limit-period" className="text-xs font-bold uppercase tracking-wider">
+                Limit Frequency *
+              </Label>
+              <select
+                id="limit-period"
+                value={limitPeriod}
+                onChange={(e) => setLimitPeriod(e.target.value as OfferPeriod)}
+                className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
+              >
+                {PERIOD_LABELS.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {limitPeriod !== "unlimited" && (
+              <div className="space-y-1.5">
+                <Input
+                  id="limit-count"
+                  label="Max Redemptions *"
+                  type="number"
+                  min="1"
+                  max="100"
+                  required
+                  placeholder="1"
+                  value={limitCount}
+                  onChange={(e) => {
+                    setLimitCount(e.target.value);
+                    if (fieldErrors.limitCount) setFieldErrors((prev) => ({ ...prev, limitCount: undefined }));
+                  }}
+                  error={fieldErrors.limitCount}
+                  className="h-11 rounded-xl"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Section 4: Schedule & Timing */}
+        <div className="pt-3 border-t border-border space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            4. Schedule & Active Days/Hours
+          </h4>
+
+          {/* Active Days Chips */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">
+                Active Days ({activeDays.length === 0 ? "Every day" : `${activeDays.length} days selected`})
+              </Label>
+              <button
+                type="button"
+                onClick={handleSelectAllDays}
+                className="text-xs font-bold text-brand dark:text-brand-soft hover:underline cursor-pointer min-h-[32px] px-1"
+              >
+                {activeDays.length === 7 ? "Clear all" : "Select all"}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {DAYS.map((day) => {
+                const isChecked = activeDays.includes(day.value);
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleDay(day.value)}
+                    className={cn(
+                      "h-11 px-3.5 rounded-xl text-xs font-bold transition-all min-w-[44px] min-h-[44px] cursor-pointer border",
+                      isChecked
+                        ? "bg-brand text-white border-brand shadow-xs"
+                        : "bg-muted text-muted-foreground border-border hover:bg-muted/80 hover:text-foreground"
+                    )}
+                  >
+                    {day.label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {/* Title & Description */}
-          <div className="space-y-4">
+          {/* Active Hours */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="offer-title" className="text-xs font-bold uppercase tracking-wider">
-                Offer Title <span className="text-rose-500">*</span>
-              </Label>
               <Input
-                id="offer-title"
-                required
-                placeholder="e.g. 15% off any drink, Free cookie with coffee"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-11 rounded-xl font-medium"
+                id="active-from"
+                label="Active From (Time)"
+                type="time"
+                placeholder="08:00"
+                value={activeFrom}
+                onChange={(e) => {
+                  setActiveFrom(e.target.value);
+                  if (fieldErrors.activeFrom) setFieldErrors((prev) => ({ ...prev, activeFrom: undefined }));
+                }}
+                error={fieldErrors.activeFrom}
+                className="h-11 rounded-xl"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="offer-desc" className="text-xs font-semibold">
-                Short Description (Optional)
-              </Label>
               <Input
-                id="offer-desc"
-                placeholder="e.g. Valid on hot and iced specialty beverages"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                id="active-to"
+                label="Active To (Time)"
+                type="time"
+                placeholder="12:00"
+                value={activeTo}
+                onChange={(e) => {
+                  setActiveTo(e.target.value);
+                  if (fieldErrors.activeTo) setFieldErrors((prev) => ({ ...prev, activeTo: undefined }));
+                }}
+                error={fieldErrors.activeTo}
                 className="h-11 rounded-xl"
               />
             </div>
           </div>
 
-          {/* Discount Type & Value */}
-          <div className="pt-3 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Discount Details
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="discount-type" className="text-xs font-bold uppercase tracking-wider">
-                  Discount Type <span className="text-rose-500">*</span>
-                </Label>
-                <select
-                  id="discount-type"
-                  value={discountType}
-                  onChange={(e) => setDiscountType(e.target.value as typeof discountType)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                >
-                  <option value="percent">Percentage (% Off)</option>
-                  <option value="fixed">Fixed Amount (EGP Off)</option>
-                  <option value="free_item">Free Item / Gift</option>
-                  <option value="custom">Custom Text Deal</option>
-                </select>
-              </div>
-
-              {discountType === "percent" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="discount-val-percent" className="text-xs font-bold uppercase tracking-wider">
-                    Discount Percentage (%) <span className="text-rose-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="discount-val-percent"
-                      type="number"
-                      min="1"
-                      max="100"
-                      required
-                      placeholder="15"
-                      value={discountValue}
-                      onChange={(e) => setDiscountValue(e.target.value)}
-                      className="h-11 rounded-xl pr-8"
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                      %
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {discountType === "fixed" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="discount-val-fixed" className="text-xs font-bold uppercase tracking-wider">
-                    Amount Off in EGP <span className="text-rose-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      id="discount-val-fixed"
-                      type="number"
-                      min="1"
-                      step="0.5"
-                      required
-                      placeholder="20"
-                      value={discountValue}
-                      onChange={(e) => setDiscountValue(e.target.value)}
-                      className="h-11 rounded-xl pr-12"
-                    />
-                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-foreground">
-                      EGP
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {(discountType === "free_item" || discountType === "custom") && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="discount-text" className="text-xs font-bold uppercase tracking-wider">
-                    Discount Label Text <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="discount-text"
-                    required
-                    placeholder={discountType === "free_item" ? "e.g. Free Cookie" : "e.g. Buy 1 Get 1"}
-                    value={discountText}
-                    onChange={(e) => setDiscountText(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Usage Limits */}
-          <div className="pt-3 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Usage Limits (Per Student)
-            </h4>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="limit-period" className="text-xs font-bold uppercase tracking-wider">
-                  Limit Frequency <span className="text-rose-500">*</span>
-                </Label>
-                <select
-                  id="limit-period"
-                  value={limitPeriod}
-                  onChange={(e) => setLimitPeriod(e.target.value as OfferPeriod)}
-                  className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                >
-                  {PERIOD_LABELS.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {limitPeriod !== "unlimited" && (
-                <div className="space-y-1.5">
-                  <Label htmlFor="limit-count" className="text-xs font-bold uppercase tracking-wider">
-                    Max Redemptions <span className="text-rose-500">*</span>
-                  </Label>
-                  <Input
-                    id="limit-count"
-                    type="number"
-                    min="1"
-                    max="100"
-                    required
-                    placeholder="1"
-                    value={limitCount}
-                    onChange={(e) => setLimitCount(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Schedule & Timing */}
-          <div className="pt-3 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Schedule & Active Days/Hours
-            </h4>
-
-            {/* Active Days Chips */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">
-                  Active Days ({activeDays.length === 0 ? "Every day" : `${activeDays.length} days selected`})
-                </Label>
-                <button
-                  type="button"
-                  onClick={handleSelectAllDays}
-                  className="text-xs font-bold text-brand dark:text-brand-soft hover:underline cursor-pointer"
-                >
-                  {activeDays.length === 7 ? "Clear all" : "Select all"}
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap">
-                {DAYS.map((day) => {
-                  const isChecked = activeDays.includes(day.value);
-                  return (
-                    <button
-                      key={day.value}
-                      type="button"
-                      onClick={() => toggleDay(day.value)}
-                      className={cn(
-                        "h-10 px-3.5 rounded-xl text-xs font-bold transition-all min-w-[44px] cursor-pointer border",
-                        isChecked
-                          ? "bg-brand text-white border-brand shadow-xs"
-                          : "bg-muted text-muted-foreground border-border hover:bg-muted/80 hover:text-foreground"
-                      )}
-                    >
-                      {day.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Active Hours */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="active-from" className="text-xs font-semibold">
-                  Active From (Time)
-                </Label>
-                <Input
-                  id="active-from"
-                  type="time"
-                  placeholder="08:00"
-                  value={activeFrom}
-                  onChange={(e) => setActiveFrom(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="active-to" className="text-xs font-semibold">
-                  Active To (Time)
-                </Label>
-                <Input
-                  id="active-to"
-                  type="time"
-                  placeholder="12:00"
-                  value={activeTo}
-                  onChange={(e) => setActiveTo(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
-              </div>
-            </div>
-
-            {/* Date Range */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="starts-at" className="text-xs font-semibold">
-                  Valid From (Date)
-                </Label>
-                <Input
-                  id="starts-at"
-                  type="date"
-                  value={startsAt}
-                  onChange={(e) => setStartsAt(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="ends-at" className="text-xs font-semibold">
-                  Valid Until (Date)
-                </Label>
-                <Input
-                  id="ends-at"
-                  type="date"
-                  value={endsAt}
-                  onChange={(e) => setEndsAt(e.target.value)}
-                  className="h-11 rounded-xl"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Visibility & Status Toggles */}
-          <div className="pt-3 border-t border-border space-y-4">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-              Visibility & Terms
-            </h4>
-
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-bold text-foreground cursor-pointer">
-                  Visible in Student Portal Deals
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  Show this deal in student app browsable offers
-                </p>
-              </div>
-              <Switch
-                checked={visible}
-                onCheckedChange={setVisible}
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
-              <div className="space-y-0.5">
-                <Label className="text-sm font-bold text-foreground cursor-pointer">
-                  Offer Status
-                </Label>
-                <p className="text-xs text-muted-foreground">
-                  {status === "active" ? "Active (Can be scanned)" : "Paused (Scans paused)"}
-                </p>
-              </div>
-              <Switch
-                checked={status === "active"}
-                onCheckedChange={(checked) => setStatus(checked ? "active" : "paused")}
+          {/* Date Range */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Input
+                id="starts-at"
+                label="Valid From (Date)"
+                type="date"
+                value={startsAt}
+                onChange={(e) => setStartsAt(e.target.value)}
+                className="h-11 rounded-xl"
               />
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="offer-terms" className="text-xs font-semibold">
-                Terms & Conditions
-              </Label>
-              <Textarea
-                id="offer-terms"
-                rows={2}
-                placeholder="e.g. Cannot be combined with other promotions. Valid on dine-in and takeaway."
-                value={terms}
-                onChange={(e) => setTerms(e.target.value)}
-                className="rounded-xl"
+              <Input
+                id="ends-at"
+                label="Valid Until (Date)"
+                type="date"
+                value={endsAt}
+                onChange={(e) => {
+                  setEndsAt(e.target.value);
+                  if (fieldErrors.endsAt) setFieldErrors((prev) => ({ ...prev, endsAt: undefined }));
+                }}
+                error={fieldErrors.endsAt}
+                className="h-11 rounded-xl"
               />
             </div>
           </div>
-        </ModalBody>
+        </div>
 
-        <ModalFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="normal-case font-semibold"
-          >
-            Cancel
-          </Button>
+        {/* Section 5: Visibility & Status Toggles */}
+        <div className="pt-3 border-t border-border space-y-4">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            5. Visibility & Terms
+          </h4>
 
-          <Button
-            type="submit"
-            variant="primary"
-            disabled={isSubmitting}
-            className="normal-case font-bold h-11 px-5"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                <span>Saving offer…</span>
-              </>
-            ) : (
-              <span>{editingOffer ? "Save changes" : "Create offer"}</span>
-            )}
-          </Button>
-        </ModalFooter>
-      </form>
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-bold text-foreground cursor-pointer">
+                Visible in Student Portal Deals
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Show this deal in student app browsable offers
+              </p>
+            </div>
+            <Switch
+              checked={visible}
+              onCheckedChange={setVisible}
+            />
+          </div>
+
+          <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
+            <div className="space-y-0.5">
+              <Label className="text-sm font-bold text-foreground cursor-pointer">
+                Offer Status
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {status === "active" ? "Active (Can be scanned)" : "Paused (Scans paused)"}
+              </p>
+            </div>
+            <Switch
+              checked={status === "active"}
+              onCheckedChange={(checked) => setStatus(checked ? "active" : "paused")}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="offer-terms" className="text-xs font-semibold">
+              Terms & Conditions (Optional)
+            </Label>
+            <Textarea
+              id="offer-terms"
+              rows={2}
+              placeholder="e.g. Cannot be combined with other promotions. Valid on dine-in and takeaway."
+              value={terms}
+              onChange={(e) => setTerms(e.target.value)}
+              className="rounded-xl"
+            />
+          </div>
+        </div>
+      </ModalBody>
+
+      <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={onClose}
+          disabled={isSubmitting}
+          className="normal-case font-semibold h-11 min-h-[44px]"
+        >
+          Cancel
+        </Button>
+
+        <Button
+          type="submit"
+          variant="primary"
+          disabled={isSubmitting}
+          className="normal-case font-bold h-11 min-h-[44px] px-5"
+        >
+          {isSubmitting ? (
+            <>
+              <Loader2 className="size-4 mr-2 animate-spin" />
+              <span>Saving offer…</span>
+            </>
+          ) : (
+            <span>{editingOffer ? "Save changes" : "Create offer"}</span>
+          )}
+        </Button>
+      </ModalFooter>
+    </form>
   );
 }

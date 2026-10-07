@@ -237,7 +237,7 @@ export function VendorsTable({
                   <td className="px-5 py-4 text-right">
                     <Link
                       href={`/admin/vendors/${vendor.id}`}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold text-xs text-brand dark:text-brand-soft hover:bg-brand/10 dark:hover:bg-brand/20 transition-all min-h-[36px] active:scale-95"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold text-xs text-brand dark:text-brand-soft hover:bg-brand/10 dark:hover:bg-brand/20 transition-all min-h-[44px] active:scale-95"
                     >
                       <span>Manage</span>
                       <ArrowRight className="size-3.5 group-hover:translate-x-0.5 transition-transform" />

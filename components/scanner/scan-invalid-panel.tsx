@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import { X, ShieldAlert, RotateCcw } from "lucide-react";
+import { X, ShieldAlert, RotateCcw, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ScanResultCode } from "@/lib/vendors/types";
 
 interface ScanInvalidPanelProps {
-  code: ScanResultCode | "rate_limited" | string;
+  code: ScanResultCode | "rate_limited" | "network_error" | string;
   resetsAt: string | null;
   onDismiss: () => void;
 }
@@ -15,6 +15,7 @@ interface ReasonDetails {
   title: string;
   description: string;
   hint?: string;
+  icon?: "shield" | "wifi";
 }
 
 function formatResetTime(resetsAt: string | null): string {
@@ -37,6 +38,13 @@ function getReasonDetails(
   resetsAt: string | null
 ): ReasonDetails {
   switch (code) {
+    case "network_error":
+      return {
+        title: "Connection Error",
+        description: "Could not connect to the SU Card verification server.",
+        hint: "Please check your internet connection and scan again.",
+        icon: "wifi",
+      };
     case "not_su_card":
       return {
         title: "Not an SU Card",
@@ -104,19 +112,45 @@ export function ScanInvalidPanel({
 }: ScanInvalidPanelProps) {
   const [secondsLeft, setSecondsLeft] = useState(AUTO_RETURN_SECONDS);
   const details = getReasonDetails(code, resetsAt);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const dismissBtnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     dismissBtnRef.current?.focus();
   }, []);
 
+  // Keyboard navigation & Focus trap
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         e.preventDefault();
         onDismiss();
+        return;
+      }
+
+      if (e.key === "Tab" && dialogRef.current) {
+        const focusableElements = dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])'
+        );
+        if (focusableElements.length === 0) return;
+
+        const firstElement = focusableElements[0];
+        const lastElement = focusableElements[focusableElements.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === firstElement) {
+            e.preventDefault();
+            lastElement.focus();
+          }
+        } else {
+          if (document.activeElement === lastElement) {
+            e.preventDefault();
+            firstElement.focus();
+          }
+        }
       }
     };
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onDismiss]);
@@ -140,11 +174,12 @@ export function ScanInvalidPanel({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="invalid-title"
       aria-describedby="invalid-description"
-      className="fixed inset-0 z-50 bg-[#881337] text-white flex flex-col justify-between overflow-y-auto overscroll-contain animate-in fade-in-0 duration-200"
+      className="fixed inset-0 z-50 bg-[#881337] dark:bg-rose-950 text-white flex flex-col justify-between overflow-y-auto overscroll-contain motion-safe:animate-in motion-safe:fade-in-0 duration-200"
     >
       {/* Screen Reader Announcement */}
       <div aria-live="assertive" className="sr-only">
@@ -154,7 +189,11 @@ export function ScanInvalidPanel({
       {/* Top Bar */}
       <header className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/20 text-rose-200 border border-rose-400/30 text-xs font-bold uppercase tracking-wider">
-          <ShieldAlert className="size-4" />
+          {details.icon === "wifi" ? (
+            <WifiOff className="size-4" />
+          ) : (
+            <ShieldAlert className="size-4" />
+          )}
           <span>Discount Declined</span>
         </div>
 
@@ -162,7 +201,7 @@ export function ScanInvalidPanel({
           type="button"
           onClick={onDismiss}
           aria-label="Close error"
-          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95"
+          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           <X className="size-5" />
         </button>
@@ -170,9 +209,13 @@ export function ScanInvalidPanel({
 
       {/* Main Error Body */}
       <main className="flex-1 px-6 py-8 sm:px-10 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
-        {/* Giant ✕ Badge */}
+        {/* Giant Badge */}
         <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-reduce:transform-none">
-          <X className="size-12 sm:size-14 stroke-[3.5]" />
+          {details.icon === "wifi" ? (
+            <WifiOff className="size-12 sm:size-14" />
+          ) : (
+            <X className="size-12 sm:size-14 stroke-[3.5]" />
+          )}
         </div>
 
         {/* Reason Typography */}
@@ -193,7 +236,7 @@ export function ScanInvalidPanel({
 
         {/* Helpful Store Staff Hint */}
         {details.hint && (
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-black/30 border border-white/15 text-xs sm:text-sm text-rose-200 font-medium max-w-sm text-left">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-black/30 border border-white/15 text-xs sm:text-sm text-rose-200 font-medium max-w-sm text-left w-full">
             <span className="font-bold text-white block mb-0.5">Note:</span>
             {details.hint}
           </div>
@@ -222,7 +265,7 @@ export function ScanInvalidPanel({
             variant="primary"
             size="lg"
             onClick={onDismiss}
-            className="w-full h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider bg-white text-rose-950 hover:bg-rose-50 active:scale-[0.98] shadow-xl shadow-black/30 font-bold border-none cursor-pointer"
+            className="w-full min-h-[52px] h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider bg-white text-rose-950 hover:bg-rose-50 active:scale-[0.98] shadow-xl shadow-black/30 font-bold border-none cursor-pointer"
           >
             <RotateCcw className="size-5 mr-2 stroke-[2.5]" />
             <span>Scan next card</span>

@@ -52,12 +52,13 @@ function useIsTabVisible() {
 export function LanyardHero() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [sceneReady, setSceneReady] = useState(false);
+  const [webGlError, setWebGlError] = useState(false);
   const handleReady = useCallback(() => setSceneReady(true), []);
   const [inView, setInView] = useState(true);
 
   const prefersReducedMotion = usePrefersReducedMotion();
   const isTabActive = useIsTabVisible();
-  const isWebGLSupported = checkWebGLSupport();
+  const isWebGLSupported = checkWebGLSupport() && !webGlError;
 
   useEffect(() => {
     const currentContainer = containerRef.current;
@@ -82,7 +83,7 @@ export function LanyardHero() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[480px] sm:h-[560px] lg:h-[640px] flex items-center justify-center select-none touch-pan-y"
+      className="relative w-full h-[320px] sm:h-[440px] md:h-[520px] lg:h-[600px] flex items-center justify-center select-none touch-pan-y"
     >
       {/* Screen Reader Visually Hidden Description */}
       <div className="sr-only" aria-live="polite">
@@ -105,6 +106,7 @@ export function LanyardHero() {
             onCreated={({ gl }) => {
               gl.toneMapping = THREE.NeutralToneMapping;
             }}
+            onError={() => setWebGlError(true)}
             aria-hidden="true"
             className={`w-full h-full transition-opacity duration-400 ease-in-out ${sceneReady ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{

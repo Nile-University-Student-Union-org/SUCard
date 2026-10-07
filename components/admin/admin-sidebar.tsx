@@ -127,10 +127,12 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
       isMobile ? "h-full" : "sticky top-0 h-screen"
     )}>
       {/* Sidebar Header & Brand */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 shrink-0">
         <Link
-          href="/admin/cards"
-          className="flex items-center gap-3 focus-visible:outline-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg"
+          href="/admin"
+          onClick={onCloseMobile}
+          className="flex items-center gap-3 min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg p-1"
+          aria-label="SU Card Admin Home"
         >
           <Image
             src="/brand/su-logo-white@hd.png"
@@ -145,7 +147,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
           <button
             type="button"
             onClick={onCloseMobile}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
+            className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
             aria-label="Close menu"
           >
             <X className="size-5" />
@@ -175,7 +177,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
                   return (
                     <div
                       key={item.title}
-                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-white/40 cursor-not-allowed transition-colors"
+                      className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-white/40 cursor-not-allowed transition-colors min-h-[44px]"
                       aria-disabled="true"
                     >
                       <div className="flex items-center gap-3">
@@ -198,7 +200,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
                     href={item.href}
                     onClick={onCloseMobile}
                     className={cn(
-                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all group min-h-[40px] cursor-pointer",
+                      "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all group min-h-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
                       isItemActive
                         ? "bg-[#018BCE] text-white shadow-sm font-extrabold"
                         : "text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.98]"

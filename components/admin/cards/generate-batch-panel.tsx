@@ -5,11 +5,11 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Loader2, AlertCircle, Layers, Palette } from "lucide-react";
+import { Plus, Loader2, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon, Sparkles } from "lucide-react";
 import { BATCH_LABEL_MAX, BATCH_COUNT_MAX, type Batch } from "@/lib/cards/types";
 import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { listStyles } from "@/components/admin/qr-studio/api";
-import { createBatch } from "./api";
+import { createBatch, getBatchExportUrl } from "./api";
 import { formatNumber, formatBatchNumber } from "./utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,12 +46,16 @@ const QUICK_PICK_COUNTS = [100, 500, 1000, 5000];
 
 interface GenerateBatchPanelProps {
   onBatchCreated: (newBatch: Batch) => void;
+  onOpenDownloadDialog?: (batch: Batch) => void;
 }
 
-export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) {
+export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: GenerateBatchPanelProps) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [pendingValues, setPendingValues] = useState<GenerateFormValues | null>(null);
+
+  // Post-creation prominent success state
+  const [createdBatch, setCreatedBatch] = useState<Batch | null>(null);
 
   // Styles library for batch style picker
   const [publishedStyles, setPublishedStyles] = useState<QrStyleDto[]>([]);
@@ -116,12 +120,10 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
 
       const newBatch = response.batch;
       toast.success(
-        `${formatBatchNumber(newBatch.number)} created — ${formatNumber(newBatch.count)} cards`,
-        {
-          description: `Serials ${newBatch.firstSerial} → ${newBatch.lastSerial}`,
-        }
+        `${formatBatchNumber(newBatch.number)} created — ${formatNumber(newBatch.count)} cards`
       );
 
+      setCreatedBatch(newBatch);
       reset({
         label: "",
         count: 1000,
@@ -133,12 +135,32 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to generate batch. Please try again.";
-      toast.error("Batch creation failed", {
-        description: message,
-      });
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const triggerDirectDownload = (batch: Batch, format: "svg" | "png") => {
+    const exportUrl = getBatchExportUrl(batch.id, {
+      svg: format === "svg",
+      png: format === "png",
+      pngSize: 1200,
+    });
+
+    const link = document.createElement("a");
+    link.href = exportUrl;
+    link.setAttribute(
+      "download",
+      `batch-${String(batch.number).padStart(3, "0")}-${format}-export.zip`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.info("Preparing ZIP export…", {
+      description: `Packing ${format.toUpperCase()} QR codes for ${formatNumber(batch.count)} cards.`,
+    });
   };
 
   const selectedStyle = publishedStyles.find(
@@ -164,7 +186,82 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
           </div>
         </CardHeader>
 
-        <CardContent className="pt-0">
+        <CardContent className="pt-0 space-y-4">
+          {/* Post-Creation Immediate Download & Count Display */}
+          {createdBatch && (
+            <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/30 text-xs space-y-3 animate-in fade-in duration-200">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <div>
+                    <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
+                      {formatBatchNumber(createdBatch.number)} Generated Successfully!
+                    </h3>
+                    <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300 font-medium">
+                      Label: <strong>{createdBatch.label}</strong> &bull; Total Quantity:{" "}
+                      <strong>{formatNumber(createdBatch.count)} cards</strong> (Serials:{" "}
+                      <span className="font-mono font-bold">
+                        {createdBatch.firstSerial} &rarr; {createdBatch.lastSerial}
+                      </span>
+                      )
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCreatedBatch(null)}
+                  className="self-end sm:self-auto text-xs font-semibold text-emerald-800 dark:text-emerald-300 min-h-[36px]"
+                >
+                  Dismiss
+                </Button>
+              </div>
+
+              {/* Direct Export Actions */}
+              <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center gap-2.5">
+                <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 uppercase tracking-wide">
+                  Immediate Export:
+                </span>
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  onClick={() => triggerDirectDownload(createdBatch, "svg")}
+                  className="min-h-[44px] px-3.5 text-xs font-bold normal-case shadow-xs"
+                >
+                  <FileCode className="size-3.5 mr-1.5" />
+                  Download SVG Vector ZIP
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="surface"
+                  size="sm"
+                  onClick={() => triggerDirectDownload(createdBatch, "png")}
+                  className="min-h-[44px] px-3.5 text-xs font-bold normal-case text-emerald-900 dark:text-emerald-200 border-emerald-500/30"
+                >
+                  <ImageIcon className="size-3.5 mr-1.5 text-emerald-600" />
+                  Download PNG ZIP
+                </Button>
+
+                {onOpenDownloadDialog && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onOpenDownloadDialog(createdBatch)}
+                    className="min-h-[44px] px-3.5 text-xs font-bold normal-case"
+                  >
+                    <Download className="size-3.5 mr-1.5" />
+                    Custom Export Options…
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Form */}
           <form onSubmit={handleSubmit(onFormValid)} className="space-y-4" noValidate>
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
               {/* Batch Label Input */}
@@ -195,7 +292,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
                       setValue("qrStyleVersionId", e.target.value);
                     }}
                     disabled={isSubmitting || publishedStyles.length === 0}
-                    className="w-full h-11 rounded-xl border-2 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+                    className="w-full min-h-[44px] rounded-xl border-2 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
                   >
                     {publishedStyles.map((s) => (
                       <option key={s.id} value={s.latestVersion!.id}>
@@ -237,7 +334,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
                       type="button"
                       onClick={() => setValue("count", chipCount, { shouldValidate: true })}
                       disabled={isSubmitting}
-                      className={`text-xs px-2 py-0.5 rounded-lg border font-bold transition-all cursor-pointer select-none active:scale-95 ${
+                      className={`text-xs px-2.5 min-h-[36px] rounded-lg border font-bold transition-all cursor-pointer select-none active:scale-95 ${
                         currentCount === chipCount
                           ? "bg-brand text-white border-brand shadow-xs"
                           : "bg-white dark:bg-zinc-800 text-charcoal dark:text-zinc-200 border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -260,7 +357,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
                 type="submit"
                 variant="primary"
                 disabled={isSubmitting}
-                className="w-full sm:w-auto h-11 px-6 text-sm font-bold normal-case shadow-xs"
+                className="w-full sm:w-auto min-h-[44px] px-6 text-sm font-bold normal-case shadow-xs"
               >
                 {isSubmitting ? (
                   <>
@@ -283,37 +380,35 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
       <Modal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
-        title={`Generate ${pendingValues ? formatNumber(pendingValues.count) : ""} Cards?`}
-        icon={<AlertCircle className="size-5 text-amber-500" />}
+        title={`Generate ${pendingValues ? formatNumber(pendingValues.count) : ""} Physical Cards?`}
+        icon={<Sparkles className="size-5 text-brand" />}
         maxWidth="md"
+        role="alertdialog"
       >
         <ModalBody className="space-y-3">
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Each card gets a unique cryptographic QR code and serial number rendered in the chosen style. This operation cannot be undone.
-          </p>
-
-          {pendingValues && (
-            <div className="rounded-xl bg-slate-50 dark:bg-zinc-800/60 p-3.5 border border-slate-200 dark:border-zinc-700 text-xs space-y-2">
+          <div className="rounded-xl bg-slate-50 dark:bg-zinc-800/60 p-3.5 border border-slate-200 dark:border-zinc-700 text-xs space-y-2">
+            <div className="flex justify-between">
+              <span className="text-ash dark:text-zinc-400 font-bold">Target Batch Label:</span>
+              <span className="text-charcoal dark:text-white font-black">{pendingValues?.label}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-ash dark:text-zinc-400 font-bold">Total Quantity:</span>
+              <span className="text-charcoal dark:text-white font-black">
+                {pendingValues ? formatNumber(pendingValues.count) : 0} physical cards
+              </span>
+            </div>
+            {selectedStyle && (
               <div className="flex justify-between">
-                <span className="text-ash dark:text-zinc-400 font-bold">Batch Label:</span>
-                <span className="text-charcoal dark:text-white font-black">{pendingValues.label}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-ash dark:text-zinc-400 font-bold">Total Quantity:</span>
-                <span className="text-charcoal dark:text-white font-black">
-                  {formatNumber(pendingValues.count)} physical cards
+                <span className="text-ash dark:text-zinc-400 font-bold">QR Visual Style:</span>
+                <span className="text-brand dark:text-brand-soft font-black">
+                  {selectedStyle.name} (v{selectedStyle.latestVersion?.version})
                 </span>
               </div>
-              {selectedStyle && (
-                <div className="flex justify-between">
-                  <span className="text-ash dark:text-zinc-400 font-bold">QR Style:</span>
-                  <span className="text-brand dark:text-brand-soft font-black">
-                    {selectedStyle.name} (v{selectedStyle.latestVersion?.version})
-                  </span>
-                </div>
-              )}
+            )}
+            <div className="pt-2 border-t border-slate-200 dark:border-zinc-700 text-muted-foreground text-[11px] leading-relaxed">
+              <strong>Consequence:</strong> Generates cryptographic tokens and serial numbers in the database. You will immediately be able to export print-ready vector SVGs and raster PNG files.
             </div>
-          )}
+          </div>
         </ModalBody>
 
         <ModalFooter className="flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2">
@@ -322,7 +417,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
             variant="secondary"
             onClick={() => setIsConfirmOpen(false)}
             disabled={isSubmitting}
-            className="normal-case"
+            className="normal-case min-h-[44px]"
           >
             Cancel
           </Button>
@@ -331,7 +426,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
             variant="primary"
             onClick={handleConfirmGenerate}
             disabled={isSubmitting}
-            className="normal-case"
+            className="normal-case min-h-[44px]"
           >
             {isSubmitting ? (
               <>
@@ -339,7 +434,7 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
                 Generating batch…
               </>
             ) : (
-              "Confirm & generate"
+              "Confirm & Generate"
             )}
           </Button>
         </ModalFooter>

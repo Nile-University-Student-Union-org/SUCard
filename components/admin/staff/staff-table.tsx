@@ -231,7 +231,7 @@ export function StaffTable({
                             <Dropdown align="right">
                               <DropdownTrigger
                                 ariaLabel={`Actions for ${member.name}`}
-                                className="h-8 w-8 rounded-lg items-center justify-center border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800"
+                                className="size-11 min-h-[44px] min-w-[44px] rounded-xl items-center justify-center border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
                               >
                                 <MoreVertical className="size-4 text-ash dark:text-zinc-400" />
                               </DropdownTrigger>
