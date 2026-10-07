@@ -4,7 +4,6 @@ import React, { useState, useRef, useEffect, useCallback, useSyncExternalStore }
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { UserAvatar } from "./user-avatar";
-import { ThemeToggle } from "./theme-toggle";
 import { LogoutConfirmModal } from "./logout-confirm-modal";
 import {
   ChevronDown,
@@ -318,12 +317,6 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
               })}
             </div>
           )}
-
-          {/* 4. Theme Toggle Row */}
-          <div className="pt-1 border-t border-border flex items-center justify-between px-3 py-1">
-            <span className="text-xs font-semibold text-muted-foreground">Theme</span>
-            <ThemeToggle />
-          </div>
 
           {/* 5. Sign Out Footer Action */}
           <div className="pt-1 border-t border-border">

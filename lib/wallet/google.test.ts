@@ -31,7 +31,7 @@ describe("Google Wallet", () => {
   });
 
   it("builds the class and object with the exact QR and inactive state", () => {
-    expect(buildGenericClass("123456")).toEqual({ id: "123456.su_card_v1", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" });
+    expect(buildGenericClass("123456")).toEqual({ id: "123456.su_card_v1", reviewStatus: "UNDER_REVIEW", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" });
     const active = buildGenericObject(config, student, card);
     expect(active).toMatchObject({
       id: "123456.student_student-1", classId: "123456.su_card_v1", hexBackgroundColor: "#0F3056",

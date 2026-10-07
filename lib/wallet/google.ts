@@ -51,7 +51,7 @@ export function objectId(issuerId: string, userId: string) {
 
 const localized = (value: string) => ({ defaultValue: { language: "en-US", value } });
 export function buildGenericClass(issuerId: string) {
-  return { id: `${issuerId}.su_card_v1`, multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" };
+  return { id: `${issuerId}.su_card_v1`, reviewStatus: "UNDER_REVIEW", multipleDevicesAndHoldersAllowedStatus: "ONE_USER_ALL_DEVICES" };
 }
 export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">, student: Pick<StudentHomeResponse, "profile" | "name">, card: Pick<CardSummary, "qr"> | null) {
   return {

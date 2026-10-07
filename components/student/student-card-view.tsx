@@ -288,7 +288,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           </svg>
         </div>
 
-        {/* Card Top Branding Header: NUSU Logo + "SU CARD" Wordmark + Flow Chip */}
+        {/* Card Top Branding Header: NUSU Logo + "SU CARD" Wordmark */}
         <div className="relative z-10 flex items-center justify-between gap-2 mb-4">
           <div className="flex items-center gap-2.5">
             <Image
@@ -304,10 +304,6 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
               SU CARD
             </span>
           </div>
-
-          <span className="px-2.5 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-sky-200 shrink-0">
-            {home.card.type === "digital" ? "DIGITAL" : "PHYSICAL"}
-          </span>
         </div>
 
         {/* Centered High-Contrast QR Code Box (Scan-Safe Quiet Zone) */}
