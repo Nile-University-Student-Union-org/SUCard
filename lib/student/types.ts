@@ -43,3 +43,8 @@ export type BulkSwitchResponse = { count: number };
 // POST /api/admin/staff/promote; POST /api/admin/staff/{id}/revoke.
 export type PromoteStudentRequest = { email: string };
 export type StaffRoleResponse = { id: string; role: string };
+
+// GET /api/student/wallet/google — "Save to Google Wallet" link for the student's active card.
+// Errors: 401 not signed in; 404 no student profile; 409 { code: "no_card" } no active card;
+// 403 { code: "suspended" }; 503 { code: "wallet_unavailable" } Google Wallet not configured.
+export type GoogleWalletSaveResponse = { saveUrl: string };
