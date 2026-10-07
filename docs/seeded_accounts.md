@@ -18,7 +18,7 @@ Password for all: `studentpass123`
 |---|---|---|---|---|
 | Test Student One | `s.one2300@sucard.local` | 231001001 | digital | gets a digital card at seed time |
 | Test Student Two | `s.two2300@sucard.local` | 231001002 | physical | no card at seed (a card may be linked from testing) |
-| Test Student Three | `s.three2300@sucard.local` | 231001003 | physical | no card — use to test scan-to-link |
+| Test Student Three | `s.three2300@sucard.local` | 231001003 | physical | card SU-000002 linked during testing |
 | Test Student Admin | `s.admin2300@sucard.local` | 231001004 | digital | student **and** admin — tests the "Where to?" switch |
 
 Real students sign in with Microsoft (NU accounts); these email accounts exist only to test locally.
