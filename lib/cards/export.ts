@@ -5,11 +5,14 @@ import type { ExportOptions } from "./types";
 import type { getBatchWithCards } from "./batches";
 import { buildQrPayload, formatSerial } from "./token";
 import { renderQrSvg } from "@/lib/qr-style/render";
+import { nusuLogoDataUri } from "@/lib/qr-style/render";
+import { renderQrSvgFromConfig } from "@/lib/qr-style/render-core";
+import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { svgToPng } from "@/lib/qr-style/png";
 
 type FoundBatch = NonNullable<Awaited<ReturnType<typeof getBatchWithCards>>>;
 function csv(value: string): string { return `"${value.replaceAll('"', '""')}"`; }
-export function streamBatchZip(batch: FoundBatch, options: ExportOptions): Readable {
+export function streamBatchZip(batch: FoundBatch, options: ExportOptions, config?: QrStyleConfig): Readable {
   const zip = new ZipArchive({ zlib: { level: 6 } });
   const append = async (data: string | Buffer, name: string, store = false) => {
     const done = new Promise<void>((resolve, reject) => {
@@ -34,7 +37,7 @@ export function streamBatchZip(batch: FoundBatch, options: ExportOptions): Reada
       await append(manifest.join("\n") + "\n", "manifest.csv");
       for (const card of batch.cards) {
         const serial = formatSerial(card.serialNumber);
-        const svg = renderQrSvg(buildQrPayload(card.token));
+        const svg = config ? renderQrSvgFromConfig(buildQrPayload(card.token), config, { logoDataUri: config.logo.type === "nusu" ? nusuLogoDataUri() : undefined }) : renderQrSvg(buildQrPayload(card.token));
         if (options.svg) await append(svg, `qr/svg/${serial}.svg`);
         if (options.png) await append(svgToPng(svg, options.pngSize), `qr/png/${serial}.png`, true);
       }

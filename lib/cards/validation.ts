@@ -4,6 +4,7 @@ import { BATCH_COUNT_MAX, BATCH_LABEL_MAX } from "./types";
 export const createBatchSchema = z.strictObject({
   label: z.string().trim().min(1).max(BATCH_LABEL_MAX),
   count: z.number().int().min(1).max(BATCH_COUNT_MAX),
+  qrStyleVersionId: z.uuid().optional(),
 });
 const flag = z.enum(["0", "1"]).transform((v) => v === "1");
 export const exportOptionsSchema = z.strictObject({

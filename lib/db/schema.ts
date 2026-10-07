@@ -28,11 +28,27 @@ export const verification = pgTable("verification", {
   id: text("id").primaryKey(), identifier: text("identifier").notNull(), value: text("value").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), createdAt: time("created_at"), updatedAt: time("updated_at"),
 }, (t) => [index("verification_identifier_idx").on(t.identifier)]);
+export const qrStyles = pgTable("qr_styles", {
+  id: uuid("id").primaryKey().defaultRandom(), name: text("name").notNull().unique(),
+  status: text("status", { enum: ["draft", "published", "archived"] }).notNull().default("draft"),
+  isDefaultPrint: boolean("is_default_print").notNull().default(false), isDefaultWeb: boolean("is_default_web").notNull().default(false),
+  draftConfig: jsonb("draft_config").notNull(), createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }),
+  createdAt: time("created_at"), updatedAt: time("updated_at"),
+}, (t) => [uniqueIndex("qr_styles_default_print_idx").on(t.isDefaultPrint).where(sql`${t.isDefaultPrint} = true`), uniqueIndex("qr_styles_default_web_idx").on(t.isDefaultWeb).where(sql`${t.isDefaultWeb} = true`)]);
+export const qrStyleVersions = pgTable("qr_style_versions", {
+  id: uuid("id").primaryKey().defaultRandom(), styleId: uuid("style_id").notNull().references(() => qrStyles.id),
+  version: integer("version").notNull(), config: jsonb("config").notNull(), checks: jsonb("checks").notNull(),
+  acceptedWarningsReason: text("accepted_warnings_reason"), publishedBy: text("published_by").references(() => user.id, { onDelete: "set null" }),
+  publishedAt: time("published_at"),
+}, (t) => [uniqueIndex("qr_style_versions_style_version_idx").on(t.styleId, t.version)]);
 export const cardBatches = pgTable("card_batches", {
   id: uuid("id").primaryKey().defaultRandom(), number: integer("number").notNull().unique(),
   label: text("label").notNull(), count: integer("count").notNull(),
   firstSerialNumber: integer("first_serial_number").notNull(), lastSerialNumber: integer("last_serial_number").notNull(),
   payloadFormat: text("payload_format", { enum: ["code"] }).notNull().default("code"),
+  qrStyleVersionId: uuid("qr_style_version_id").references(() => qrStyleVersions.id),
+  printStatus: text("print_status", { enum: ["draft", "sent_to_printer", "received", "distributing"] }).notNull().default("draft"),
+  printStatusNote: text("print_status_note"), printStatusChangedAt: timestamp("print_status_changed_at", { withTimezone: true }),
   createdBy: text("created_by").references(() => user.id, { onDelete: "set null" }), createdAt: time("created_at"),
 });
 export const cards = pgTable("cards", {

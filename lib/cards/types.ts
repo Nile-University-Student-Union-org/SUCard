@@ -25,6 +25,10 @@ export interface Batch {
   createdAt: string;
   createdByEmail: string | null;
   stats: BatchStats;
+  styleVersion: { id: string; styleName: string; version: number } | null;
+  printStatus: "draft" | "sent_to_printer" | "received" | "distributing";
+  printStatusNote: string | null;
+  printStatusChangedAt: string | null;
 }
 
 export interface ListBatchesResponse {
@@ -34,6 +38,7 @@ export interface ListBatchesResponse {
 export interface CreateBatchRequest {
   label: string; // 1–80 chars
   count: number; // integer 1–20000
+  qrStyleVersionId?: string;
 }
 
 export interface CreateBatchResponse {

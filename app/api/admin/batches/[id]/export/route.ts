@@ -4,6 +4,7 @@ import { getAdminFromRequest } from "@/lib/auth/guards";
 import { auditBatchExport, getBatchWithCards } from "@/lib/cards/batches";
 import { streamBatchZip } from "@/lib/cards/export";
 import { parseExportOptions } from "@/lib/cards/validation";
+import { getVersion } from "@/lib/qr-studio/service";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +20,8 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
   const batch = await getBatchWithCards(id);
   if (!batch) return Response.json({ error: "Batch not found" }, { status: 404, headers: noStore });
   await auditBatchExport(id, admin.id, options);
-  const zip = streamBatchZip(batch, options);
+  const config = batch.batch.qrStyleVersionId ? (await getVersion(batch.batch.qrStyleVersionId))?.config : undefined;
+  const zip = streamBatchZip(batch, options, config);
   return new Response(Readable.toWeb(zip) as ReadableStream<Uint8Array>, { headers: {
     ...noStore, "Content-Type": "application/zip", "Content-Disposition": `attachment; filename="nusu-cards-batch-${String(batch.batch.number).padStart(3, "0")}.zip"`,
   } });
