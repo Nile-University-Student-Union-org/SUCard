@@ -261,7 +261,7 @@ Mobile-first web app (PWA, installable to home screen).
 
 ### M12 — Branding & Design System
 
-Sources: `SU branding.pdf`, `assets/brand/`.
+Sources: `SU branding.pdf`, `public/brand/`.
 
 | Token | Hex | Use |
 |---|---|---|
@@ -278,8 +278,8 @@ Sources: `SU branding.pdf`, `assets/brand/`.
 
 | Asset | File |
 |---|---|
-| Logo, white (for navy/black backgrounds) | `assets/brand/su-logo-white-on-black.png` |
-| Logo, full color (for white backgrounds) | `assets/brand/su-logo-color.png` |
+| Logo, white (for navy/black backgrounds) | `public/brand/su-logo-white@hd.png` |
+| Logo, full color (for white backgrounds) | `public/brand/su-logo-color.png` |
 
 | ID | Requirement |
 |---|---|

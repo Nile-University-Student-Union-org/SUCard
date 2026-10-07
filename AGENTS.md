@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # SU Card — project rules
 
 Digital + physical membership card for Nile University Student Union (NUSU). Specs live in `docs/`:
-`docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md`, `docs/IMPLEMENTATION-PLAN.md`.
+`docs/REQUIREMENTS.md`, `docs/ARCHITECTURE.md` (plus `DEPLOY.md`, `EMAIL-SETUP.md`, `PRIVACY-NOTICE.md`).
 
 ## Stack
 
