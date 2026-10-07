@@ -113,6 +113,7 @@ function ribbonGeometry() {
 
 function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }) {
   const { gl } = useThree();
+  const invalidate = useThree((s) => s.invalidate);
   const cardMesh = useRef<THREE.Group>(null);
   const sim = useMemo(() => {
     const created = new LanyardSim({
@@ -126,7 +127,9 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     created.reset("swing-in"); // the card swings in on load
     return created;
   }, []);
-  const clock = useRef({ acc: 0, dragZ: 0 });
+  // `idle`: the last frame found the sim asleep, so the next frame's delta covers idle time and is not simulated.
+  // `started`: the swing-in waits until the card is revealed (textures painted), so the entrance is seen in full.
+  const clock = useRef({ acc: 0, dragZ: 0, idle: false, started: false });
   // Where and when the current press started, to tell a tap (flip the card) from a drag.
   const press = useRef<{ t: number; x: number; y: number } | null>(null);
 
@@ -142,12 +145,19 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   useEffect(() => {
     let live = true;
     void textures.ready.then(() =>
-      requestAnimationFrame(() => requestAnimationFrame(() => live && onReady?.())),
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          if (!live) return;
+          clock.current.started = true;
+          invalidate();
+          onReady?.();
+        }),
+      ),
     );
     return () => {
       live = false;
     };
-  }, [textures, onReady]);
+  }, [textures, onReady, invalidate]);
 
   const geometries = useMemo(() => ({ face: faceGeometry(), body: bodyGeometry() }), []);
   useEffect(() => () => {
@@ -227,8 +237,9 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       sim.endDrag();
       setDragged(false);
       if (e && performance.now() - p.t < 280 && Math.hypot(e.clientX - p.x, e.clientY - p.y) < 8) sim.flip();
+      invalidate();
     },
-    [sim],
+    [sim, invalidate],
   );
 
   // Release the drag even if the pointer is let go outside the canvas.
@@ -269,12 +280,15 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     }
 
     // Fixed-rate physics, drawn interpolated so motion is smooth at any refresh rate.
-    clock.current.acc += Math.min(delta, 0.1);
+    if (clock.current.started) clock.current.acc += clock.current.idle ? Math.min(delta, 1 / 60) : Math.min(delta, 0.1);
     while (clock.current.acc >= TICK) {
       sim.tick();
       clock.current.acc -= TICK;
     }
     sim.interpolate(clock.current.acc / TICK, drawn);
+    // Render on demand: keep frames coming only while something moves.
+    clock.current.idle = sim.sleeping && !sim.dragging;
+    if (!clock.current.idle) state.invalidate();
 
     // Card pose from its three particles.
     const at = (i: number, v: THREE.Vector3) => v.set(drawn[i * 3], drawn[i * 3 + 1], drawn[i * 3 + 2]);
@@ -341,6 +355,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     press.current = { t: performance.now(), x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
     sim.startDrag(local.x, local.y);
     setDragged(true);
+    invalidate();
     onGrab?.();
   };
 

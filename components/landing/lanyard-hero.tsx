@@ -97,7 +97,7 @@ export function LanyardHero() {
         <>
           <Canvas
             dpr={[1, 2]}
-            frameloop={isFrameloopActive ? "always" : "never"}
+            frameloop={isFrameloopActive ? "demand" : "never"}
             camera={{ position: [0, 0, 13], fov: CAMERA_FOV }}
             gl={{
               alpha: true,
@@ -122,7 +122,7 @@ export function LanyardHero() {
 
           <LanyardSkeleton
             done={sceneReady}
-            className={`transition-opacity duration-500 ${sceneReady ? "opacity-0" : "opacity-100"}`}
+            className={`transition-opacity ${sceneReady ? "opacity-0 duration-200" : "opacity-100 duration-500"}`}
           />
 
           {/* Interactive Tactile Hint Pill */}

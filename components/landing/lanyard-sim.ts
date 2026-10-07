@@ -30,7 +30,9 @@ const SUBSTEPS = 10;
 const STRAP_DRAG = 3;
 /** Fabric's internal damping: evens out velocity between neighbouring strap points (kills fast wobble, keeps swing). Per second. */
 const STRAP_INTERNAL_DAMPING = 60;
-const CARD_DRAG = 0.45;
+const CARD_DRAG = 0.6;
+/** Dry friction at the pivot (units/s²): ends small leftover swings in finite time, barely touches big ones. */
+const PIVOT_FRICTION = 0.15;
 /** Friction in the ring and swivel: damps the card spinning/rocking about its own centre, not its swing. */
 const CARD_SPIN_DRAG = 2.2;
 /** Masses: a light strap and a card whose particles put its centre of mass at the card's centre. */
@@ -79,6 +81,8 @@ export class LanyardSim {
   /** True while a flip is under way, so the twist spring pulls toward the new face instead of the nearest one. */
   private flipping = false;
   private pendingSpin = 0;
+  /** Ticks in a row with (almost) no motion; past a second the sim sleeps until touched. */
+  private stillTicks = 0;
 
   constructor(dims: LanyardDims) {
     this.dims = dims;
@@ -129,6 +133,7 @@ export class LanyardSim {
     this.prev.set(this.pos);
     this.tickStart.set(this.pos);
     this.grab = null;
+    this.stillTicks = 0;
   }
 
   private set(i: number, x: number, y: number, z: number) {
@@ -247,13 +252,26 @@ export class LanyardSim {
     }
   }
 
+  /** True once everything has come to rest (no work is done until the card is touched again). */
+  get sleeping() {
+    return this.stillTicks > 1 / TICK;
+  }
+
   /** Advance one fixed tick. */
   tick() {
+    if (this.grab || this.pendingSpin !== 0) this.stillTicks = 0;
+    if (this.sleeping) {
+      this.tickStart.set(this.pos);
+      return;
+    }
     this.tickStart.set(this.pos);
     if (this.grab) this.updateHold(this.grab);
     const dt = TICK / SUBSTEPS;
     for (let s = 0; s < SUBSTEPS; s++) this.substep(dt);
     if (!this.healthy()) this.reset("hanging");
+    let moved = 0;
+    for (let i = 0; i < this.pos.length; i++) moved = Math.max(moved, Math.abs(this.pos[i] - this.tickStart[i]));
+    this.stillTicks = moved < 8e-5 ? this.stillTicks + 1 : 0; // ~1 px/s
   }
 
   private substep(dt: number) {
@@ -272,7 +290,14 @@ export class LanyardSim {
       let vx = (pos[o] - prev[o]) * damp;
       let vy = (pos[o + 1] - prev[o + 1]) * damp;
       let vz = (pos[o + 2] - prev[o + 2]) * damp;
-      const v = Math.hypot(vx, vy, vz);
+      let v = Math.hypot(vx, vy, vz);
+      if (i >= this.hang && v > 0) {
+        const k = Math.max(0, v - PIVOT_FRICTION * dt * dt) / v;
+        vx *= k;
+        vy *= k;
+        vz *= k;
+        v *= k;
+      }
       if (v > maxStep) {
         const k = maxStep / v;
         vx *= k;

@@ -105,4 +105,19 @@ describe("LanyardSim", () => {
     run(sim, 2);
     expect(Math.abs(Math.abs(sim.yaw()) - Math.PI)).toBeLessThan(0.1);
   });
+
+  it("sleeps once settled and wakes when touched", () => {
+    const sim = new LanyardSim(dims);
+    run(sim, 10);
+    expect(sim.sleeping).toBe(true);
+    sim.flip();
+    sim.tick();
+    expect(sim.sleeping).toBe(false);
+    run(sim, 12);
+    expect(sim.sleeping).toBe(true);
+    sim.startDrag(0, 0);
+    sim.moveDrag(0.5, 0, 0);
+    run(sim, 0.5);
+    expect(sim.sleeping).toBe(false);
+  });
 });
