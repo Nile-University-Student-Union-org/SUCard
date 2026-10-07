@@ -366,8 +366,8 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       {/* Students Data Display */}
       <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
         <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
-          <CardTitle className="text-base font-bold text-foreground">
-            Student Directory
+          <CardTitle className="text-xl sm:text-2xl text-foreground">
+            STUDENT DIRECTORY
           </CardTitle>
           <Badge variant="brand" className="text-xs font-bold">
             {students.length} {students.length === 1 ? "Student" : "Students"}

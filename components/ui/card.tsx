@@ -68,7 +68,7 @@ export const CardTitle = forwardRef<
   <h3
     ref={ref}
     className={cn(
-      "font-black text-lg sm:text-xl text-eel-dark-blue dark:text-white leading-tight [overflow-wrap:anywhere]",
+      "text-lg sm:text-xl text-charcoal dark:text-white uppercase tracking-wider leading-tight [overflow-wrap:anywhere]",
       className
     )}
     {...props}

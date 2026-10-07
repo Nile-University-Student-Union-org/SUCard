@@ -68,9 +68,9 @@ export function CardLookupPanel() {
   return (
     <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs rounded-2xl overflow-hidden">
       <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
-        <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-          <Search className="size-5 text-brand dark:text-brand-soft" />
-          <span>Look Up a Card</span>
+        <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
+          <Search className="size-5 text-brand dark:text-brand-soft shrink-0" />
+          <span>LOOK UP A CARD</span>
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           Enter a serial number (e.g. SU-000123 or 123) or paste a QR code payload to inspect card status and ownership.

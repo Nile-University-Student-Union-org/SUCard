@@ -180,8 +180,8 @@ export function AccountManager({ user }: AccountManagerProps) {
                   <KeyRound className="size-5 stroke-[2.5]" />
                 </div>
                 <div>
-                  <CardTitle className="text-base sm:text-lg font-bold text-foreground">
-                    Change Password
+                  <CardTitle className="text-xl sm:text-2xl text-foreground">
+                    CHANGE PASSWORD
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">
                     Update your password to keep your administrator account secure.
