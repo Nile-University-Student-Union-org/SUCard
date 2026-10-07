@@ -166,3 +166,10 @@
     @apply tracking-tight;
   }
 }
+/* Anton has a single weight: never fake-bold it, and give it brand letter spacing.
+   Unlayered on purpose so it wins over font-bold / tracking-* utilities. */
+.font-heading {
+  font-weight: 400;
+  font-synthesis-weight: none;
+  letter-spacing: 0.06em;
+}
