@@ -1,7 +1,10 @@
 import "server-only";
 import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { auth } from "./server";
+import { db } from "@/lib/db";
+import { user } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
 import type { StaffRole } from "@/lib/staff/types";
 
@@ -17,11 +20,12 @@ export interface StaffUser {
 }
 
 /**
- * For server components/pages: returns the signed-in admin, or redirects to /login.
+ * For server components/pages: returns the signed-in admin; anyone else gets a 404
+ * (we don't reveal that the admin panel exists).
  */
 export async function requireAdminPage(): Promise<StaffUser> {
   const admin = await readAdmin(await headers());
-  if (!admin) redirect("/login");
+  if (!admin) notFound();
   return admin;
 }
 
@@ -33,12 +37,11 @@ export async function getAdminFromRequest(request: Request): Promise<StaffUser |
 }
 
 /**
- * For super-admin-only pages: returns the signed-in super admin; a signed-in admin is
- * redirected to /admin, anyone else to /login.
+ * For super-admin-only pages: returns the signed-in super admin; anyone else gets a 404.
  */
 export async function requireSuperAdminPage(): Promise<StaffUser> {
   const admin = await requireAdminPage();
-  if (admin.role !== "super_admin") redirect("/admin");
+  if (admin.role !== "super_admin") notFound();
   return admin;
 }
 
@@ -48,5 +51,7 @@ export async function requireSuperAdminPage(): Promise<StaffUser> {
 async function readAdmin(requestHeaders: Headers): Promise<StaffUser | null> {
   const session = await auth.api.getSession({ headers: requestHeaders });
   if (!session || (session.user.role !== "super_admin" && session.user.role !== "admin")) return null;
-  return { id: session.user.id, email: session.user.email, name: session.user.name, role: session.user.role };
+  const [current] = await db.select({ role: user.role, disabledAt: user.disabledAt, email: user.email, name: user.name }).from(user).where(eq(user.id, session.user.id));
+  if (!current || current.disabledAt || (current.role !== "super_admin" && current.role !== "admin")) return null;
+  return { id: session.user.id, email: current.email, name: current.name, role: current.role };
 }
