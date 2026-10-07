@@ -340,10 +340,18 @@ function paintStrap(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null
   ctx.textAlign = "left";
 }
 
-/** Draws an artist-supplied PNG over the whole face (stretched to the card ratio). */
+/** Draws an artist-supplied PNG over the whole face. */
 function paintArt(ctx: CanvasRenderingContext2D, art: HTMLImageElement) {
-  ctx.drawImage(art, 0, 0, CARD_TEX_W, CARD_TEX_H);
+  ctx.drawImage(art, 0, 0, ctx.canvas.width, ctx.canvas.height);
 }
+
+/**
+ * Face canvas size. Supplied artwork is small (~700 px wide), so painting it into the full
+ * 2560 px canvas only costs memory and upload time: use twice the art's resolution instead.
+ */
+const ART_TEX_W = 1414;
+const faceSize = (hasArt: boolean) =>
+  hasArt ? { w: ART_TEX_W, h: Math.round((ART_TEX_W * CARD_TEX_H) / CARD_TEX_W) } : { w: CARD_TEX_W, h: CARD_TEX_H };
 
 export type CardTextures = {
   front: THREE.CanvasTexture;
@@ -359,11 +367,14 @@ export type CardTextures = {
  * (plain navy) and repainted once fonts and logos have loaded.
  */
 export function createCardTextures(maxAnisotropy: number): CardTextures {
-  const front = canvasOf(CARD_TEX_W, CARD_TEX_H);
-  const back = canvasOf(CARD_TEX_W, CARD_TEX_H);
+  const frontSize = faceSize(!!CARD_ART.front);
+  const backSize = faceSize(!!CARD_ART.back);
+  const front = canvasOf(frontSize.w, frontSize.h);
+  const back = canvasOf(backSize.w, backSize.h);
   const strap = canvasOf(STRAP_TEX_W, STRAP_TEX_H);
-  paintBase(front.ctx, CARD_TEX_W, CARD_TEX_H);
-  paintBase(back.ctx, CARD_TEX_W, CARD_TEX_H);
+  // Faces covered by artwork are painted once, when it loads; the scene is hidden until then.
+  if (!CARD_ART.front) paintBase(front.ctx, CARD_TEX_W, CARD_TEX_H);
+  if (!CARD_ART.back) paintBase(back.ctx, CARD_TEX_W, CARD_TEX_H);
   strap.ctx.fillStyle = NAVY;
   strap.ctx.fillRect(0, 0, STRAP_TEX_W, STRAP_TEX_H);
 

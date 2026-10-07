@@ -172,23 +172,6 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   const textures = useMemo(() => createCardTextures(gl.capabilities.getMaxAnisotropy()), [gl]);
   useEffect(() => () => textures.dispose(), [textures]);
 
-  // Physics and textures are in: tell the hero after a couple of frames so the first paint is the real card.
-  useEffect(() => {
-    let live = true;
-    void textures.ready.then(() =>
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          if (!live) return;
-          clock.current.started = true;
-          invalidate();
-          onReady?.();
-        }),
-      ),
-    );
-    return () => {
-      live = false;
-    };
-  }, [textures, onReady, invalidate]);
 
   const geometries = useMemo(() => ({ face: faceGeometry(), body: bodyGeometry() }), []);
   useEffect(() => () => {
@@ -219,6 +202,37 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       strapBack: strapMaterial(mirroredAcross(textures.strap), THREE.BackSide),
     };
   }, [textures]);
+  // The card stays hidden until it can be drawn without a hitch: textures painted, shaders compiled off the main
+  // thread (compileAsync), then each texture uploaded on its own frame. Only then is it shown and the hero told.
+  const getState = useThree((s) => s.get);
+  const [prepared, setPrepared] = useState(false);
+  useEffect(() => {
+    let live = true;
+    const frame = () => new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    void (async () => {
+      await textures.ready;
+      if (!live) return;
+      const { scene, camera } = getState();
+      await gl.compileAsync(scene, camera).catch(() => undefined);
+      for (const texture of [textures.front, textures.back, textures.strap, materials.strapBack.map]) {
+        if (!live) return;
+        if (texture) gl.initTexture(texture);
+        await frame();
+      }
+      if (!live) return;
+      setPrepared(true);
+      await frame();
+      await frame();
+      if (!live) return;
+      clock.current.started = true;
+      invalidate();
+      onReady?.();
+    })();
+    return () => {
+      live = false;
+    };
+  }, [textures, materials, gl, getState, onReady, invalidate]);
+
   // The mirrored strap print shares the painted image but is its own texture, so re-upload it once painting is done.
   useEffect(() => {
     let live = true;
@@ -404,7 +418,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   };
 
   return (
-    <>
+    <group visible={prepared}>
       <group
         ref={cardMesh}
         onPointerOver={() => setHovered(true)}
@@ -446,7 +460,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       </group>
       <mesh ref={ribbon} geometry={ribbonGeo} material={materials.strap} frustumCulled={false} />
       <mesh geometry={ribbonGeo} material={materials.strapBack} frustumCulled={false} />
-    </>
+    </group>
   );
 }
 
@@ -470,7 +484,7 @@ export function LanyardScene({ onCardGrab, onReady }: { onCardGrab?: () => void;
       <ambientLight intensity={Math.PI * 0.55} />
       <directionalLight position={[3, 5, 6]} intensity={1.2} />
       <Band onGrab={onCardGrab} onReady={onReady} />
-      <Environment resolution={512} frames={1}>
+      <Environment resolution={256} frames={1}>
         <Lightformer intensity={2} color="white" position={[0, -1, 5]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
         <Lightformer intensity={3} color="white" position={[-1, -1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
         <Lightformer intensity={3} color="white" position={[1, 1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
