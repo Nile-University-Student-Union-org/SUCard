@@ -21,6 +21,18 @@ Password for all: `studentpass123`
 | Test Student Three | `s.three2300@sucard.local` | 231001003 | physical | card SU-000002 linked during testing |
 | Test Student Admin | `s.admin2300@sucard.local` | 231001004 | digital | student **and** admin — tests the "Where to?" switch |
 
+## Test vendors & cashiers — `pnpm db:seed:vendors` (refuses to run in production)
+
+Password for all: `cashierpass123`
+
+| Role | Email | Vendor / branch |
+|---|---|---|
+| Cashier | `cashier.coffee@sucard.local` | Campus Coffee — Main Gate |
+| Cashier | `cashier.library@sucard.local` | Campus Coffee — Library |
+| Vendor manager | `manager.coffee@sucard.local` | Campus Coffee |
+
+Seeded vendors: **Campus Coffee** (active; offers "15% off any drink" 1/day, "Free cookie with any coffee" 2/week 08:00–12:00) and **Book Corner** (paused; "10% off", unlimited).
+
 Real students sign in with Microsoft (NU accounts); these email accounts exist only to test locally.
 
 Keep this file in sync when seeded accounts change.
