@@ -34,6 +34,8 @@ export function computeAreas(hasProfile: boolean, needsProfile: boolean, role: s
   const areas: Area[] = [];
   if (hasProfile || needsProfile) areas.push({ key: "student", label: "My SU Card", href: "/card" });
   if (role === "admin" || role === "super_admin") areas.push({ key: "admin", label: "Admin panel", href: "/admin/cards" });
+  if (role === "cashier") areas.push({ key: "scanner", label: "Scanner", href: "/scan" });
+  if (role === "vendor_manager") areas.push({ key: "vendor", label: "Vendor portal", href: "/vendor" });
   return areas;
 }
 export function goDestination(areas: Area[], needsProfile: boolean, preferred?: string): string {

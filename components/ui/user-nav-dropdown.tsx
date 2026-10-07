@@ -26,7 +26,7 @@ export interface UserNavUser {
 }
 
 export interface UserNavArea {
-  key?: "student" | "admin";
+  key?: "student" | "admin" | "scanner" | "vendor";
   label: string;
   href: string;
 }
@@ -34,7 +34,7 @@ export interface UserNavArea {
 interface UserNavDropdownProps {
   user: UserNavUser;
   areas?: UserNavArea[];
-  currentArea?: "student" | "admin";
+  currentArea?: "student" | "admin" | "scanner" | "vendor";
   className?: string;
 }
 

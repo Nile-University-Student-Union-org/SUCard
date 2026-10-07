@@ -7,12 +7,12 @@ import type { Settings } from "@/lib/student/types";
 
 export const issuanceSchema = z.object({ mode: z.enum(["digital", "physical"]), physicalQuotaRemaining: z.number().int().nonnegative().nullable() });
 export const officeSchema = z.object({ location: z.string().trim().min(1).max(300), hours: z.string().trim().min(1).max(300) });
-export const settingsSchema = z.object({ issuance: issuanceSchema, allowDigitalUpgrade: z.boolean(), studentEmailPattern: z.string().min(1).max(500).refine((value) => {
+export const settingsSchema = z.object({ issuance: issuanceSchema, allowDigitalUpgrade: z.boolean(), semesters: z.array(z.strictObject({ name: z.string().trim().min(1).max(80), start: z.iso.date(), end: z.iso.date() }).refine((s) => s.end >= s.start)).max(20), studentEmailPattern: z.string().min(1).max(500).refine((value) => {
   try { new RegExp(value); return true; } catch { return false; }
 }, "Invalid regular expression"), office: officeSchema });
 export const settingsPatchSchema = settingsSchema.partial().strict();
 export const defaults: Settings = { issuance: { mode: "digital", physicalQuotaRemaining: null }, allowDigitalUpgrade: true,
-  studentEmailPattern: DEFAULT_STUDENT_EMAIL_PATTERN, office: { location: "SU office", hours: "Contact SU for opening hours" } };
+  studentEmailPattern: DEFAULT_STUDENT_EMAIL_PATTERN, office: { location: "SU office", hours: "Contact SU for opening hours" }, semesters: [] };
 export async function getSettings(tx: typeof db = db): Promise<Settings> {
   const rows = await tx.select().from(settings);
   const result = { ...defaults };
