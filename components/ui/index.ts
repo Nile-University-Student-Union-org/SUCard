@@ -35,3 +35,4 @@ export * from "./toggle-chip";
 export * from "./user-avatar";
 export * from "./user-nav-dropdown";
 export * from "./validation-bubble";
+export * from "./microsoft-sign-in-button";

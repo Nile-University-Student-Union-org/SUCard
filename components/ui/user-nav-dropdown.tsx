@@ -24,13 +24,20 @@ export interface UserNavUser {
   role: "super_admin" | "admin" | string;
 }
 
+export interface UserNavArea {
+  label: string;
+  href: string;
+}
+
 interface UserNavDropdownProps {
   user: UserNavUser;
+  areas?: UserNavArea[];
   className?: string;
 }
 
 export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
   user,
+  areas,
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -216,7 +223,27 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
             </Link>
           </div>
 
-          {/* 3. Theme Toggle Row */}
+          {/* 3. Switch to Area Section (conditional when >1 area) */}
+          {areas && areas.length > 1 && (
+            <div className="pt-1 border-t border-border space-y-0.5">
+              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Switch to
+              </div>
+              {areas.map((area) => (
+                <Link
+                  key={area.href}
+                  href={area.href}
+                  onClick={() => setIsOpen(false)}
+                  role="menuitem"
+                  className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer"
+                >
+                  <span>{area.label}</span>
+                </Link>
+              ))}
+            </div>
+          )}
+
+          {/* 4. Theme Toggle Row */}
           <div className="pt-1 border-t border-border flex items-center justify-between px-3 py-1">
             <span className="text-xs font-semibold text-muted-foreground">Theme</span>
             <ThemeToggle />

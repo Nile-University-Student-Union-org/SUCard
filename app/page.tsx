@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -50,8 +50,7 @@ export default function HomePage() {
             size="sm"
             className="normal-case"
           >
-            <ShieldCheck className="size-4 text-brand dark:text-brand-soft" />
-            <span>Staff portal</span>
+            <span>Sign in</span>
           </ButtonLink>
         </div>
       </header>
@@ -82,7 +81,7 @@ export default function HomePage() {
             variant="primary"
             className="w-full sm:w-auto h-12 px-8 text-base font-bold normal-case shadow-md"
           >
-            <span>Staff sign in</span>
+            <span>Sign in</span>
             <ArrowRight className="size-5 ml-1.5" />
           </ButtonLink>
         </div>

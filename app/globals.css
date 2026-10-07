@@ -454,4 +454,9 @@
   select {
     cursor: pointer;
   }
+  button:disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
+  }
 }

@@ -113,23 +113,18 @@ export function GenerateBatchPanel({ onBatchCreated }: GenerateBatchPanelProps) 
     <>
       <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
         <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="size-9 rounded-xl bg-brand text-white flex items-center justify-center shrink-0 shadow-xs">
-                <Plus className="size-5 stroke-[2.5]" />
-              </div>
-              <div>
-                <CardTitle className="text-base sm:text-lg font-bold text-foreground">
-                  Generate Physical Cards
-                </CardTitle>
-                <CardDescription className="text-xs text-muted-foreground">
-                  Create a new physical batch with unique cryptographic QR tokens.
-                </CardDescription>
-              </div>
+          <div className="flex items-center gap-3">
+            <div className="size-9 rounded-xl bg-brand text-white flex items-center justify-center shrink-0 shadow-xs">
+              <Plus className="size-5 stroke-[2.5]" />
             </div>
-            <span className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-bold text-brand dark:text-brand-soft bg-brand/10 dark:bg-brand/20 border border-brand/20 px-2.5 py-1 rounded-full uppercase tracking-wider">
-              Auto-serialized
-            </span>
+            <div>
+              <CardTitle className="text-base sm:text-lg font-bold text-foreground">
+                Generate Physical Cards
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground">
+                Create a new physical batch with unique cryptographic QR tokens.
+              </CardDescription>
+            </div>
           </div>
         </CardHeader>
 

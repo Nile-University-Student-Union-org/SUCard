@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Menu, ShieldCheck } from "lucide-react";
+import { Menu } from "lucide-react";
 import { type StaffUser } from "@/lib/auth/guards";
 import { UserNavDropdown } from "@/components/ui/user-nav-dropdown";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -29,16 +29,9 @@ export function AdminHeader({ user }: AdminHeaderProps) {
           </button>
 
           <div className="flex items-center gap-2">
-            <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
-              NUSU Staff
+            <span className="text-xs sm:text-sm font-black text-charcoal dark:text-white truncate">
+              SU Card Manager
             </span>
-            <span className="hidden sm:inline text-slate-300 dark:text-zinc-700" aria-hidden="true">&bull;</span>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="size-4 text-brand dark:text-brand-soft shrink-0" />
-              <span className="text-xs sm:text-sm font-black text-charcoal dark:text-white truncate">
-                Admin Console
-              </span>
-            </div>
           </div>
         </div>
 

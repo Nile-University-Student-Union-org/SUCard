@@ -122,7 +122,10 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
   const isSuperAdmin = role === "super_admin";
 
   return (
-    <aside className="flex flex-col h-full w-64 bg-[#0F3056] text-white border-r border-[#0A2240] select-none shadow-xl">
+    <aside className={cn(
+      "flex flex-col w-64 bg-[#0F3056] text-white border-r border-[#0A2240] select-none shadow-xl",
+      isMobile ? "h-full" : "sticky top-0 h-screen"
+    )}>
       {/* Sidebar Header & Brand */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
         <Link
@@ -148,19 +151,6 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
             <X className="size-5" />
           </button>
         )}
-      </div>
-
-      {/* Union Badge */}
-      <div className="px-6 py-3 border-b border-white/10 bg-[#0A2240]/60">
-        <div className="flex items-center justify-between text-xs text-white/80">
-          <span className="font-semibold uppercase tracking-wider text-[10px] text-sky-200">
-            {isSuperAdmin ? "Super Admin Portal" : "Staff Portal"}
-          </span>
-          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-sky-300 font-semibold">
-            <span className="size-1.5 rounded-full bg-[#018BCE] animate-pulse" />
-            2026/27
-          </span>
-        </div>
       </div>
 
       {/* Navigation List */}
@@ -235,13 +225,22 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
       </nav>
 
       {/* Sidebar Footer info */}
-      <div className="p-4 border-t border-white/10 bg-[#0A2240]/40 text-xs text-white/60 space-y-1">
-        <p className="text-[11px] font-bold text-white/80 uppercase tracking-wide">
-          Nile University Student Union
-        </p>
-        <p className="text-[10px] leading-tight text-white/45">
-          SU Card Management &bull; 2026/2027
-        </p>
+      <div className="p-4 border-t border-white/10 bg-[#0A2240]/40 text-xs text-white/60 flex items-center gap-3">
+        <Image
+          src="/brand/su-icon-white@hd.png"
+          alt="NUSU Icon"
+          width={16}
+          height={16}
+          className="h-4 w-auto object-contain shrink-0"
+        />
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-[11px] font-bold text-white/80 uppercase tracking-wide truncate">
+            Nile University SU
+          </p>
+          <p className="text-[10px] leading-tight text-white/45 truncate">
+            SU Card &bull; 2026/27
+          </p>
+        </div>
       </div>
     </aside>
   );
