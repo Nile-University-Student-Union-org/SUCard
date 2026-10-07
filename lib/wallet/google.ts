@@ -10,7 +10,8 @@ const configSchema = z.object({
   issuerId: z.string().regex(/^\d+$/),
   email: z.email(),
   keyFile: z.string().min(1),
-  baseUrl: z.url().refine((value) => value.startsWith("https://")),
+  // Only used for the pass logo, which Google must be able to fetch; on http (local dev) the logo is left out.
+  baseUrl: z.url(),
 });
 const keySchema = z.object({ private_key: z.string().min(1), client_email: z.email() });
 type Config = z.infer<typeof configSchema> & { privateKey: string };
@@ -52,7 +53,9 @@ export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">,
     id: objectId(config.issuerId, student.profile.userId),
     classId: `${config.issuerId}.su_card_v1`,
     hexBackgroundColor: "#0F3056",
-    logo: { sourceUri: { uri: `${config.baseUrl.replace(/\/$/, "")}/brand/su-icon-white@hd.png` }, contentDescription: localized("NUSU") },
+    ...(config.baseUrl.startsWith("https://")
+      ? { logo: { sourceUri: { uri: `${config.baseUrl.replace(/\/$/, "")}/brand/su-icon-white@hd.png` }, contentDescription: localized("NUSU") } }
+      : {}),
     cardTitle: localized("SU CARD"),
     header: localized(student.name),
     subheader: localized("Nile University Student Union"),

@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { StatusState } from "@/components/ui/status-state";
 import { CardScanner } from "./card-scanner";
+import { WalletQrModal } from "./wallet-qr-modal";
 
 const emptySubscribe = () => () => {};
 
@@ -52,6 +53,7 @@ interface StudentCardViewProps {
 export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [walletLoading, setWalletLoading] = useState(false);
+  const [walletQrUrl, setWalletQrUrl] = useState<string | null>(null);
   const [walletNotice, setWalletNotice] = useState<{
     variant: "info" | "warning" | "destructive";
     message: string;
@@ -102,7 +104,13 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
       }
 
       if (data.saveUrl) {
-        window.location.assign(data.saveUrl);
+        // On a phone, open Google Wallet directly; on a computer, show a QR to scan with the phone.
+        if (/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)) {
+          window.location.assign(data.saveUrl);
+        } else {
+          setWalletQrUrl(data.saveUrl);
+          setWalletLoading(false);
+        }
       } else {
         setWalletNotice({
           variant: "warning",
@@ -373,6 +381,8 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             )}
           </button>
         )}
+
+        <WalletQrModal saveUrl={walletQrUrl} onClose={() => setWalletQrUrl(null)} />
 
         {/* Card Metadata Details: No Internal Serial (Admin-only M14-1) */}
         <div className="flex items-center justify-between px-3 py-2 text-xs text-ash dark:text-zinc-400 font-medium border-t border-slate-200/80 dark:border-zinc-800/80">

@@ -43,4 +43,8 @@ describe("Google Wallet", () => {
     expect(buildGenericObject(config, { ...student, profile: { ...student.profile, status: "suspended" } }, card).state).toBe("INACTIVE");
     expect(buildGenericObject(config, student, null).state).toBe("INACTIVE");
   });
+
+  it("leaves the logo out when the app has no public https address", () => {
+    expect(buildGenericObject({ ...config, baseUrl: "http://localhost:3000" }, student, card)).not.toHaveProperty("logo");
+  });
 });
