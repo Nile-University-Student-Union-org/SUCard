@@ -6,6 +6,7 @@ import { formatSerial } from "@/lib/cards/token";
 import { claimCard, getStudentHome, StudentError } from "./service";
 import { parseClaimQr } from "./rules";
 import type { AdminLinkRequest, CardFlow } from "./types";
+import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function issueDigital(tx: Tx, userId: string) {
@@ -16,15 +17,17 @@ async function issueDigital(tx: Tx, userId: string) {
     status: "active", studentId: userId, linkedAt: new Date() });
 }
 export async function voidCard(cardId: string, reason: string, actorId: string) {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [card] = await tx.select().from(cards).where(eq(cards.id, cardId)).for("update");
     if (!card) throw new StudentError(404, "Card not found");
     if (card.status === "void") throw new StudentError(409, "Card already voided");
     await tx.update(cards).set({ status: "void", voidReason: reason, voidedAt: new Date(), voidedBy: actorId }).where(eq(cards.id, cardId));
     await tx.insert(auditLog).values({ actorId, action: "cards.voided", entity: "card", entityId: cardId,
       data: { reason, before: card.status, studentId: card.studentId } });
-    return { count: 1 };
+    return { count: 1, syncStudentId: card.status === "active" ? card.studentId : null };
   });
+  if (result.syncStudentId) await syncGoogleWalletForStudent(result.syncStudentId);
+  return { count: result.count };
 }
 export async function voidBatch(batchId: string, reason: string, actorId: string) {
   return db.transaction(async (tx) => {
@@ -92,6 +95,7 @@ export async function setStudentFlow(userId: string, flow: CardFlow, actorId: st
       data: { before: profile.cardFlow, after: flow } });
   });
   const home = await getStudentHome(userId);
+  if (home.card) await syncGoogleWalletForStudent(userId);
   return { student: { profile: home.profile, name: home.name, email: home.email, card: home.card } };
 }
 export async function switchAllPendingToDigital(actorId: string) {
