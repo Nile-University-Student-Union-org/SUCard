@@ -245,6 +245,12 @@
   * {
     @apply border-border;
   }
+  /* In-page links (e.g. "How it works") glide to their section; route changes stay instant via data-scroll-behavior. */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
   body {
     @apply bg-background text-foreground font-sans antialiased;
     letter-spacing: -0.011em;

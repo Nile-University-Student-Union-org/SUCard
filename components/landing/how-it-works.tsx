@@ -10,7 +10,7 @@ import { GoogleWalletLogo } from "@/components/student/student-card-view";
 const STEPS = [
   {
     title: "Sign in",
-    body: "Use your NU Microsoft account. We confirm you're a student and make your card on the spot.",
+    body: "Use your NU Microsoft account.",
   },
   {
     title: "Get your card",
