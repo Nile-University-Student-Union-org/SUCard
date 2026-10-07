@@ -28,6 +28,8 @@ export const TICK = 1 / 120;
 const SUBSTEPS = 10;
 /** Air drag, per second. */
 const STRAP_DRAG = 3;
+/** Fabric's internal damping: evens out velocity between neighbouring strap points (kills fast wobble, keeps swing). Per second. */
+const STRAP_INTERNAL_DAMPING = 60;
 const CARD_DRAG = 0.45;
 /** Friction in the ring and swivel: damps the card spinning/rocking about its own centre, not its swing. */
 const CARD_SPIN_DRAG = 2.2;
@@ -40,9 +42,9 @@ const STRAP_BEND_COMPLIANCE = 1.5e-3; // strap resists sharp kinks
 const STRAP_CLEARANCE = 0.05;
 const CLAMP_COMPLIANCE = 6e-4; // strap leaves the crimp roughly straight
 const FACING_COMPLIANCE = 0.6; // card drifts back to face the viewer
-const HOLD_COMPLIANCE = 1.5e-4; // how firmly the held card follows the hand
+const HOLD_COMPLIANCE = 0; // the hand holds firmly; softness comes from the hand spring (a soft hold here rings)
 /** Held card: pointer smoothing, how fast it rights itself, and how much it leans when moved sideways. */
-const HOLD_SMOOTHING = 0.03; // s
+const HOLD_RESPONSE = 20; // rad/s: the hand is a critically damped spring toward the pointer, so uneven pointer events don't show
 const HOLD_UPRIGHT = 0.3; // s
 const HOLD_LEAN = 0.035; // rad per unit/s of hand speed
 const HOLD_MAX_LEAN = 0.45; // rad
@@ -186,11 +188,12 @@ export class LanyardSim {
 
   /** Moves the hand toward the pointer (smoothed), eases the grip upright with a lean, and sets particle targets. */
   private updateHold(g: Hold) {
-    const follow = 1 - Math.exp(-TICK / HOLD_SMOOTHING);
-    const before = g.hand;
-    g.hand = before.map((v, c) => v + (g.raw[c] - v) * follow) as Vec;
-    const vk = 1 - Math.exp(-TICK / 0.08);
-    g.vel = g.vel.map((v, c) => v + ((g.hand[c] - before[c]) / TICK - v) * vk) as Vec;
+    // Critically damped spring (semi-implicit): smooth position and velocity whatever the pointer does.
+    const w = HOLD_RESPONSE;
+    for (let c = 0; c < 3; c++) {
+      g.vel[c] += (w * w * (g.raw[c] - g.hand[c]) - 2 * w * g.vel[c]) * TICK;
+      g.hand[c] += g.vel[c] * TICK;
+    }
 
     const lean = Math.max(-HOLD_MAX_LEAN, Math.min(HOLD_MAX_LEAN, -g.vel[0] * HOLD_LEAN));
     const upright: Quat = [0, 0, Math.sin(lean / 2), Math.cos(lean / 2)];
@@ -205,6 +208,9 @@ export class LanyardSim {
       const shift = scale(normalize(toHang), -over);
       g.targets = g.targets.map((t) => add(t, shift));
       g.hand = add(g.hand, shift);
+      const n = normalize(toHang);
+      const out = dot(g.vel, n);
+      if (out > 0) g.vel = sub(g.vel, scale(n, out));
     }
   }
 
@@ -220,6 +226,7 @@ export class LanyardSim {
   private substep(dt: number) {
     const { pos, prev, invMass } = this;
     this.dampCardSpin(dt);
+    this.dampStrapWobble(dt);
     const maxStep = MAX_SPEED * dt;
     for (let i = 0; i < this.count; i++) {
       if (invMass[i] === 0) continue;
@@ -263,6 +270,22 @@ export class LanyardSim {
     const w = this.invMass[i];
     const k = w / (w + alpha);
     for (let c = 0; c < 3; c++) this.pos[i * 3 + c] += (target[c] - this.pos[i * 3 + c]) * k;
+  }
+
+  /** Moves each strap point's velocity toward the average of its neighbours'. */
+  private dampStrapWobble(dt: number) {
+    const { pos, prev } = this;
+    const k = 1 - Math.exp(-STRAP_INTERNAL_DAMPING * dt);
+    const v = (i: number, c: number) => pos[i * 3 + c] - prev[i * 3 + c];
+    for (let c = 0; c < 3; c++) {
+      let left = v(0, c);
+      for (let i = 1; i < this.hang; i++) {
+        const here = v(i, c);
+        const target = (left + v(i + 1, c)) / 2;
+        prev[i * 3 + c] = pos[i * 3 + c] - (here + (target - here) * k);
+        left = here;
+      }
+    }
   }
 
   /** Blends each card particle's velocity toward the card's centre-of-mass velocity. */
