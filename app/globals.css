@@ -511,3 +511,7 @@ html[data-theme-transition="active"]::view-transition-new(root) {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
+@keyframes scan-beam {
+  0% { top: -14cqw; }
+  100% { top: 100%; }
+}

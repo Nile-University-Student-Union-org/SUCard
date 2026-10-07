@@ -4,9 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
-  ShieldCheck,
-  Smartphone,
-  Sparkles,
   CheckCircle2,
   Utensils,
   Laptop,
@@ -14,9 +11,9 @@ import {
   Lock,
 } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanyardCard } from "@/components/landing/lanyard-card";
+import { HowItWorks } from "@/components/landing/how-it-works";
 
 export default function HomePage() {
   return (
@@ -125,92 +122,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* "How It Works" Section */}
-        <section
-          id="how-it-works"
-          className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 border-t border-border/80"
-        >
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
-            <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl text-charcoal dark:text-white uppercase tracking-wider mb-4 leading-tight">
-              HOW IT WORKS
-            </h2>
-            <p className="text-base sm:text-lg text-ash dark:text-zinc-400 font-normal leading-relaxed">
-              Get and use your official student union membership in three effortless steps.
-            </p>
-          </div>
-
-          {/* 3 Step Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {/* Step 1 */}
-            <Card className="card-tactile p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden group">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <span className="font-heading text-3xl text-brand dark:text-brand-soft leading-none">
-                    01
-                  </span>
-                  <div className="size-12 rounded-tactile bg-brand/10 dark:bg-brand-soft/15 border-2 border-brand/20 dark:border-brand-soft/30 flex items-center justify-center text-brand dark:text-brand-soft">
-                    <ShieldCheck className="size-6" />
-                  </div>
-                </div>
-                <h3 className="font-heading text-xl sm:text-2xl text-charcoal dark:text-white uppercase tracking-wide mb-3">
-                  Sign in with NU Email
-                </h3>
-                <p className="text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                  Authenticate securely with your Nile University Microsoft student email. Your active enrollment and union eligibility are verified automatically.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-brand dark:text-brand-soft flex items-center gap-1">
-                <span>Fast single sign-on</span>
-              </div>
-            </Card>
-
-            {/* Step 2 */}
-            <Card className="card-tactile p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden group">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <span className="font-heading text-3xl text-brand dark:text-brand-soft leading-none">
-                    02
-                  </span>
-                  <div className="size-12 rounded-tactile bg-brand/10 dark:bg-brand-soft/15 border-2 border-brand/20 dark:border-brand-soft/30 flex items-center justify-center text-brand dark:text-brand-soft">
-                    <Smartphone className="size-6" />
-                  </div>
-                </div>
-                <h3 className="font-heading text-xl sm:text-2xl text-charcoal dark:text-white uppercase tracking-wide mb-3">
-                  Instant Digital Pass
-                </h3>
-                <p className="text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                  Your cryptographic card generates immediately with an offline-ready QR code. Save it directly to Google Wallet for rapid one-tap access.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-brand dark:text-brand-soft flex items-center gap-1">
-                <span>Google Wallet support</span>
-              </div>
-            </Card>
-
-            {/* Step 3 */}
-            <Card className="card-tactile p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden group">
-              <div>
-                <div className="flex items-center justify-between mb-6">
-                  <span className="font-heading text-3xl text-brand dark:text-brand-soft leading-none">
-                    03
-                  </span>
-                  <div className="size-12 rounded-tactile bg-brand/10 dark:bg-brand-soft/15 border-2 border-brand/20 dark:border-brand-soft/30 flex items-center justify-center text-brand dark:text-brand-soft">
-                    <Sparkles className="size-6" />
-                  </div>
-                </div>
-                <h3 className="font-heading text-xl sm:text-2xl text-charcoal dark:text-white uppercase tracking-wide mb-3">
-                  Show & Save at Partners
-                </h3>
-                <p className="text-sm text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                  Present your card QR at participating campus venues, cafes, tech stores, and partner retailers across Egypt to redeem exclusive discounts.
-                </p>
-              </div>
-              <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-brand dark:text-brand-soft flex items-center gap-1">
-                <span>Exclusive student savings</span>
-              </div>
-            </Card>
-          </div>
-        </section>
+        <HowItWorks />
 
         {/* Benefits & Privileges Strip */}
         <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
