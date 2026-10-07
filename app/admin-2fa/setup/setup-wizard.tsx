@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { toast } from "sonner";
 import {
   ShieldCheck,
   QrCode,
@@ -63,10 +62,12 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
   const [verifyError, setVerifyError] = useState<string | null>(null);
   const [isPinError, setIsPinError] = useState(false);
   const [isSecretCopied, setIsSecretCopied] = useState(false);
+  const [showManualKey, setShowManualKey] = useState(false);
 
   // Step 3 State: Backup Codes Confirmation
   const [hasSavedCodes, setHasSavedCodes] = useState(false);
   const [areCodesCopied, setAreCodesCopied] = useState(false);
+  const [isDownloaded, setIsDownloaded] = useState(false);
 
   const secretKey = extractSecretKey(totpURI);
 
@@ -179,7 +180,6 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
     if (!secretKey) return;
     navigator.clipboard.writeText(secretKey).then(() => {
       setIsSecretCopied(true);
-      toast.success("Secret key copied to clipboard");
       setTimeout(() => setIsSecretCopied(false), 2500);
     });
   };
@@ -193,8 +193,8 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
 
     navigator.clipboard.writeText(content).then(() => {
       setAreCodesCopied(true);
-      toast.success("Backup codes copied to clipboard");
-      setTimeout(() => setAreCodesCopied(false), 2500);
+      setIsDownloaded(false);
+      setTimeout(() => setAreCodesCopied(false), 3000);
     });
   };
 
@@ -214,7 +214,9 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast.success("Backup codes downloaded");
+    setIsDownloaded(true);
+    setAreCodesCopied(false);
+    setTimeout(() => setIsDownloaded(false), 3000);
   };
 
   // Format secret into groups of 4
@@ -320,27 +322,27 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
             )}
 
             {/* QR Code Container */}
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border-2 border-slate-200 dark:border-zinc-700/80 text-center space-y-4">
+            <div className="flex flex-col items-center justify-center p-4 sm:p-6 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border-2 border-slate-200 dark:border-zinc-700/80 text-center space-y-3 sm:space-y-4">
               {qrDataUrl ? (
-                <div className="p-3 bg-white rounded-2xl border-2 border-slate-200 shadow-md">
+                <div className="p-2.5 sm:p-3 bg-white rounded-2xl border-2 border-slate-200 shadow-md">
                   <Image
                     src={qrDataUrl}
                     alt="Two-Factor Setup QR Code"
                     width={220}
                     height={220}
-                    className="w-[200px] h-[200px] sm:w-[220px] sm:h-[220px] object-contain rounded-lg"
+                    className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] object-contain rounded-lg"
                     unoptimized
                   />
                 </div>
               ) : (
-                <div className="w-[220px] h-[220px] rounded-2xl bg-slate-200 dark:bg-zinc-700 animate-pulse" />
+                <div className="w-[180px] h-[180px] sm:w-[220px] sm:h-[220px] rounded-2xl bg-slate-200 dark:bg-zinc-700 animate-pulse motion-reduce:animate-none" />
               )}
 
               {/* Mobile direct link */}
               {totpURI && (
                 <a
                   href={totpURI}
-                  className="sm:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft text-xs font-bold min-h-[44px]"
+                  className="sm:hidden inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft text-xs font-bold min-h-[44px] w-full"
                 >
                   <Smartphone className="size-4" />
                   <span>Open in authenticator app</span>
@@ -348,29 +350,52 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
                 </a>
               )}
 
-              {/* Manual Entry Secret */}
+              {/* Manual Entry Secret Accordion / Fallback */}
               {secretKey && (
-                <div className="w-full max-w-sm space-y-1.5 pt-2 border-t border-slate-200 dark:border-zinc-700">
-                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
-                    <span>Can&apos;t scan? Enter key manually:</span>
-                  </div>
-                  <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700">
-                    <span className="font-mono text-xs sm:text-sm font-bold tracking-widest text-charcoal dark:text-zinc-200 select-all truncate pl-1">
-                      {formattedSecret}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleCopySecret}
-                      className="p-2 rounded-lg text-ash dark:text-zinc-400 hover:text-brand dark:hover:text-brand-soft hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0 min-h-[36px] min-w-[36px] flex items-center justify-center cursor-pointer"
-                      aria-label="Copy secret key"
+                <div className="w-full max-w-sm pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualKey((prev) => !prev)}
+                    className="w-full text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] flex items-center justify-center gap-1.5 cursor-pointer rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                    aria-expanded={showManualKey}
+                    aria-controls="manual-secret-container"
+                  >
+                    <span>{showManualKey ? "Hide manual entry key" : "Can't scan? Enter key manually"}</span>
+                  </button>
+
+                  {showManualKey && (
+                    <div
+                      id="manual-secret-container"
+                      className="w-full space-y-1.5 pt-2 border-t border-slate-200 dark:border-zinc-700 animate-in fade-in-0 duration-150 text-left"
                     >
-                      {isSecretCopied ? (
-                        <Check className="size-4 text-emerald-600 dark:text-emerald-400" />
-                      ) : (
-                        <Copy className="size-4" />
+                      <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+                        <span>Authenticator Secret Key:</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700">
+                        <span className="font-mono text-xs sm:text-sm font-bold tracking-widest text-charcoal dark:text-zinc-200 select-all truncate pl-2">
+                          {formattedSecret}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleCopySecret}
+                          className="p-2.5 rounded-xl text-ash dark:text-zinc-400 hover:text-brand dark:hover:text-brand-soft hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+                          aria-label="Copy secret key"
+                        >
+                          {isSecretCopied ? (
+                            <Check className="size-5 text-emerald-600 dark:text-emerald-400" />
+                          ) : (
+                            <Copy className="size-5" />
+                          )}
+                        </button>
+                      </div>
+                      {isSecretCopied && (
+                        <p className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 pl-1">
+                          <Check className="size-3" />
+                          <span>Secret key copied to clipboard</span>
+                        </p>
                       )}
-                    </button>
-                  </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -431,26 +456,26 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
 
             {/* Backup Codes Grid */}
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border-2 border-slate-200 dark:border-zinc-700/80 space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
                 <span className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
                   Single-Use Backup Codes ({backupCodes.length})
                 </span>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={handleCopyBackupCodes}
-                    className="normal-case text-xs font-bold h-9 px-3"
+                    className="normal-case text-xs font-bold min-h-[44px] px-3.5"
                   >
                     {areCodesCopied ? (
                       <>
-                        <Check className="size-3.5 mr-1 text-emerald-600" />
+                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400" />
                         <span>Copied!</span>
                       </>
                     ) : (
                       <>
-                        <Copy className="size-3.5 mr-1" />
+                        <Copy className="size-4 mr-1" />
                         <span>Copy all</span>
                       </>
                     )}
@@ -458,21 +483,44 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
                   <Button
                     type="button"
                     variant="outline"
-                    size="sm"
+                    size="md"
                     onClick={handleDownloadBackupCodes}
-                    className="normal-case text-xs font-bold h-9 px-3"
+                    className="normal-case text-xs font-bold min-h-[44px] px-3.5"
                   >
-                    <Download className="size-3.5 mr-1" />
-                    <span>Download .txt</span>
+                    {isDownloaded ? (
+                      <>
+                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400" />
+                        <span>Downloaded!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download className="size-4 mr-1" />
+                        <span>Download .txt</span>
+                      </>
+                    )}
                   </Button>
                 </div>
               </div>
+
+              {/* Inline status indicator */}
+              {areCodesCopied && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 animate-in fade-in-0 duration-150">
+                  <Check className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>All backup codes copied to clipboard</span>
+                </div>
+              )}
+              {isDownloaded && (
+                <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/60 text-xs font-semibold text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5 animate-in fade-in-0 duration-150">
+                  <Check className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span>Backup codes file downloaded</span>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-2.5">
                 {backupCodes.map((code, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 font-mono text-xs sm:text-sm font-bold tracking-wider text-charcoal dark:text-zinc-200 select-all"
+                    className="flex items-center justify-between p-2.5 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-700 font-mono text-xs sm:text-sm font-bold tracking-wider text-charcoal dark:text-zinc-200 select-all min-h-[44px]"
                   >
                     <span className="text-ash dark:text-zinc-500 font-sans text-[11px] font-medium mr-1.5">
                       {idx + 1}.
@@ -489,7 +537,7 @@ export function TwoFactorSetupWizard({ admin }: TwoFactorSetupWizardProps) {
             </div>
 
             {/* Mandatory Checkbox */}
-            <div className="p-3 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
+            <div className="p-3.5 rounded-xl border border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60">
               <Checkbox
                 id="saved-backup-codes"
                 checked={hasSavedCodes}

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Store,
-  MapPin,
   Tag,
   Clock,
   RotateCcw,
@@ -12,11 +11,11 @@ import {
   CheckCircle2,
   Receipt,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import type { StudentHistoryResponse } from "@/lib/analytics/types";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
 import {
@@ -28,7 +27,6 @@ import {
 interface RedemptionItem {
   id: string;
   vendorName: string;
-  branchName: string;
   offerTitle: string | null;
   confirmedAt: string;
   billAmount: string | null;
@@ -158,14 +156,14 @@ export function HistoryView() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full min-w-0">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-3xl sm:text-4xl text-foreground tracking-wide">
+          <h1 className="font-heading text-3xl sm:text-4xl text-charcoal dark:text-white uppercase tracking-wider">
             REDEMPTION HISTORY
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-0.5">
             Your past card uses and discount redemptions across Nile University
           </p>
         </div>
@@ -179,9 +177,9 @@ export function HistoryView() {
               <Skeleton className="h-5 w-28 rounded" />
               <div className="space-y-3">
                 {[1, 2].map((n) => (
-                  <Card key={n} className="p-4 flex items-center justify-between gap-4">
+                  <Card key={n} className="p-4 flex items-center justify-between gap-4 border border-border">
                     <div className="flex items-center gap-3">
-                      <Skeleton className="h-10 w-10 rounded-xl" />
+                      <Skeleton className="size-10 rounded-xl" />
                       <div className="space-y-2">
                         <Skeleton className="h-4 w-36" />
                         <Skeleton className="h-3.5 w-48" />
@@ -200,27 +198,44 @@ export function HistoryView() {
           title="Could not load history"
           description={error}
           actions={
-            <Button variant="outline" onClick={() => setRefreshKey((k) => k + 1)}>
-              <RotateCcw className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              onClick={() => setRefreshKey((k) => k + 1)}
+              className="min-h-[44px]"
+            >
+              <RotateCcw className="size-4 mr-2" />
               Try Again
             </Button>
           }
         />
       ) : redemptions.length === 0 ? (
-        <Card className="p-8 text-center space-y-4">
-          <div className="h-14 w-14 rounded-2xl bg-brand/10 text-brand flex items-center justify-center mx-auto border border-brand/20">
-            <Receipt className="h-7 w-7" />
+        <Card className="p-8 text-center space-y-5 border border-border bg-card">
+          <div className="size-14 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto border border-brand/20 shadow-xs">
+            <Receipt className="size-7" />
           </div>
-          <div className="max-w-md mx-auto space-y-1">
-            <h2 className="text-xl text-foreground">No Redemptions Yet</h2>
-            <p className="text-sm text-muted-foreground">
-              You haven&apos;t redeemed any deals or scanned your SU Card at partner vendors yet.
-              Present your QR code at participating vendors to claim exclusive discounts!
+          <div className="max-w-md mx-auto space-y-1.5">
+            <h2 className="font-heading text-xl uppercase tracking-wider text-foreground">
+              No Redemptions Yet
+            </h2>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              No discounts redeemed yet. Show your card QR code at partner spots around campus to start saving!
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-3 pt-2">
-            <ButtonLink href="/card" variant="primary">
-              <CreditCard className="h-4 w-4 mr-2" />
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
+            <ButtonLink
+              href="/deals"
+              variant="primary"
+              className="w-full sm:w-auto min-h-[44px] font-bold text-sm"
+            >
+              <Tag className="size-4 mr-2" />
+              Browse Student Deals
+            </ButtonLink>
+            <ButtonLink
+              href="/card"
+              variant="outline"
+              className="w-full sm:w-auto min-h-[44px] font-semibold text-sm border-slate-300 dark:border-zinc-700"
+            >
+              <CreditCard className="size-4 mr-2" />
               View My Card
             </ButtonLink>
           </div>
@@ -231,7 +246,7 @@ export function HistoryView() {
             <section key={group.dayLabel} className="space-y-3">
               {/* Day Header */}
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                <h2 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">
                   {group.dayLabel}
                 </h2>
                 <span className="text-xs text-muted-foreground font-medium">
@@ -245,38 +260,35 @@ export function HistoryView() {
                 {group.items.map((item) => (
                   <Card
                     key={item.id}
-                    className="p-4 transition-colors hover:bg-slate-50/75 dark:hover:bg-zinc-900/60 border border-border"
+                    className="p-4 transition-colors hover:bg-slate-50/75 dark:hover:bg-zinc-900/60 border border-border rounded-2xl"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       {/* Left: Vendor & Offer details */}
                       <div className="flex items-start gap-3.5">
-                        <div className="h-10 w-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 border border-border shrink-0 mt-0.5">
-                          <Store className="h-5 w-5" />
+                        <div className="size-10 rounded-xl bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-700 dark:text-zinc-300 border border-border shrink-0 mt-0.5">
+                          <Store className="size-5 text-brand dark:text-brand-soft" />
                         </div>
                         <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                            <span className="font-semibold text-foreground text-sm truncate max-w-[220px] sm:max-w-xs md:max-w-md" title={item.vendorName}>
+                          <div className="flex items-center gap-2">
+                            <span
+                              className="font-bold text-foreground text-sm truncate max-w-[220px] sm:max-w-xs md:max-w-md"
+                              title={item.vendorName}
+                            >
                               {item.vendorName}
                             </span>
-                            <Badge
-                              variant="secondary"
-                              className="text-[11px] font-normal py-0 px-1.5 h-5 flex items-center gap-1 w-fit shrink-0"
-                            >
-                              <MapPin className="h-2.5 w-2.5 shrink-0" />
-                              <span className="truncate max-w-[150px]">{item.branchName}</span>
-                            </Badge>
                           </div>
 
                           {item.offerTitle ? (
                             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                              <Tag className="h-3 w-3 text-brand shrink-0" />
-                              <span className="text-foreground/80 font-medium">
+                              <Tag className="size-3 text-brand dark:text-brand-soft shrink-0" />
+                              <span className="text-foreground/90 font-medium">
                                 {item.offerTitle}
                               </span>
                             </p>
                           ) : (
-                            <p className="text-xs text-muted-foreground italic">
-                              Standard membership discount
+                            <p className="text-xs text-muted-foreground italic flex items-center gap-1">
+                              <Sparkles className="size-3 text-ash dark:text-zinc-400 shrink-0" />
+                              <span>Standard student discount</span>
                             </p>
                           )}
                         </div>
@@ -285,15 +297,18 @@ export function HistoryView() {
                       {/* Right: Bill amount, time, and confirmed badge */}
                       <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center border-t sm:border-t-0 pt-2 sm:pt-0 border-border/40 gap-1 shrink-0">
                         {item.billAmount && (
-                          <span className="font-semibold text-foreground text-sm">
+                          <span className="font-bold text-foreground text-sm font-mono">
                             {formatCurrency(item.billAmount)}
                           </span>
                         )}
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Clock className="h-3 w-3" />
+                          <Clock className="size-3 text-ash dark:text-zinc-400" />
                           <span>{formatCairoTimeOnly(item.confirmedAt)}</span>
-                          <span className="inline-flex items-center text-emerald-600 dark:text-emerald-400 ml-1">
-                            <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span
+                            className="inline-flex items-center text-emerald-600 dark:text-emerald-400 ml-1"
+                            title="Confirmed redemption"
+                          >
+                            <CheckCircle2 className="size-3.5" />
                           </span>
                         </div>
                       </div>
@@ -311,17 +326,17 @@ export function HistoryView() {
                 variant="outline"
                 onClick={() => fetchHistory(nextCursor)}
                 disabled={loadingMore}
-                className="w-full sm:w-auto min-w-[160px]"
+                className="w-full sm:w-auto min-w-[160px] min-h-[44px] font-semibold"
               >
                 {loadingMore ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="size-4 mr-2 animate-spin motion-reduce:animate-none" />
                     Loading more…
                   </>
                 ) : (
                   <>
                     Load older redemptions
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                    <ArrowRight className="size-4 ml-2" />
                   </>
                 )}
               </Button>

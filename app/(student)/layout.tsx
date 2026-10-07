@@ -75,7 +75,7 @@ export default async function StudentLayout({
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 w-full max-w-4xl mx-auto p-4 sm:p-6 pb-24 sm:pb-8 flex flex-col justify-start">
+      <main className="flex-1 w-full min-w-0 max-w-4xl mx-auto p-4 sm:p-6 pb-24 sm:pb-8 flex flex-col justify-start">
         {children}
       </main>
 

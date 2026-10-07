@@ -324,13 +324,13 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           </p>
         </div>
 
-        {/* Card Bottom: Student Identity */}
+        {/* Card Bottom: Student Identity — Two-line name readability without truncation */}
         <div className="relative z-10 pt-4 mt-3 border-t border-white/15 flex items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h2 className="font-heading text-xl sm:text-2xl uppercase tracking-wider text-white truncate leading-tight">
+            <h2 className="font-heading text-lg sm:text-xl uppercase tracking-wide text-white leading-tight break-words line-clamp-2">
               {home.name}
             </h2>
-            <p className="text-xs sm:text-sm font-mono font-bold text-sky-200 tracking-wider mt-0.5">
+            <p className="text-xs sm:text-sm font-mono font-bold text-sky-200 tracking-wider mt-1">
               ID {home.profile.universityId}
             </p>
           </div>
@@ -351,9 +351,26 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
 
         {/* Google Wallet / Apple Wallet CTA */}
         {isIos ? (
-          /* Apple Wallet Coming Soon Info Notice */
-          <div className="p-3.5 rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-center text-xs font-semibold text-muted-foreground shadow-2xs">
-            <p>Apple Wallet is coming soon — use this card or your physical card.</p>
+          /* Apple Wallet Coming Soon Info Notice with direct Show Web Card action */
+          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-center space-y-2.5 shadow-2xs">
+            <p className="text-xs font-semibold text-muted-foreground leading-relaxed">
+              Apple Wallet is in development. Your active SU Card above is ready for scanning at all partner spots.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.scrollTo({
+                  top: 0,
+                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+                });
+              }}
+              className="text-xs font-bold min-h-[44px] normal-case border-slate-300 dark:border-zinc-700"
+            >
+              <CreditCard className="size-4 mr-1.5" />
+              Show web card
+            </Button>
           </div>
         ) : (
           /* Google Wallet Official Button Guideline Pill */
@@ -362,11 +379,11 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             onClick={handleAddToGoogleWallet}
             disabled={walletLoading}
             aria-label="Add to Google Wallet"
-            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-all active:scale-[0.99]"
+            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-all active:scale-[0.99] motion-reduce:active:scale-100 motion-reduce:transition-none"
           >
             {walletLoading ? (
               <>
-                <Loader2 className="size-4 animate-spin text-white" />
+                <Loader2 className="size-4 animate-spin text-white motion-reduce:animate-none" />
                 <span>Connecting to Google Wallet…</span>
               </>
             ) : (
@@ -380,7 +397,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
 
         <WalletQrModal saveUrl={walletQrUrl} onClose={() => setWalletQrUrl(null)} />
 
-        {/* Card Metadata Details: No Internal Serial (Admin-only M14-1) */}
+        {/* Card Metadata Details */}
         <div className="flex items-center justify-between px-3 py-2 text-xs text-ash dark:text-zinc-400 font-medium border-t border-slate-200/80 dark:border-zinc-800/80">
           <div className="flex items-center gap-1.5">
             <CreditCard className="size-3.5 text-ash dark:text-zinc-400 shrink-0" />
@@ -403,7 +420,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
               variant="outline"
               size="sm"
               onClick={() => setIsScannerOpen(true)}
-              className="text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 min-h-[40px] normal-case"
+              className="text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 min-h-[44px] normal-case"
             >
               <QrCode className="size-3.5 mr-1.5" />
               Upgrade to physical card

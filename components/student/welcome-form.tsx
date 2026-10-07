@@ -78,7 +78,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
   };
 
   return (
-    <div className="w-full my-auto py-4">
+    <div className="w-full my-auto py-4 max-w-lg mx-auto">
       <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden">
         <CardHeader className="p-6 sm:p-8 pb-4 space-y-2 text-center sm:text-left border-b border-slate-100 dark:border-zinc-800/80">
           <div className="w-12 h-12 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto sm:mx-0 shadow-xs">
@@ -89,7 +89,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
               WELCOME TO SU CARD
             </h1>
             <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-              One identity for Nile University student discounts, events, and campus access.
+              Set up your membership card for Nile University student discounts and partner offers.
             </p>
           </div>
         </CardHeader>
@@ -144,7 +144,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
             </div>
 
             {/* Privacy Acceptance Checkbox */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700">
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 min-h-[44px] flex items-center">
               <Checkbox
                 id="acceptPrivacy"
                 disabled={isLoading}
@@ -166,12 +166,13 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
               />
             </div>
 
+            {/* Identity & Next Step Explanation */}
             <Alert
               variant="info"
               size="sm"
               icon={<AlertCircle className="size-4 text-sky-600 dark:text-sky-400" />}
               title="Identity on card"
-              description="Your name and ID will appear on your card and can't be changed later."
+              description="Your name and student ID will appear on your card and cannot be changed later. After setup, you can access your digital card or link a physical card from the SU office."
             />
 
             {/* Submit Action */}
@@ -183,7 +184,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
                 disabled={isLoading}
                 className="w-full text-sm font-bold min-h-[48px] normal-case"
               >
-                {isLoading ? "Creating your card…" : "Create my SU Card"}
+                {isLoading ? "Setting up your account…" : "Continue"}
               </Button>
             </div>
           </form>

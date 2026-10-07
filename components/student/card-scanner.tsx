@@ -347,8 +347,8 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
         {isSuccess ? (
           /* Celebration View */
-          <div className="p-8 flex flex-col items-center justify-center text-center space-y-5 min-h-[360px] animate-in fade-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg animate-bounce">
+          <div className="p-8 flex flex-col items-center justify-center text-center space-y-5 min-h-[360px] animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none">
+            <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg animate-bounce motion-reduce:animate-none">
               <Sparkles className="size-10 text-emerald-400" />
             </div>
             <div className="space-y-1.5">
@@ -402,7 +402,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <Button
                 variant="ghost"
                 onClick={onClose}
-                className="w-full normal-case font-semibold text-zinc-400 hover:text-white"
+                className="w-full normal-case font-semibold text-zinc-400 hover:text-white min-h-[44px]"
               >
                 Cancel
               </Button>
@@ -431,7 +431,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <div className="absolute bottom-0 right-0 w-7 h-7 border-b-4 border-r-4 border-[#018BCE] rounded-br-xl -mb-1 -mr-1" />
 
               {/* Scanning Laser Beam Animation */}
-              <div className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#018BCE] to-transparent shadow-[0_0_12px_#018BCE] animate-pulse" />
+              <div className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#018BCE] to-transparent shadow-[0_0_12px_#018BCE] animate-pulse motion-reduce:animate-none" />
             </div>
 
             {/* Top Toolbar: Torch & Close */}

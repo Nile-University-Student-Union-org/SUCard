@@ -13,7 +13,7 @@ import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { ButtonLink } from "@/components/ui/button";
 import { PasswordStrengthMeter } from "@/components/ui/password-strength-meter";
 import { AuthLayout } from "@/components/ui/auth-layout";
 
@@ -145,24 +145,22 @@ function ResetPasswordContent() {
             </div>
 
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href="/forgot-password" className="w-full sm:w-auto">
-                <Button
-                  variant="primary"
-                  size="md"
-                  className="w-full sm:w-auto text-sm font-bold min-h-[44px] normal-case px-6"
-                >
-                  Request new link
-                </Button>
-              </Link>
-              <Link href="/login" className="w-full sm:w-auto">
-                <Button
-                  variant="outline"
-                  size="md"
-                  className="w-full sm:w-auto text-sm font-bold min-h-[44px] normal-case px-6"
-                >
-                  Back to sign in
-                </Button>
-              </Link>
+              <ButtonLink
+                href="/forgot-password"
+                variant="primary"
+                size="md"
+                className="w-full sm:w-auto text-sm font-bold min-h-[44px] normal-case px-6"
+              >
+                Request new link
+              </ButtonLink>
+              <ButtonLink
+                href="/login"
+                variant="outline"
+                size="md"
+                className="w-full sm:w-auto text-sm font-bold min-h-[44px] normal-case px-6"
+              >
+                Back to sign in
+              </ButtonLink>
             </div>
           </div>
         ) : isSuccess ? (
@@ -182,15 +180,14 @@ function ResetPasswordContent() {
             </div>
 
             <div className="pt-2">
-              <Link href="/login" className="block w-full">
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="w-full text-sm font-bold min-h-[48px] normal-case"
-                >
-                  Sign in with new password
-                </Button>
-              </Link>
+              <ButtonLink
+                href="/login"
+                variant="primary"
+                size="lg"
+                className="w-full text-sm font-bold min-h-[48px] normal-case"
+              >
+                Sign in with new password
+              </ButtonLink>
             </div>
           </div>
         ) : (
@@ -278,9 +275,41 @@ function ResetPasswordContent() {
   );
 }
 
+function ResetPasswordSkeleton() {
+  return (
+    <AuthLayout backHref="/login" backLabel="Back to sign in" maxWidth="md">
+      <Card
+        className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl sm:rounded-3xl overflow-hidden p-6 sm:p-8 space-y-6"
+        role="status"
+        aria-label="Loading reset password"
+      >
+        <div className="space-y-2 text-center sm:text-left">
+          <div className="size-11 rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none mx-auto sm:mx-0 shadow-xs mb-1" />
+          <div className="h-8 w-52 rounded-lg bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+          <div className="h-4 w-72 max-w-full rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+        </div>
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-24 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+          </div>
+          <div className="space-y-1.5">
+            <div className="h-3.5 w-36 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+          </div>
+          <div className="h-12 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none pt-2" />
+        </div>
+        <div className="pt-2 flex justify-center">
+          <div className="h-4 w-28 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+        </div>
+      </Card>
+    </AuthLayout>
+  );
+}
+
 export default function ResetPasswordPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ResetPasswordSkeleton />}>
       <ResetPasswordContent />
     </Suspense>
   );

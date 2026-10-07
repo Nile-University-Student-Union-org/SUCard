@@ -310,13 +310,13 @@ function LoginContent() {
               <span>Nile University Student Union</span>
             </p>
             <h1 className="font-heading text-2xl xl:text-3xl uppercase tracking-wider text-white font-normal leading-tight">
-              Your student card,{" "}
+              Your student card &amp;{" "}
               <span className="bg-gradient-to-r from-brand-soft to-macaw-blue bg-clip-text text-transparent">
-                one tap away
+                member discounts
               </span>
             </h1>
             <p className="text-xs xl:text-sm text-sky-100/85 leading-relaxed font-normal">
-              Digital &amp; physical membership for campus access and student savings.
+              Digital &amp; physical membership for campus discounts and student union benefits.
             </p>
           </div>
         </div>
@@ -466,10 +466,10 @@ function LoginContent() {
                       {...register("password")}
                     />
 
-                    <div className="flex justify-end pt-1">
+                    <div className="flex justify-end">
                       <Link
                         href="/forgot-password"
-                        className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[32px] inline-flex items-center"
+                        className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] inline-flex items-center px-1"
                       >
                         Forgot password?
                       </Link>
@@ -626,9 +626,78 @@ function LoginContent() {
   );
 }
 
+function LoginSkeleton() {
+  return (
+    <div
+      className="min-h-screen bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white"
+      role="status"
+      aria-label="Loading sign in"
+    >
+      {/* 1. Left Brand Panel Skeleton */}
+      <div className="hidden lg:flex lg:col-span-5 relative bg-gradient-to-b from-[#0F3056] via-[#0D2849] to-[#0A1E38] text-white flex-col justify-between p-8 xl:p-10 overflow-hidden border-r border-[#0A2240] shadow-2xl">
+        <div className="relative z-10 flex items-center">
+          <div className="h-9 w-40 rounded-lg bg-white/10 animate-pulse motion-reduce:animate-none" />
+        </div>
+        <div className="relative z-10 flex flex-col items-center my-auto w-full max-w-sm mx-auto space-y-6">
+          <div className="w-[280px] aspect-[1.37/1] rounded-2xl bg-white/10 animate-pulse motion-reduce:animate-none -rotate-6" />
+          <div className="w-full space-y-2">
+            <div className="h-3.5 w-44 rounded bg-white/10 animate-pulse motion-reduce:animate-none" />
+            <div className="h-8 w-60 rounded bg-white/10 animate-pulse motion-reduce:animate-none" />
+            <div className="h-4 w-full rounded bg-white/10 animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
+        <div className="relative z-10 pt-4 border-t border-white/10 flex items-center justify-between">
+          <div className="h-3 w-36 rounded bg-white/10 animate-pulse motion-reduce:animate-none" />
+          <div className="h-3 w-10 rounded bg-white/10 animate-pulse motion-reduce:animate-none" />
+        </div>
+      </div>
+
+      {/* 2. Right Form Panel Skeleton */}
+      <div className="flex-1 lg:col-span-7 flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative z-10">
+        <AmbientBackdrop />
+        <div className="w-full max-w-md mx-auto flex items-center justify-between mb-6">
+          <div className="h-5 w-16 rounded-md bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+          <div className="size-10 rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+        </div>
+
+        <main className="w-full max-w-md mx-auto my-auto">
+          <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl overflow-hidden p-6 sm:p-8 space-y-6">
+            <div className="lg:hidden flex justify-center mb-2">
+              <div className="h-10 w-44 rounded-lg bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            </div>
+            <div className="space-y-2">
+              <div className="h-8 w-32 rounded-lg bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            </div>
+            <div className="h-12 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            <div className="h-px w-full bg-slate-200 dark:bg-zinc-800 my-2" />
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-24 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+                <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="h-3.5 w-20 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+                <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+                <div className="flex justify-end">
+                  <div className="h-3.5 w-28 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+                </div>
+              </div>
+              <div className="h-12 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none pt-1" />
+            </div>
+          </Card>
+        </main>
+
+        <footer className="w-full max-w-md mx-auto mt-6 text-center">
+          <div className="h-3 w-48 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none mx-auto" />
+        </footer>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<LoginSkeleton />}>
       <LoginContent />
     </Suspense>
   );
