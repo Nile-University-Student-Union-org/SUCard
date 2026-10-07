@@ -58,8 +58,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Students",
+        href: "/admin/students",
         icon: GraduationCap,
-        soon: true,
       },
       {
         title: "Vendors",
@@ -104,8 +104,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Settings",
+        href: "/admin/settings",
         icon: Settings,
-        soon: true,
       },
     ],
   },

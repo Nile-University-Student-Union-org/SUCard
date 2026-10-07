@@ -73,3 +73,55 @@ export function getBatchExportUrl(batchId: string, options: ExportOptions): stri
 
   return `/api/admin/batches/${encodeURIComponent(batchId)}/export?${params.toString()}`;
 }
+
+/**
+ * Void unassigned cards in a batch.
+ */
+export async function voidBatch(batchId: string, reason: string): Promise<{ count: number }> {
+  const res = await fetch(`/api/admin/batches/${encodeURIComponent(batchId)}/void`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({ reason }),
+  });
+  return handleResponse<{ count: number }>(res);
+}
+
+/**
+ * Look up a card by serial number or QR code.
+ */
+export async function lookupCard(query: {
+  serial?: string;
+  qr?: string;
+}): Promise<{
+  card: {
+    id: string;
+    type: "digital" | "physical";
+    serial: string;
+    status: "unassigned" | "active" | "void";
+    qr: string;
+    linkedAt: string | null;
+    batchLabel: string | null;
+    student: {
+      userId: string;
+      name: string;
+      email: string;
+      universityId: string;
+    } | null;
+  };
+}> {
+  const params = new URLSearchParams();
+  if (query.serial) params.set("serial", query.serial);
+  if (query.qr) params.set("qr", query.qr);
+
+  const res = await fetch(`/api/admin/cards/lookup?${params.toString()}`, {
+    method: "GET",
+    headers: {
+      Accept: "application/json",
+    },
+    cache: "no-store",
+  });
+  return handleResponse(res);
+}

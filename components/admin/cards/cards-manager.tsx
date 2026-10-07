@@ -7,6 +7,7 @@ import { KpiSummary } from "./kpi-summary";
 import { GenerateBatchPanel } from "./generate-batch-panel";
 import { BatchesTable } from "./batches-table";
 import { DownloadDialog } from "./download-dialog";
+import { CardLookupPanel } from "./card-lookup-panel";
 
 export function CardsManager() {
   const [batches, setBatches] = useState<Batch[]>([]);
@@ -75,6 +76,11 @@ export function CardsManager() {
       {/* KPI Overview Tiles */}
       <section aria-label="Membership Statistics">
         <KpiSummary batches={batches} isLoading={isLoading} />
+      </section>
+
+      {/* Card Lookup Section */}
+      <section aria-label="Card Lookup">
+        <CardLookupPanel />
       </section>
 
       {/* Batch Generation Section */}

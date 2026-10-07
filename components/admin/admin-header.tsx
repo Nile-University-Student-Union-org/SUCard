@@ -3,15 +3,17 @@
 import React, { useState } from "react";
 import { Menu } from "lucide-react";
 import { type StaffUser } from "@/lib/auth/guards";
+import type { Area } from "@/lib/student/types";
 import { UserNavDropdown } from "@/components/ui/user-nav-dropdown";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AdminSidebar } from "./admin-sidebar";
 
 interface AdminHeaderProps {
   user: StaffUser;
+  areas?: Area[];
 }
 
-export function AdminHeader({ user }: AdminHeaderProps) {
+export function AdminHeader({ user, areas }: AdminHeaderProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   return (
@@ -38,7 +40,7 @@ export function AdminHeader({ user }: AdminHeaderProps) {
         {/* Right: Theme Toggle & User Navigation Dropdown */}
         <div className="flex items-center gap-2 sm:gap-3">
           <ThemeToggle />
-          <UserNavDropdown user={user} />
+          <UserNavDropdown user={user} areas={areas} currentArea="admin" />
         </div>
       </header>
 
