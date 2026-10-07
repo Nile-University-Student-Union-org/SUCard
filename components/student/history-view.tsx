@@ -8,7 +8,6 @@ import {
   Clock,
   RotateCcw,
   CreditCard,
-  Sparkles,
   ArrowRight,
   CheckCircle2,
   Receipt,
@@ -223,10 +222,6 @@ export function HistoryView() {
             <ButtonLink href="/card" variant="primary">
               <CreditCard className="h-4 w-4 mr-2" />
               View My Card
-            </ButtonLink>
-            <ButtonLink href="/deals" variant="outline">
-              <Sparkles className="h-4 w-4 mr-2 text-brand" />
-              Explore Deals
             </ButtonLink>
           </div>
         </Card>
