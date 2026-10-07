@@ -9,7 +9,7 @@ const nextConfig: NextConfig = {
     const policy = ["default-src 'self'", "base-uri 'self'", "object-src 'none'", "frame-ancestors 'none'",
       "form-action 'self'", `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`, "worker-src 'self' blob:", "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com data:", "img-src 'self' data: blob:", "connect-src 'self' https://login.microsoftonline.com",
-      "frame-src 'self'", "navigate-to 'self' https://pay.google.com https://login.microsoftonline.com"].join("; ");
+      "frame-src 'self'"].join("; ");
     const headers = [
       { key: "X-Content-Type-Options", value: "nosniff" }, { key: "X-Frame-Options", value: "DENY" },
       { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
