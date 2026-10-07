@@ -38,8 +38,8 @@ const navGroups: NavGroup[] = [
     items: [
       {
         title: "Dashboard",
+        href: "/admin",
         icon: LayoutDashboard,
-        soon: true,
       },
     ],
   },
