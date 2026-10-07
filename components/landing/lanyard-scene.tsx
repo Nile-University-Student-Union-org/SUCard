@@ -111,6 +111,37 @@ function ribbonGeometry() {
   return geo;
 }
 
+function strapMaterial(map: THREE.Texture, side: THREE.Side) {
+  return new THREE.MeshPhysicalMaterial({
+    map,
+    side,
+    roughness: 0.78,
+    metalness: 0,
+    sheen: 0.25,
+    sheenRoughness: 0.5,
+    sheenColor: new THREE.Color("#3A6EA5"),
+  });
+}
+
+/** Same image (shared, repainted together), flipped across the strap's width. */
+function mirroredAcross(tex: THREE.Texture) {
+  const t = tex.clone();
+  t.repeat.set(1, -1);
+  t.offset.set(0, 1);
+  return t;
+}
+
+/** Pointer capture keeps the drag alive outside the card; it throws if the pointer is already gone (very fast taps). */
+function capture(e: ThreeEvent<PointerEvent>, on: boolean) {
+  const el = e.target as Element;
+  try {
+    if (on) el.setPointerCapture?.(e.pointerId);
+    else el.releasePointerCapture?.(e.pointerId);
+  } catch {
+    // Nothing to capture or release; the window listeners still end the drag.
+  }
+}
+
 function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }) {
   const { gl } = useThree();
   const invalidate = useThree((s) => s.invalidate);
@@ -183,18 +214,31 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       edge: new THREE.MeshPhysicalMaterial({ color: "#0A2240", roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.2 }),
       metal: new THREE.MeshStandardMaterial({ color: "#DCE4EC", metalness: 1, roughness: 0.16 }),
       crimp: new THREE.MeshPhysicalMaterial({ color: "#B9C4CF", metalness: 1, roughness: 0.28, clearcoat: 0.5, clearcoatRoughness: 0.25 }),
-      strap: new THREE.MeshPhysicalMaterial({
-        map: textures.strap,
-        side: THREE.DoubleSide,
-        roughness: 0.78,
-        metalness: 0,
-        sheen: 0.25,
-        sheenRoughness: 0.5,
-        sheenColor: new THREE.Color("#3A6EA5"),
-      }),
+      strap: strapMaterial(textures.strap, THREE.FrontSide),
+      // Printed on both sides: seen from behind, the print is mirrored across the width so it still reads right.
+      strapBack: strapMaterial(mirroredAcross(textures.strap), THREE.BackSide),
     };
   }, [textures]);
-  useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
+  // The mirrored strap print shares the painted image but is its own texture, so re-upload it once painting is done.
+  useEffect(() => {
+    let live = true;
+    void textures.ready.then(() => {
+      const map = materials.strapBack.map;
+      if (!live || !map) return;
+      map.needsUpdate = true;
+      invalidate();
+    });
+    return () => {
+      live = false;
+    };
+  }, [textures, materials, invalidate]);
+  useEffect(
+    () => () => {
+      materials.strapBack.map?.dispose();
+      Object.values(materials).forEach((m) => m.dispose());
+    },
+    [materials],
+  );
 
   const ribbonGeo = useMemo(() => ribbonGeometry(), []);
   useEffect(() => () => ribbonGeo.dispose(), [ribbonGeo]);
@@ -349,7 +393,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   const grab = (e: ThreeEvent<PointerEvent>) => {
     if (!cardMesh.current) return;
     e.stopPropagation();
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+    capture(e, true);
     const local = cardMesh.current.worldToLocal(e.point.clone());
     clock.current.dragZ = e.point.z;
     press.current = { t: performance.now(), x: e.nativeEvent.clientX, y: e.nativeEvent.clientY };
@@ -366,7 +410,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
         onPointerUp={(e) => {
-          (e.target as Element).releasePointerCapture?.(e.pointerId);
+          capture(e, false);
           release(e.nativeEvent);
         }}
         onPointerDown={grab}
@@ -401,6 +445,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
         />
       </group>
       <mesh ref={ribbon} geometry={ribbonGeo} material={materials.strap} frustumCulled={false} />
+      <mesh geometry={ribbonGeo} material={materials.strapBack} frustumCulled={false} />
     </>
   );
 }
@@ -412,7 +457,7 @@ function CameraRig() {
   useEffect(() => {
     const camera = get().camera;
     const aspect = width / Math.max(1, height);
-    camera.position.z = THREE.MathUtils.clamp(11.6 / aspect, 9.5, 14);
+    camera.position.z = THREE.MathUtils.clamp(11.6 / aspect, 9.5, 12.8);
     camera.updateProjectionMatrix();
   }, [get, width, height]);
   return null;
