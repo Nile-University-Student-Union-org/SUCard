@@ -175,7 +175,15 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
             {firstName}
           </span>
           <span className="text-[10px] font-semibold text-muted-foreground truncate">
-            {isSuperAdmin ? "Super admin" : user.role === "admin" ? "Admin" : "Student"}
+            {isSuperAdmin
+              ? "Super admin"
+              : user.role === "admin"
+              ? "Admin"
+              : user.role === "cashier"
+              ? "Cashier"
+              : user.role === "vendor_manager"
+              ? "Vendor manager"
+              : "Student"}
           </span>
         </div>
 
@@ -219,11 +227,25 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                         ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-soft border-brand/30"
                         : user.role === "admin"
                         ? "bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border-sky-500/30"
+                        : user.role === "cashier"
+                        ? "bg-amber-500/10 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300 border-amber-500/30"
+                        : user.role === "vendor_manager"
+                        ? "bg-indigo-500/10 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300 border-indigo-500/30"
                         : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-500/30"
                     )}
                   >
                     {isAdmin ? <ShieldCheck className="w-3 h-3" /> : <CreditCard className="w-3 h-3" />}
-                    <span>{isSuperAdmin ? "Super Admin" : user.role === "admin" ? "Admin" : "Student"}</span>
+                    <span>
+                      {isSuperAdmin
+                        ? "Super Admin"
+                        : user.role === "admin"
+                        ? "Admin"
+                        : user.role === "cashier"
+                        ? "Cashier"
+                        : user.role === "vendor_manager"
+                        ? "Vendor Manager"
+                        : "Student"}
+                    </span>
                   </span>
                 </div>
               </div>
