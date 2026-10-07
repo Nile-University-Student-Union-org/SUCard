@@ -75,12 +75,6 @@ export default function HomePage() {
         <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 pb-12 sm:pt-8 sm:pb-16 lg:py-16 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           {/* Left Column: Hero Copy & Actions */}
           <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left">
-            {/* Official Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 dark:bg-brand-soft/15 border-2 border-brand/20 dark:border-brand-soft/30 text-brand dark:text-brand-soft text-xs font-bold tracking-wider uppercase mb-6 shadow-xs">
-              <Sparkles className="size-3.5" />
-              <span>Official NUSU Membership</span>
-            </div>
-
             {/* Hero Heading in Anton Display */}
             <h1 className="font-heading text-6xl sm:text-7xl md:text-8xl lg:text-9xl tracking-wider uppercase text-charcoal dark:text-white font-normal drop-shadow-xs mb-4 leading-[0.9]">
               SU CARD
@@ -88,7 +82,7 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <p className="text-lg sm:text-xl lg:text-2xl text-ash dark:text-zinc-300 font-normal max-w-xl mb-8 leading-relaxed">
-              Your Nile University Student Union card. Show it, save at partners, and unlock campus privileges.
+              Your Nile University Student Union card. Show it at partners and save.
             </p>
 
             {/* Primary & Secondary CTAs */}
@@ -121,10 +115,6 @@ export default function HomePage() {
               <div className="flex items-center gap-1.5">
                 <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
                 <span>Google Wallet ready</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="size-4 text-emerald-500 shrink-0" />
-                <span>Zero card fees</span>
               </div>
             </div>
           </div>

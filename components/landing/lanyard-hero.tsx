@@ -89,7 +89,7 @@ export function LanyardHero() {
           <Canvas
             dpr={[1, 2]}
             frameloop={isFrameloopActive ? "always" : "never"}
-            camera={{ position: [0, 0, 6.2], fov: 40 }}
+            camera={{ position: [0, 0.25, 4.6], fov: 42 }}
             gl={{
               alpha: true,
               antialias: true,
