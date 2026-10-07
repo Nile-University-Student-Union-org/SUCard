@@ -1,12 +1,15 @@
-"use client";
-
-import { Download, Inbox, RotateCcw, AlertTriangle, Calendar, User } from "lucide-react";
+import React, { useState } from "react";
+import { Download, Inbox, RotateCcw, AlertTriangle, Calendar, User, Ban, Loader2 } from "lucide-react";
 import type { Batch } from "@/lib/cards/types";
 import { formatNumber, formatBatchNumber, formatCairoDate } from "./utils";
+import { voidBatch } from "./api";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
+import { Input } from "@/components/ui/input";
+import { Alert } from "@/components/ui/alert";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import {
   Table,
   TableBody,
@@ -35,6 +38,34 @@ export function BatchesTable({
   onRetry,
   onDownloadClick,
 }: BatchesTableProps) {
+  const [voidingBatch, setVoidingBatch] = useState<Batch | null>(null);
+  const [voidReason, setVoidReason] = useState("");
+  const [isVoiding, setIsVoiding] = useState(false);
+  const [voidError, setVoidError] = useState<string | null>(null);
+
+  const handleVoidUnassigned = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!voidingBatch) return;
+
+    setIsVoiding(true);
+    setVoidError(null);
+
+    try {
+      await voidBatch(
+        voidingBatch.id,
+        voidReason.trim() || "Batch unassigned cards voided"
+      );
+
+      setVoidingBatch(null);
+      setVoidReason("");
+      onRetry();
+    } catch (err: unknown) {
+      const errorObj = err as { message?: string };
+      setVoidError(errorObj.message || "Failed to void unassigned cards");
+    } finally {
+      setIsVoiding(false);
+    }
+  };
   return (
     <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
       <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-zinc-800">
@@ -198,15 +229,33 @@ export function BatchesTable({
 
                         {/* Actions */}
                         <TableCell className="text-right py-3.5 pr-4 whitespace-nowrap">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onDownloadClick(batch)}
-                            className="h-8 px-2.5 text-xs font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 hover:border-brand/40"
-                          >
-                            <Download className="size-3.5 mr-1 text-brand dark:text-brand-soft" />
-                            Download ZIP
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {stats.unassigned > 0 && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setVoidingBatch(batch);
+                                  setVoidReason("");
+                                  setVoidError(null);
+                                }}
+                                className="h-8 px-2.5 text-xs font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10"
+                              >
+                                <Ban className="size-3.5 mr-1" />
+                                Void unassigned
+                              </Button>
+                            )}
+
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => onDownloadClick(batch)}
+                              className="h-8 px-2.5 text-xs font-bold normal-case text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 hover:border-brand/40"
+                            >
+                              <Download className="size-3.5 mr-1 text-brand dark:text-brand-soft" />
+                              Download ZIP
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -263,17 +312,34 @@ export function BatchesTable({
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-zinc-800 text-[11px] text-ash dark:text-zinc-400">
+                    <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800 text-[11px] text-ash dark:text-zinc-400">
                       <span>{formatCairoDate(batch.createdAt)}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDownloadClick(batch)}
-                        className="min-h-[44px] px-3 text-xs font-bold normal-case text-brand dark:text-brand-soft"
-                      >
-                        <Download className="size-3.5 mr-1" />
-                        Download ZIP
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        {stats.unassigned > 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setVoidingBatch(batch);
+                              setVoidReason("");
+                              setVoidError(null);
+                            }}
+                            className="min-h-[44px] px-3 text-xs font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50"
+                          >
+                            <Ban className="size-3.5 mr-1" />
+                            Void
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDownloadClick(batch)}
+                          className="min-h-[44px] px-3 text-xs font-bold normal-case text-brand dark:text-brand-soft"
+                        >
+                          <Download className="size-3.5 mr-1" />
+                          Download ZIP
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -282,6 +348,76 @@ export function BatchesTable({
           </>
         )}
       </CardContent>
+
+      {/* Void Unassigned Cards Modal */}
+      <Modal
+        isOpen={voidingBatch !== null}
+        onClose={() => {
+          if (!isVoiding) setVoidingBatch(null);
+        }}
+        title="Void Unassigned Cards"
+        icon={<Ban className="size-5 text-rose-600" />}
+        maxWidth="md"
+      >
+        <form onSubmit={handleVoidUnassigned}>
+          <ModalBody className="space-y-4">
+            {voidingBatch && (
+              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1">
+                <p className="font-bold text-rose-700 dark:text-rose-300">
+                  Batch: {formatBatchNumber(voidingBatch.number)} — {voidingBatch.label}
+                </p>
+                <p className="text-muted-foreground">
+                  Unassigned cards to void:{" "}
+                  <strong>
+                    {formatNumber(voidingBatch.stats?.unassigned ?? voidingBatch.count)}
+                  </strong>
+                </p>
+              </div>
+            )}
+
+            {voidError && (
+              <Alert variant="destructive" size="sm" description={voidError} />
+            )}
+
+            <Input
+              id="batchVoidReason"
+              label="Void Reason"
+              placeholder="e.g. Batch reprint, cards discarded or misprinted"
+              value={voidReason}
+              onChange={(e) => setVoidReason(e.target.value)}
+              helperText="Recorded in the permanent audit trail"
+              required
+              autoFocus
+            />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={isVoiding}
+              onClick={() => setVoidingBatch(null)}
+              className="normal-case font-semibold"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={isVoiding}
+              className="normal-case font-bold"
+            >
+              {isVoiding ? (
+                <>
+                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  Voiding…
+                </>
+              ) : (
+                "Confirm & Void Cards"
+              )}
+            </Button>
+          </ModalFooter>
+        </form>
+      </Modal>
     </Card>
   );
 }

@@ -25,7 +25,7 @@ export interface MicrosoftSignInButtonProps {
 
 export function MicrosoftSignInButton({
   onSignInError,
-  callbackURL = "/admin/cards",
+  callbackURL = "/go",
   disabled = false,
   className,
 }: MicrosoftSignInButtonProps) {
@@ -42,14 +42,10 @@ export function MicrosoftSignInButton({
       });
 
       if (res && "error" in res && res.error) {
-        onSignInError?.(
-          "Microsoft sign-in isn't set up yet. Use your email and password for now."
-        );
+        onSignInError?.("Microsoft sign-in failed. Try again.");
       }
     } catch {
-      onSignInError?.(
-        "Microsoft sign-in isn't set up yet. Use your email and password for now."
-      );
+      onSignInError?.("Microsoft sign-in failed. Try again.");
     } finally {
       setIsLoading(false);
     }

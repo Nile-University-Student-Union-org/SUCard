@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, Info } from "lucide-react";
+import { Mail, ArrowLeft, Info, AlertTriangle } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
@@ -28,8 +28,19 @@ const loginSchema = z.object({
 
 type LoginFormValues = z.infer<typeof loginSchema>;
 
-export default function LoginPage() {
-  const router = useRouter();
+const URL_ERROR_MESSAGES: Record<string, string> = {
+  not_student:
+    "Only Nile University student accounts can sign up. Staff: sign in with email, or ask an SU admin to add you.",
+  not_allowed: "This Microsoft account can't be used for SU Card.",
+  disabled: "This account is disabled. Contact an SU super admin.",
+  no_access: "Your account doesn't have access to SU Card yet.",
+};
+
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const urlError = searchParams.get("error");
+  const [dismissedUrlError, setDismissedUrlError] = useState(false);
+
   const [authError, setAuthError] = useState<{
     variant: "error" | "lockout" | "warning";
     message: string;
@@ -88,7 +99,8 @@ export default function LoginPage() {
         return;
       }
 
-      router.push("/admin/cards");
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
+      window.location.assign("/go");
     } catch (err: unknown) {
       const errorObj = err as { status?: number; message?: string };
       if (errorObj?.status === 429) {
@@ -106,6 +118,11 @@ export default function LoginPage() {
       setIsLoading(false);
     }
   };
+
+  const activeUrlErrorMessage =
+    urlError && !dismissedUrlError
+      ? URL_ERROR_MESSAGES[urlError] || "Authentication error. Please try again."
+      : null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
@@ -217,6 +234,21 @@ export default function LoginPage() {
               </p>
             </div>
 
+            {/* URL Query Error Alert */}
+            {activeUrlErrorMessage && (
+              <div className="mb-5">
+                <Alert
+                  variant="warning"
+                  size="sm"
+                  title="Notice"
+                  description={activeUrlErrorMessage}
+                  icon={<AlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />}
+                  dismissible
+                  onDismiss={() => setDismissedUrlError(true)}
+                />
+              </div>
+            )}
+
             {/* Microsoft Info Alert */}
             {microsoftInfo && (
               <div className="mb-5">
@@ -312,5 +344,13 @@ export default function LoginPage() {
         </footer>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginContent />
+    </Suspense>
   );
 }

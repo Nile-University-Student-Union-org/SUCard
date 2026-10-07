@@ -21,10 +21,11 @@ export interface UserNavUser {
   id?: string;
   name: string;
   email: string;
-  role: "super_admin" | "admin" | string;
+  role: "super_admin" | "admin" | "student" | string;
 }
 
 export interface UserNavArea {
+  key?: "student" | "admin";
   label: string;
   href: string;
 }
@@ -32,12 +33,14 @@ export interface UserNavArea {
 interface UserNavDropdownProps {
   user: UserNavUser;
   areas?: UserNavArea[];
+  currentArea?: "student" | "admin";
   className?: string;
 }
 
 export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
   user,
   areas,
+  currentArea,
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -119,6 +122,30 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
 
   const firstName = user.name.trim().split(/\s+/)[0] || user.name;
   const isSuperAdmin = user.role === "super_admin";
+  const isAdmin = user.role === "admin" || isSuperAdmin;
+  const activeArea = currentArea || (typeof window !== "undefined" && window.location.pathname.startsWith("/admin") ? "admin" : "student");
+  const otherAreas = areas ? areas.filter((a) => (a.key ? a.key !== activeArea : true)) : [];
+
+  const handleSwitchArea = async (area: UserNavArea) => {
+    setIsOpen(false);
+    if (area.key) {
+      try {
+        const res = await fetch("/api/me/area", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ key: area.key }),
+        });
+        if (res.ok) {
+          const data = (await res.json()) as { href: string };
+          window.location.assign(data.href || area.href);
+          return;
+        }
+      } catch {
+        // Fallback to direct navigation
+      }
+    }
+    window.location.assign(area.href);
+  };
 
   return (
     <div className={cn("relative", className)}>
@@ -147,7 +174,7 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
             {firstName}
           </span>
           <span className="text-[10px] font-semibold text-muted-foreground truncate">
-            {isSuperAdmin ? "Super admin" : "Admin"}
+            {isSuperAdmin ? "Super admin" : user.role === "admin" ? "Admin" : "Student"}
           </span>
         </div>
 
@@ -189,11 +216,13 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                       "inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider border",
                       isSuperAdmin
                         ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-soft border-brand/30"
-                        : "bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border-sky-500/30"
+                        : user.role === "admin"
+                        ? "bg-sky-500/10 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300 border-sky-500/30"
+                        : "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border-emerald-500/30"
                     )}
                   >
-                    <ShieldCheck className="w-3 h-3" />
-                    <span>{isSuperAdmin ? "Super Admin" : "Admin"}</span>
+                    {isAdmin ? <ShieldCheck className="w-3 h-3" /> : <CreditCard className="w-3 h-3" />}
+                    <span>{isSuperAdmin ? "Super Admin" : user.role === "admin" ? "Admin" : "Student"}</span>
                   </span>
                 </div>
               </div>
@@ -202,43 +231,57 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
 
           {/* 2. Menu Navigation Links */}
           <div className="space-y-0.5 pt-1 border-t border-border">
-            <Link
-              href="/admin/account"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer group"
-            >
-              <User className="w-4 h-4 text-brand dark:text-brand-soft group-hover:scale-110 transition-transform duration-200" />
-              <span className="flex-1">My account</span>
-            </Link>
+            {activeArea === "admin" ? (
+              <>
+                <Link
+                  href="/admin/account"
+                  onClick={() => setIsOpen(false)}
+                  role="menuitem"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer group"
+                >
+                  <User className="w-4 h-4 text-brand dark:text-brand-soft group-hover:scale-110 transition-transform duration-200" />
+                  <span className="flex-1">My account</span>
+                </Link>
 
-            <Link
-              href="/admin/cards"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-              className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer group"
-            >
-              <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-200" />
-              <span className="flex-1">Cards management</span>
-            </Link>
+                <Link
+                  href="/admin/cards"
+                  onClick={() => setIsOpen(false)}
+                  role="menuitem"
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer group"
+                >
+                  <CreditCard className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform duration-200" />
+                  <span className="flex-1">Cards management</span>
+                </Link>
+              </>
+            ) : (
+              <Link
+                href="/card"
+                onClick={() => setIsOpen(false)}
+                role="menuitem"
+                className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer group"
+              >
+                <CreditCard className="w-4 h-4 text-brand dark:text-brand-soft group-hover:scale-110 transition-transform duration-200" />
+                <span className="flex-1">My SU Card</span>
+              </Link>
+            )}
           </div>
 
           {/* 3. Switch to Area Section (conditional when >1 area) */}
-          {areas && areas.length > 1 && (
+          {otherAreas.length > 0 && (
             <div className="pt-1 border-t border-border space-y-0.5">
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 Switch to
               </div>
-              {areas.map((area) => (
-                <Link
+              {otherAreas.map((area) => (
+                <button
                   key={area.href}
-                  href={area.href}
-                  onClick={() => setIsOpen(false)}
+                  type="button"
+                  onClick={() => handleSwitchArea(area)}
                   role="menuitem"
-                  className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold text-foreground hover:bg-muted hover:translate-x-1 active:scale-[0.98] transition-all min-h-[44px] cursor-pointer text-left"
                 >
                   <span>{area.label}</span>
-                </Link>
+                </button>
               ))}
             </div>
           )}
@@ -249,7 +292,7 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
             <ThemeToggle />
           </div>
 
-          {/* 4. Sign Out Footer Action */}
+          {/* 5. Sign Out Footer Action */}
           <div className="pt-1 border-t border-border">
             <button
               type="button"
@@ -273,7 +316,8 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
         isOpen={isLogoutModalOpen}
         onClose={() => setIsLogoutModalOpen(false)}
         user={user}
-        isAdmin
+        isAdmin={isAdmin}
+        redirectTo="/login"
       />
     </div>
   );

@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { requireAdminPage } from "@/lib/auth/guards";
+import { getAreas } from "@/lib/student/service";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { AdminHeader } from "@/components/admin/admin-header";
 
@@ -11,6 +12,7 @@ export default async function AdminLayout({
   await connection();
 
   const user = await requireAdminPage();
+  const areas = await getAreas({ ...user, disabledAt: null });
 
   return (
     <div className="min-h-screen flex bg-background text-foreground">
@@ -21,7 +23,7 @@ export default async function AdminLayout({
 
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col min-w-0">
-        <AdminHeader user={user} />
+        <AdminHeader user={user} areas={areas} />
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children}
         </main>
