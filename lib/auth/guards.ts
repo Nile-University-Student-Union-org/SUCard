@@ -114,3 +114,7 @@ export async function requireVendorManagerPage() {
   if (!actor) notFound();
   return actor;
 }
+/** Enabled manager with a real vendor, scoped to that vendor for API handlers. */
+export async function getVendorManagerFromRequest(request: Request) {
+  return readVendorActor(request.headers, "vendor_manager");
+}

@@ -6,7 +6,7 @@ export type ClaimErrorCode = "not_su_card" | "already_linked" | "cancelled" | "a
 export type Area = { key: "student" | "admin" | "scanner" | "vendor"; label: string; href: string };
 export type IssuanceSetting = { mode: CardFlow; physicalQuotaRemaining: number | null };
 export type OfficeSetting = { location: string; hours: string };
-export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; studentEmailPattern: string; office: OfficeSetting; semesters: { name: string; start: string; end: string }[] };
+export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; studentEmailPattern: string; office: OfficeSetting; semesters: { name: string; start: string; end: string }[]; atRisk: { redemptions: number; days: number } };
 export type ApiError = { error: string; code?: ClaimErrorCode | string };
 export type CardSummary = { id: string; type: CardFlow; serial: string; status: "unassigned" | "active" | "void"; qr: string; linkedAt: string | null };
 
@@ -32,7 +32,7 @@ export type VoidResponse = { count: number };
 // GET /api/admin/cards/lookup?qr=...|serial=...
 export type CardLookupResponse = { card: CardSummary & { batchLabel: string | null; student: { userId: string; name: string; email: string; universityId: string } | null } };
 // GET /api/admin/students?q=&cursor=; PATCH /api/admin/students/{id}.
-export type StudentSearchItem = { profile: StudentProfile; name: string; email: string; card: CardSummary | null };
+export type StudentSearchItem = { profile: StudentProfile; name: string; email: string; card: CardSummary | null; registeredAt?: string; lastRedemptionAt?: string | null };
 export type StudentSearchResponse = { students: StudentSearchItem[]; nextCursor: string | null };
 export type SetStudentFlowRequest = { cardFlow: CardFlow };
 export type SetStudentFlowResponse = { student: StudentSearchItem };

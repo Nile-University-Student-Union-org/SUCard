@@ -2,6 +2,8 @@ import { requireStudent, json, errorResponse } from "@/lib/student/http";
 import { getStudentHome } from "@/lib/student/service";
 import { buildSaveUrl, ensureClass, getGoogleWalletConfig, GoogleWalletError, objectId, upsertObject } from "@/lib/wallet/google";
 import { getCurrentUser } from "@/lib/auth/guards";
+import { db } from "@/lib/db";
+import { walletPasses } from "@/lib/db/schema";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,7 +25,10 @@ export async function GET(request: Request) {
     if (!config) return json({ error: "Google Wallet is not configured", code: "wallet_unavailable" }, 503);
     await ensureClass(config);
     await upsertObject(config, home, home.card);
-    return json({ saveUrl: buildSaveUrl(config, objectId(config.issuerId, student.user.id)) });
+    const id = objectId(config.issuerId, student.user.id);
+    await db.insert(walletPasses).values({ studentId: student.user.id, platform: "google", objectId: id })
+      .onConflictDoUpdate({ target: [walletPasses.studentId, walletPasses.platform], set: { objectId: id, lastSyncedAt: new Date() } });
+    return json({ saveUrl: buildSaveUrl(config, id) });
   } catch (error) {
     if (error instanceof GoogleWalletError) {
       console.error("Google Wallet API failed", { status: error.status, message: error.message });

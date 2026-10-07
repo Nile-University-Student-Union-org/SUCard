@@ -151,10 +151,19 @@ export async function syncGoogleWalletForStudent(userId: string): Promise<void> 
     const id = objectId(config.issuerId, userId);
     const status = await request(config, "GET", `genericObject/${encodeURIComponent(id)}`);
     if (status === 404) return;
+    const { db } = await import("@/lib/db");
+    const { user } = await import("@/lib/db/schema");
+    const { and, eq } = await import("drizzle-orm");
+    if (!(await db.select({ id: user.id }).from(user).where(eq(user.id, userId))).length) {
+      await request(config, "PATCH", `genericObject/${encodeURIComponent(id)}`, { state: "INACTIVE" });
+      return;
+    }
     const { getStudentHome } = await import("@/lib/student/service");
     const student = await getStudentHome(userId);
     const value = buildGenericObject(config, student, student.card);
     await request(config, "PATCH", `genericObject/${encodeURIComponent(id)}`, value);
+    const { walletPasses } = await import("@/lib/db/schema");
+    await db.update(walletPasses).set({ lastSyncedAt: new Date() }).where(and(eq(walletPasses.studentId, userId),eq(walletPasses.platform,"google")));
   } catch (error) {
     if (error instanceof GoogleWalletError) console.error("Google Wallet sync failed", { status: error.status, message: error.message });
     else console.error("Google Wallet sync failed", error instanceof Error ? error.message : "Unknown error");

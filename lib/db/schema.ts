@@ -1,4 +1,4 @@
-import { boolean, check, customType, date, doublePrecision, integer, index, jsonb, numeric, pgTable, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, customType, date, doublePrecision, integer, index, jsonb, numeric, pgTable, primaryKey, text, time as pgTime, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 const time = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
@@ -57,6 +57,12 @@ export const settings = pgTable("settings", {
   key: text("key").primaryKey(), value: jsonb("value").notNull(),
   updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }), updatedAt: time("updated_at"),
 });
+export const walletPasses = pgTable("wallet_passes", {
+  studentId: text("student_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  platform: text("platform", { enum: ["google", "apple"] }).notNull(),
+  objectId: text("object_id").notNull(),
+  firstIssuedAt: time("first_issued_at"), lastSyncedAt: time("last_synced_at"),
+}, (t) => [primaryKey({ columns: [t.studentId, t.platform] })]);
 export const cardClaimAttempts = pgTable("card_claim_attempts", {
   id: uuid("id").primaryKey().defaultRandom(), userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
   cardId: uuid("card_id").references(() => cards.id, { onDelete: "set null" }), result: text("result").notNull(), createdAt: time("created_at"),
@@ -93,8 +99,9 @@ export const offerRevisions = pgTable("offer_revisions", {
 }, (t) => [uniqueIndex("offer_revisions_offer_version_idx").on(t.offerId, t.version)]);
 export const scanEvents = pgTable("scan_events", {
   id: uuid("id").primaryKey().defaultRandom(), cardId: uuid("card_id").references(() => cards.id), studentId: text("student_id").references(() => user.id),
+  studentDeleted: boolean("student_deleted").notNull().default(false),
   vendorId: uuid("vendor_id").notNull().references(() => vendors.id), branchId: uuid("branch_id").notNull().references(() => branches.id), cashierId: text("cashier_id").notNull().references(() => user.id),
   offerId: uuid("offer_id").references(() => offers.id), result: text("result").notNull(), reason: text("reason"), confirmed: boolean("confirmed").notNull().default(false), confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   billAmount: numeric("bill_amount", { precision: 10, scale: 2 }), voided: boolean("voided").notNull().default(false), voidedAt: timestamp("voided_at", { withTimezone: true }), voidedBy: text("voided_by").references(() => user.id), voidReason: text("void_reason"),
   deviceInfo: text("device_info"), createdAt: time("created_at"),
-}, (t) => [index("scan_events_limit_idx").on(t.studentId, t.offerId, t.confirmed, t.voided, t.createdAt), index("scan_events_cashier_idx").on(t.cashierId, t.createdAt), index("scan_events_vendor_idx").on(t.vendorId, t.createdAt)]);
+}, (t) => [index("scan_events_limit_idx").on(t.studentId, t.offerId, t.confirmed, t.voided, t.createdAt), index("scan_events_cashier_idx").on(t.cashierId, t.createdAt), index("scan_events_vendor_idx").on(t.vendorId, t.createdAt), index("scan_events_confirmed_at_idx").on(t.confirmedAt).where(sql`${t.confirmed} = true and ${t.voided} = false`)]);
