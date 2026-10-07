@@ -44,3 +44,6 @@ next-env.d.ts
 !.env.example
 /.data/
 /exports/
+
+# local secrets (Google Wallet key etc.)
+secrets/
