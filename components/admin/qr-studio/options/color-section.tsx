@@ -278,7 +278,7 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
                         onChange={(e) =>
                           handleStopOffsetChange(idx, parseFloat(e.target.value))
                         }
-                        className="w-full h-8 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1 font-mono text-center text-xs font-bold"
+                        className="w-full min-h-11 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1 font-mono text-center text-xs font-bold"
                       />
                     </div>
                   )}
@@ -309,7 +309,7 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
             type="button"
             onClick={() => handleBackgroundTypeChange("solid")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.background.type === "solid"
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -321,7 +321,7 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
             type="button"
             onClick={() => handleBackgroundTypeChange("transparent")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.background.type === "transparent"
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"

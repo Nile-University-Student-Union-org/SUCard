@@ -277,12 +277,12 @@ export const ChecksPanel: React.FC<ChecksPanelProps> = ({
           </div>
           <div className="flex items-center gap-2">
             {isRunningScan ? (
-              <Loader2 className="size-3.5 animate-spin text-muted-foreground" />
+              <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none text-muted-foreground" />
             ) : (
               <button
                 type="button"
                 onClick={() => setScanKey((k) => k + 1)}
-                className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-md"
+                className="size-11 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-md"
                 title="Re-run scan simulations"
                 aria-label="Re-run scan simulations"
               >

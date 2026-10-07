@@ -117,7 +117,7 @@ export const ColorInput: React.FC<ColorInputProps> = ({
           disabled={disabled}
           placeholder="#0F3056"
           maxLength={7}
-          className="flex-1 h-9 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 font-mono text-xs font-bold uppercase text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent disabled:opacity-50"
+          className="flex-1 min-h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 font-mono text-xs font-bold uppercase text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent disabled:opacity-50"
         />
       </div>
 

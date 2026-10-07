@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { toast } from "sonner";
 import {
   TrendingUp,
   TrendingDown,
@@ -47,6 +48,7 @@ import type {
   CashiersResponse,
 } from "@/lib/analytics/types";
 import { cn } from "cn";
+import { STAFF_PASSWORD_MIN, STAFF_PASSWORD_MAX } from "@/lib/staff/types";
 
 type VendorTabKey = "overview" | "offers" | "cashiers";
 
@@ -79,12 +81,18 @@ export function VendorPortalManager() {
 
   // 2. Offers State
   const [offers, setOffers] = useState<VendorOffersResponse["offers"]>([]);
-  const [isOffersLoading, setIsOffersLoading] = useState(false);
+  const [isOffersLoading, setIsOffersLoading] = useState(true);
+  const offersRequested = useRef(false);
   const [offersError, setOffersError] = useState<string | null>(null);
 
   // 3. Cashiers State
   const [cashiers, setCashiers] = useState<CashiersResponse["cashiers"]>([]);
-  const [isCashiersLoading, setIsCashiersLoading] = useState(false);
+  const [isCashiersLoading, setIsCashiersLoading] = useState(true);
+  const cashiersRequested = useRef(false);
+  const overviewRequestKey = useRef<string | null>(null);
+  const overviewRequestId = useRef(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<string | null>(null);
   const [cashiersError, setCashiersError] = useState<string | null>(null);
 
   // Cashier Modals
@@ -94,20 +102,30 @@ export function VendorPortalManager() {
   const [cashierPassword, setCashierPassword] = useState("");
   const [isAddingCashier, setIsAddingCashier] = useState(false);
   const [addCashierError, setAddCashierError] = useState<string | null>(null);
+  const [addFieldErrors, setAddFieldErrors] = useState<{ name?: string; email?: string; password?: string }>({});
+  const cashierNameRef = useRef<HTMLInputElement>(null);
+  const cashierEmailRef = useRef<HTMLInputElement>(null);
+  const cashierPasswordRef = useRef<HTMLInputElement>(null);
 
   // Reset Password Modal
   const [resetCashierId, setResetCashierId] = useState<string | null>(null);
   const [resetPassword, setResetPassword] = useState("");
   const [isResetting, setIsResetting] = useState(false);
   const [resetError, setResetError] = useState<string | null>(null);
-  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetPasswordError, setResetPasswordError] = useState<string | null>(null);
+  const resetPasswordRef = useRef<HTMLInputElement>(null);
 
   // Revoke Sessions Modal
   const [revokeCashier, setRevokeCashier] = useState<{ id: string; name: string; email: string } | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
+  const [revokeError, setRevokeError] = useState<string | null>(null);
+  const [statusCashier, setStatusCashier] = useState<{ id: string; name: string; status: "active" | "disabled" } | null>(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusError, setStatusError] = useState<string | null>(null);
 
   // Fetch Overview
   const fetchOverview = useCallback(async () => {
+    const requestId = ++overviewRequestId.current;
     setIsOverviewLoading(true);
     setOverviewError(null);
     try {
@@ -123,16 +141,17 @@ export function VendorPortalManager() {
 
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as VendorOverviewResponse;
-      setOverview(data);
+      if (requestId === overviewRequestId.current) setOverview(data);
     } catch (err) {
-      setOverviewError(err instanceof Error ? err.message : "Failed to load overview");
+      if (requestId === overviewRequestId.current) setOverviewError(err instanceof Error ? err.message : "Failed to load overview");
     } finally {
-      setIsOverviewLoading(false);
+      if (requestId === overviewRequestId.current) setIsOverviewLoading(false);
     }
   }, [dateRange]);
 
   // Fetch Offers
   const fetchOffers = useCallback(async () => {
+    offersRequested.current = true;
     setIsOffersLoading(true);
     setOffersError(null);
     try {
@@ -153,6 +172,7 @@ export function VendorPortalManager() {
 
   // Fetch Cashiers
   const fetchCashiers = useCallback(async () => {
+    cashiersRequested.current = true;
     setIsCashiersLoading(true);
     setCashiersError(null);
     try {
@@ -172,107 +192,54 @@ export function VendorPortalManager() {
   }, []);
 
   useEffect(() => {
-    let ignore = false;
-    void (async () => {
-      try {
-        const params = new URLSearchParams();
-        if (dateRange.from) params.set("from", dateRange.from);
-        if (dateRange.to) params.set("to", dateRange.to);
-
-        const res = await fetch(`/api/vendor/overview?${params.toString()}`, {
-          method: "GET",
-          headers: { Accept: "application/json" },
-          cache: "no-store",
-        });
-
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-
-        const data = (await res.json()) as VendorOverviewResponse;
-        if (!ignore) {
-          setOverview(data);
-          setIsOverviewLoading(false);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setOverviewError(err instanceof Error ? err.message : "Failed to load overview");
-          setIsOverviewLoading(false);
-        }
-      }
-    })();
-    return () => {
-      ignore = true;
-    };
-  }, [dateRange]);
+    const key = `${dateRange.from ?? ""}|${dateRange.to ?? ""}`;
+    if (overviewRequestKey.current === key) return;
+    overviewRequestKey.current = key;
+    void fetchOverview();
+  }, [dateRange, fetchOverview]);
 
   useEffect(() => {
-    let ignore = false;
-    if (activeTab === "offers") {
-      void (async () => {
-        try {
-          const res = await fetch("/api/vendor/offers", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = (await res.json()) as VendorOffersResponse;
-          if (!ignore) {
-            setOffers(data.offers || []);
-            setIsOffersLoading(false);
-          }
-        } catch (err) {
-          if (!ignore) {
-            setOffersError(err instanceof Error ? err.message : "Failed to load offers");
-            setIsOffersLoading(false);
-          }
-        }
-      })();
-    } else if (activeTab === "cashiers") {
-      void (async () => {
-        try {
-          const res = await fetch("/api/vendor/cashiers", {
-            method: "GET",
-            headers: { Accept: "application/json" },
-            cache: "no-store",
-          });
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = (await res.json()) as CashiersResponse;
-          if (!ignore) {
-            setCashiers(data.cashiers || []);
-            setIsCashiersLoading(false);
-          }
-        } catch (err) {
-          if (!ignore) {
-            setCashiersError(err instanceof Error ? err.message : "Failed to load cashiers");
-            setIsCashiersLoading(false);
-          }
-        }
-      })();
-    }
-    return () => {
-      ignore = true;
-    };
-  }, [activeTab]);
+    if (activeTab === "offers" && !offersRequested.current) void fetchOffers();
+    if (activeTab === "cashiers" && !cashiersRequested.current) void fetchCashiers();
+  }, [activeTab, fetchOffers, fetchCashiers]);
 
   // Export CSV Handler
-  const handleExportCsv = () => {
+  const handleExportCsv = async () => {
+    setIsExporting(true);
+    setExportStatus(null);
     const params = new URLSearchParams();
     if (dateRange.from) params.set("from", dateRange.from);
     if (dateRange.to) params.set("to", dateRange.to);
-    window.open(`/api/vendor/export?${params.toString()}`, "_blank");
+    try {
+      const response = await fetch(`/api/vendor/export?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) throw new Error("Could not prepare the CSV. Try again.");
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `vendor-stats-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      setExportStatus("CSV download started.");
+    } catch (error) {
+      setExportStatus(error instanceof Error ? error.message : "Could not prepare the CSV. Try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   // Create Cashier
   const handleCreateCashier = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (cashierPassword && cashierPassword.length < 8) {
-      setAddCashierError("Password must be at least 8 characters");
+    setAddFieldErrors({});
+    const trimmedPassword = cashierPassword.trim();
+    if (cashierPassword && (trimmedPassword.length < STAFF_PASSWORD_MIN || trimmedPassword.length > STAFF_PASSWORD_MAX)) {
+      setAddFieldErrors({ password: `Use ${STAFF_PASSWORD_MIN}–${STAFF_PASSWORD_MAX} characters.` });
+      cashierPasswordRef.current?.focus();
       return;
     }
-
     setIsAddingCashier(true);
     setAddCashierError(null);
 
@@ -281,8 +248,8 @@ export function VendorPortalManager() {
         name: cashierName.trim(),
         email: cashierEmail.trim().toLowerCase(),
       };
-      if (cashierPassword && cashierPassword.trim()) {
-        payload.password = cashierPassword.trim();
+      if (trimmedPassword) {
+        payload.password = trimmedPassword;
       }
 
       const res = await fetch("/api/vendor/cashiers", {
@@ -293,8 +260,17 @@ export function VendorPortalManager() {
 
       const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setAddCashierError(resData.error || "Failed to create cashier account");
-        setIsAddingCashier(false);
+        const message = String(resData.error || "Failed to create cashier account");
+        if (/email|already exists|duplicate/i.test(message)) {
+          setAddFieldErrors({ email: message });
+          cashierEmailRef.current?.focus();
+        } else if (/password|character/i.test(message)) {
+          setAddFieldErrors({ password: message });
+          cashierPasswordRef.current?.focus();
+        } else if (/name/i.test(message)) {
+          setAddFieldErrors({ name: message });
+          cashierNameRef.current?.focus();
+        } else setAddCashierError(message);
         return;
       }
 
@@ -302,7 +278,8 @@ export function VendorPortalManager() {
       setCashierName("");
       setCashierEmail("");
       setCashierPassword("");
-      fetchCashiers();
+      void fetchCashiers();
+      toast.success(`Cashier ${cashierName.trim()} created.`);
     } catch {
       setAddCashierError("Network error. Please try again.");
     } finally {
@@ -314,6 +291,7 @@ export function VendorPortalManager() {
   const handleRevokeCashierSessions = async () => {
     if (!revokeCashier) return;
     setIsRevoking(true);
+    setRevokeError(null);
     try {
       const res = await fetch(`/api/vendor/cashiers/${revokeCashier.id}/revoke-sessions`, {
         method: "POST",
@@ -323,31 +301,43 @@ export function VendorPortalManager() {
         const data = await res.json().catch(() => ({}));
         throw new Error(data.error || "Failed to sign out devices");
       }
+      toast.success(`${revokeCashier.name} signed out of all devices.`);
       setRevokeCashier(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Failed to sign out devices");
+      setRevokeError(err instanceof Error ? err.message : "Failed to sign out devices");
     } finally {
       setIsRevoking(false);
     }
   };
 
   // Toggle Cashier Status
-  const handleToggleCashierStatus = async (cashierId: string, currentStatus: "active" | "disabled") => {
-    const targetStatus = currentStatus === "active" ? "disabled" : "active";
+  const handleToggleCashierStatus = async () => {
+    if (!statusCashier) return;
+    const { id, name, status } = statusCashier;
+    const targetStatus = status === "active" ? "disabled" : "active";
+    setIsUpdatingStatus(true);
+    setStatusError(null);
     try {
-      const res = await fetch(`/api/vendor/cashiers/${cashierId}`, {
+      const res = await fetch(`/api/vendor/cashiers/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: targetStatus }),
       });
 
-      if (!res.ok) throw new Error("Failed to update status");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to update cashier status");
+      }
 
       setCashiers((prev) =>
-        prev.map((c) => (c.id === cashierId ? { ...c, status: targetStatus } : c))
+        prev.map((c) => (c.id === id ? { ...c, status: targetStatus } : c))
       );
+      setStatusCashier(null);
+      toast.success(`${name} ${targetStatus === "disabled" ? "disabled" : "enabled"}.`);
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Action failed");
+      setStatusError(err instanceof Error ? err.message : "Action failed");
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -355,9 +345,15 @@ export function VendorPortalManager() {
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!resetCashierId) return;
+    if (resetPassword.length < STAFF_PASSWORD_MIN || resetPassword.length > STAFF_PASSWORD_MAX) {
+      setResetPasswordError(`Use ${STAFF_PASSWORD_MIN}–${STAFF_PASSWORD_MAX} characters.`);
+      resetPasswordRef.current?.focus();
+      return;
+    }
 
     setIsResetting(true);
     setResetError(null);
+    setResetPasswordError(null);
 
     try {
       const res = await fetch(`/api/vendor/cashiers/${resetCashierId}/password`, {
@@ -368,17 +364,17 @@ export function VendorPortalManager() {
 
       if (!res.ok) {
         const resData = await res.json().catch(() => ({}));
-        setResetError(resData.error || "Failed to reset password");
-        setIsResetting(false);
+        const message = String(resData.error || "Failed to reset password");
+        if (/password|character/i.test(message)) {
+          setResetPasswordError(message);
+          resetPasswordRef.current?.focus();
+        } else setResetError(message);
         return;
       }
-
-      setResetSuccess(true);
-      setTimeout(() => {
-        setResetCashierId(null);
-        setResetPassword("");
-        setResetSuccess(false);
-      }, 1200);
+      const cashier = cashiers.find((c) => c.id === resetCashierId);
+      setResetCashierId(null);
+      setResetPassword("");
+      toast.success(`Password updated for ${cashier?.name ?? "cashier"}.`);
     } catch {
       setResetError("Network error. Please try again.");
     } finally {
@@ -390,11 +386,11 @@ export function VendorPortalManager() {
   const studentChange = formatChangePercent(overview?.uniqueStudents.changePercent);
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
+          <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white [overflow-wrap:anywhere]">
             {overview?.vendor.name ? `${overview.vendor.name.toUpperCase()} PORTAL` : "VENDOR PORTAL"}
           </h1>
           <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
@@ -402,15 +398,19 @@ export function VendorPortalManager() {
           </p>
         </div>
 
-        <Button
-          variant="surface"
-          size="sm"
-          onClick={handleExportCsv}
-          className="normal-case font-bold h-10 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 self-start sm:self-center"
-        >
-          <Download className="size-3.5 mr-1.5" />
-          Export Stats CSV
-        </Button>
+        <div className="self-start sm:self-center">
+          <Button
+            variant="surface"
+            size="sm"
+            onClick={handleExportCsv}
+            disabled={isExporting}
+            className="normal-case font-bold min-h-11 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+          >
+            <Download className="size-4" />
+            {isExporting ? "Preparing CSV…" : "Export Stats CSV"}
+          </Button>
+          {exportStatus && <p role="status" className="mt-1 text-xs text-muted-foreground">{exportStatus}</p>}
+        </div>
       </div>
 
       {/* Navigation Tab Bar */}
@@ -427,7 +427,7 @@ export function VendorPortalManager() {
 
       {/* TAB 1: OVERVIEW & ANALYTICS */}
       {activeTab === "overview" && (
-        <div className="space-y-6">
+        <div className="space-y-6" aria-busy={isOverviewLoading}>
           {/* Date Range Picker Bar */}
           <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
@@ -635,7 +635,7 @@ export function VendorPortalManager() {
 
       {/* TAB 2: OFFERS & LIMITS */}
       {activeTab === "offers" && (
-        <div className="space-y-6">
+        <div className="space-y-6" aria-busy={isOffersLoading}>
           {/* Note Callout */}
           <div className="p-4 rounded-2xl border-2 border-sky-200 dark:border-sky-900/60 bg-sky-50/50 dark:bg-sky-950/20 flex items-start gap-3">
             <Info className="size-5 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
@@ -742,7 +742,7 @@ export function VendorPortalManager() {
 
       {/* TAB 3: CASHIER ACCOUNTS */}
       {activeTab === "cashiers" && (
-        <div className="space-y-6">
+        <div className="space-y-6" aria-busy={isCashiersLoading}>
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h2 className="text-lg font-bold text-foreground">
@@ -760,9 +760,10 @@ export function VendorPortalManager() {
                 setCashierEmail("");
                 setCashierPassword("");
                 setAddCashierError(null);
+                setAddFieldErrors({});
                 setIsAddCashierOpen(true);
               }}
-              className="normal-case font-bold h-10 px-4 shrink-0"
+              className="normal-case font-bold min-h-11 px-4 shrink-0"
             >
               <UserPlus className="size-4 mr-1.5" />
               Add Cashier
@@ -819,12 +820,12 @@ export function VendorPortalManager() {
                     </thead>
                     <tbody className="divide-y divide-border">
                       {cashiers.map((cashier) => (
-                        <tr key={cashier.id} className="hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3.5">
+                         <tr key={cashier.id} className="hover:bg-muted/30">
+                          <td className="px-4 py-3.5 min-w-0">
                             <div className="font-bold text-foreground">
                               {cashier.name}
                             </div>
-                            <div className="text-[11px] text-muted-foreground font-mono">
+                            <div className="text-[11px] text-muted-foreground font-mono break-all">
                               {cashier.email}
                             </div>
                           </td>
@@ -845,8 +846,8 @@ export function VendorPortalManager() {
                               <Button
                                 variant="surface"
                                 size="sm"
-                                onClick={() => setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email })}
-                                className="h-8 px-2.5 text-xs font-semibold normal-case"
+                                onClick={() => { setRevokeError(null); setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email }); }}
+                                className="min-h-11 px-2.5 text-xs font-semibold normal-case"
                                 title="Sign out all devices for this cashier"
                               >
                                 <LogOut className="size-3 mr-1" />
@@ -860,9 +861,9 @@ export function VendorPortalManager() {
                                   setResetCashierId(cashier.id);
                                   setResetPassword("");
                                   setResetError(null);
-                                  setResetSuccess(false);
+                                  setResetPasswordError(null);
                                 }}
-                                className="h-8 px-2.5 text-xs font-semibold normal-case"
+                                className="min-h-11 px-2.5 text-xs font-semibold normal-case"
                               >
                                 <Key className="size-3 mr-1" />
                                 Reset Password
@@ -871,9 +872,9 @@ export function VendorPortalManager() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => handleToggleCashierStatus(cashier.id, cashier.status)}
+                                onClick={() => { setStatusError(null); setStatusCashier({ id: cashier.id, name: cashier.name, status: cashier.status }); }}
                                 className={cn(
-                                  "h-8 px-2.5 text-xs font-semibold normal-case",
+                                  "min-h-11 px-2.5 text-xs font-semibold normal-case",
                                   cashier.status === "active"
                                     ? "text-rose-600 hover:bg-rose-500/10"
                                     : "text-emerald-600 hover:bg-emerald-500/10"
@@ -907,9 +908,9 @@ export function VendorPortalManager() {
                       className="p-3.5 rounded-xl border border-border bg-card space-y-2.5"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p className="font-bold text-xs text-foreground">{cashier.name}</p>
-                          <p className="text-[11px] font-mono text-muted-foreground">{cashier.email}</p>
+                        <div className="min-w-0">
+                          <p className="font-bold text-xs text-foreground [overflow-wrap:anywhere]">{cashier.name}</p>
+                          <p className="text-[11px] font-mono text-muted-foreground break-all">{cashier.email}</p>
                         </div>
                         <span
                           className={cn(
@@ -924,12 +925,12 @@ export function VendorPortalManager() {
                       </div>
 
 
-                      <div className="grid grid-cols-3 gap-2 pt-1 border-t border-border">
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-border">
                         <Button
                           variant="surface"
                           size="sm"
-                          onClick={() => setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email })}
-                          className="h-9 px-2 text-xs font-semibold normal-case"
+                          onClick={() => { setRevokeError(null); setRevokeCashier({ id: cashier.id, name: cashier.name, email: cashier.email }); }}
+                          className="min-h-11 px-2 text-xs font-semibold normal-case"
                         >
                           <LogOut className="size-3 mr-1" />
                           Sign Out
@@ -942,9 +943,9 @@ export function VendorPortalManager() {
                             setResetCashierId(cashier.id);
                             setResetPassword("");
                             setResetError(null);
-                            setResetSuccess(false);
+                            setResetPasswordError(null);
                           }}
-                          className="h-9 px-2 text-xs font-semibold normal-case"
+                          className="min-h-11 px-2 text-xs font-semibold normal-case"
                         >
                           <Key className="size-3 mr-1" />
                           Password
@@ -953,9 +954,9 @@ export function VendorPortalManager() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleToggleCashierStatus(cashier.id, cashier.status)}
+                          onClick={() => { setStatusError(null); setStatusCashier({ id: cashier.id, name: cashier.name, status: cashier.status }); }}
                           className={cn(
-                            "h-9 px-2 text-xs font-semibold normal-case",
+                            "min-h-11 px-2 text-xs font-semibold normal-case col-span-2",
                             cashier.status === "active"
                               ? "text-rose-600 hover:bg-rose-500/10"
                               : "text-emerald-600 hover:bg-emerald-500/10"
@@ -991,32 +992,38 @@ export function VendorPortalManager() {
 
             <Input
               id="newCashierName"
+              ref={cashierNameRef}
               label="Staff Name"
+              error={addFieldErrors.name}
               placeholder="e.g. Ahmed Cashier"
               value={cashierName}
-              onChange={(e) => setCashierName(e.target.value)}
+              onChange={(e) => { setCashierName(e.target.value); setAddFieldErrors((prev) => ({ ...prev, name: undefined })); }}
               required
               autoFocus
             />
 
             <Input
               id="newCashierEmail"
+              ref={cashierEmailRef}
               type="email"
               label="Email Address"
+              error={addFieldErrors.email}
               placeholder="cashier@store.local"
               value={cashierEmail}
-              onChange={(e) => setCashierEmail(e.target.value)}
+              onChange={(e) => { setCashierEmail(e.target.value); setAddFieldErrors((prev) => ({ ...prev, email: undefined })); }}
               required
             />
 
             <div className="space-y-2">
               <Input
                 id="newCashierPassword"
+                ref={cashierPasswordRef}
                 type="password"
                 label="Login Password (Optional)"
+                error={addFieldErrors.password}
                 placeholder="Leave empty to email set-password link"
                 value={cashierPassword}
-                onChange={(e) => setCashierPassword(e.target.value)}
+                onChange={(e) => { setCashierPassword(e.target.value); setAddFieldErrors((prev) => ({ ...prev, password: undefined })); }}
                 helperText="Leave empty to email them a link to set their own password"
               />
               {cashierPassword && (
@@ -1037,7 +1044,7 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isAddingCashier || (cashierPassword ? cashierPassword.length < 8 : false)}
+              disabled={isAddingCashier}
               className="normal-case font-bold"
             >
               {isAddingCashier ? "Creating…" : "Create Cashier"}
@@ -1062,22 +1069,16 @@ export function VendorPortalManager() {
               <Alert variant="destructive" size="sm" description={resetError} />
             )}
 
-            {resetSuccess && (
-              <Alert
-                variant="default"
-                size="sm"
-                description="Password reset successfully!"
-              />
-            )}
-
             <div className="space-y-2">
               <Input
                 id="resetCashierPassword"
+                ref={resetPasswordRef}
                 type="password"
                 label="New Password"
+                error={resetPasswordError ?? undefined}
                 placeholder="••••••••••••"
                 value={resetPassword}
-                onChange={(e) => setResetPassword(e.target.value)}
+                onChange={(e) => { setResetPassword(e.target.value); setResetPasswordError(null); }}
                 required
                 autoFocus
               />
@@ -1097,7 +1098,7 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isResetting || resetPassword.length < 8}
+              disabled={isResetting}
               className="normal-case font-bold"
             >
               {isResetting ? "Updating…" : "Update Password"}
@@ -1117,6 +1118,7 @@ export function VendorPortalManager() {
         maxWidth="md"
       >
         <ModalBody className="space-y-4">
+          {revokeError && <Alert variant="destructive" size="sm" description={revokeError} />}
           <p className="text-sm text-foreground">
             Sign out all active sessions for <strong className="font-bold">{revokeCashier?.name}</strong> ({revokeCashier?.email})?
           </p>
@@ -1146,12 +1148,34 @@ export function VendorPortalManager() {
           >
             {isRevoking ? (
               <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
+                <Loader2 className="size-4 mr-2 animate-spin motion-reduce:animate-none" />
                 <span>Signing out…</span>
               </>
             ) : (
               <span>Sign out all devices</span>
             )}
+          </Button>
+        </ModalFooter>
+      </Modal>
+      <Modal
+        isOpen={statusCashier !== null}
+        onClose={() => { if (!isUpdatingStatus) setStatusCashier(null); }}
+        title={`${statusCashier?.status === "active" ? "Disable" : "Enable"} Cashier`}
+        icon={<Ban className="size-5" />}
+        maxWidth="md"
+      >
+        <ModalBody>
+          {statusError && <Alert variant="destructive" size="sm" description={statusError} />}
+          <p className="text-sm text-foreground">
+            {statusCashier?.status === "active"
+              ? `Disable ${statusCashier.name}? They will be signed out and cannot scan cards until enabled again.`
+              : `Enable ${statusCashier?.name}? They will be able to sign in and scan cards again.`}
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="secondary" disabled={isUpdatingStatus} onClick={() => setStatusCashier(null)}>Cancel</Button>
+          <Button variant={statusCashier?.status === "active" ? "destructive" : "primary"} disabled={isUpdatingStatus} onClick={handleToggleCashierStatus}>
+            {isUpdatingStatus ? "Updating…" : statusCashier?.status === "active" ? "Disable cashier" : "Enable cashier"}
           </Button>
         </ModalFooter>
       </Modal>

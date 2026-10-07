@@ -73,7 +73,7 @@ export const DownloadDialog: React.FC<DownloadDialogProps> = ({
             <button
               type="button"
               onClick={() => setFormat("svg")}
-              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                 format === "svg"
                   ? "bg-brand text-white border-brand shadow-xs font-bold"
                   : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -86,7 +86,7 @@ export const DownloadDialog: React.FC<DownloadDialogProps> = ({
             <button
               type="button"
               onClick={() => setFormat("png")}
-              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer ${
+              className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-1.5 cursor-pointer ${
                 format === "png"
                   ? "bg-brand text-white border-brand shadow-xs font-bold"
                   : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -151,7 +151,7 @@ export const DownloadDialog: React.FC<DownloadDialogProps> = ({
         >
           {isDownloading ? (
             <>
-              <Loader2 className="size-4 mr-1.5 animate-spin" />
+              <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
               Exporting…
             </>
           ) : (

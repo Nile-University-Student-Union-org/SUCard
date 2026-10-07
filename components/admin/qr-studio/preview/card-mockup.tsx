@@ -91,7 +91,7 @@ export const CardMockup: React.FC<CardMockupProps> = ({
             </p>
           </div>
           <div className="pt-1 flex items-center gap-1.5">
-            <span className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="size-2 rounded-full bg-emerald-400 animate-pulse motion-reduce:animate-none" />
             <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wide">
               NUSU Verified
             </span>

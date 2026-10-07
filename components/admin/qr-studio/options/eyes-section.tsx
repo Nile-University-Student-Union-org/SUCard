@@ -78,16 +78,17 @@ export const EyesSection: React.FC<EyesSectionProps> = ({ config, onChange }) =>
         <button
           type="button"
           role="switch"
+          aria-label="Link all three finder eyes"
           aria-checked={sameForAll}
           onClick={() => setSameForAll(!sameForAll)}
           className={cn(
-            "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-brand",
-            sameForAll ? "bg-brand" : "bg-slate-300 dark:bg-zinc-700"
+            "relative inline-flex h-11 w-11 items-center shrink-0 cursor-pointer before:absolute before:inset-x-0 before:top-2.5 before:h-6 before:rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+            sameForAll ? "before:bg-brand" : "before:bg-slate-300 dark:before:bg-zinc-700"
           )}
         >
           <span
             className={cn(
-              "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out",
+              "pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow-sm ring-0 transition-transform duration-200 motion-reduce:transition-none",
               sameForAll ? "translate-x-5" : "translate-x-0"
             )}
           />
@@ -109,7 +110,7 @@ export const EyesSection: React.FC<EyesSectionProps> = ({ config, onChange }) =>
               type="button"
               onClick={() => setActiveEye(tab.id)}
               className={cn(
-                "py-1.5 rounded-lg font-bold text-xs transition-all cursor-pointer",
+                "min-h-11 rounded-lg font-bold text-xs cursor-pointer",
                 activeEye === tab.id
                   ? "bg-white dark:bg-zinc-900 text-brand dark:text-brand-soft shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
@@ -135,7 +136,7 @@ export const EyesSection: React.FC<EyesSectionProps> = ({ config, onChange }) =>
                 updateEye((eye) => ({ ...eye, frameShape: shape.id }))
               }
               className={cn(
-                "py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                "min-h-11 px-2.5 rounded-xl border text-xs font-bold cursor-pointer",
                 currentEye.frameShape === shape.id
                   ? "bg-brand text-white border-brand shadow-xs"
                   : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -196,7 +197,7 @@ export const EyesSection: React.FC<EyesSectionProps> = ({ config, onChange }) =>
                 updateEye((eye) => ({ ...eye, pupilShape: shape.id }))
               }
               className={cn(
-                "py-2 px-2.5 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+                "min-h-11 px-2.5 rounded-xl border text-xs font-bold cursor-pointer",
                 currentEye.pupilShape === shape.id
                   ? "bg-brand text-white border-brand shadow-xs"
                   : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"

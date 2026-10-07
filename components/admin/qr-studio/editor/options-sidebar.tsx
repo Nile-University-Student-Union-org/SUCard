@@ -25,7 +25,7 @@ import { cn } from "cn";
 export interface OptionsSidebarProps {
   config: QrStyleConfig;
   onChange: (updater: (prev: QrStyleConfig) => QrStyleConfig) => void;
-  onResetSection: (sectionKey: keyof QrStyleConfig) => void;
+  onResetSection: (sectionKey: keyof QrStyleConfig | "color") => void;
 }
 
 type SectionKey =
@@ -82,35 +82,31 @@ export const OptionsSidebar: React.FC<OptionsSidebarProps> = ({
         return (
           <div
             key={sec.key}
-            className="rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-all"
+            className="rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden"
           >
             {/* Section Header */}
-            <div className="flex items-center justify-between px-4 py-3 bg-slate-50/70 dark:bg-zinc-800/40 border-b border-slate-100 dark:border-zinc-800">
+            <div className="flex items-center justify-between gap-1 pl-3 pr-1 py-1 bg-slate-50/70 dark:bg-zinc-800/40 border-b border-slate-100 dark:border-zinc-800">
               <button
                 type="button"
                 onClick={() => toggleSection(sec.key)}
-                className="flex items-center gap-2.5 min-w-0 flex-1 text-left cursor-pointer group select-none"
+                aria-expanded={isOpen}
+                aria-controls={`qr-option-${sec.key}`}
+                id={`qr-option-heading-${sec.key}`}
+                className="flex items-center gap-2 min-w-0 min-h-11 flex-1 text-left cursor-pointer group select-none"
               >
                 <div className="size-7 rounded-lg bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center shrink-0">
                   <Icon className="size-3.5" />
                 </div>
-                <span className="font-bold text-xs uppercase tracking-wider text-foreground group-hover:text-brand transition-colors">
+                <span className="font-bold text-xs uppercase tracking-wider text-foreground group-hover:text-brand break-words">
                   {sec.title}
                 </span>
               </button>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center shrink-0">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (sec.key === "color") {
-                      onResetSection("modules");
-                      onResetSection("background");
-                    } else {
-                      onResetSection(sec.key as keyof QrStyleConfig);
-                    }
-                  }}
-                  className="p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
+                  onClick={() => onResetSection(sec.key)}
+                  className="size-11 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-md cursor-pointer"
                   title={`Reset ${sec.title} to default`}
                   aria-label={`Reset ${sec.title}`}
                 >
@@ -119,12 +115,14 @@ export const OptionsSidebar: React.FC<OptionsSidebarProps> = ({
                 <button
                   type="button"
                   onClick={() => toggleSection(sec.key)}
-                  className="p-1 text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
-                  aria-label={isOpen ? "Collapse section" : "Expand section"}
+                  className="size-11 flex items-center justify-center text-muted-foreground hover:text-foreground rounded-md cursor-pointer"
+                  aria-label={`${isOpen ? "Collapse" : "Expand"} ${sec.title}`}
+                  aria-expanded={isOpen}
+                  aria-controls={`qr-option-${sec.key}`}
                 >
                   <ChevronDown
                     className={cn(
-                      "size-4 transition-transform duration-200",
+                      "size-4 transition-transform duration-200 motion-reduce:transition-none",
                       isOpen && "rotate-180"
                     )}
                   />
@@ -133,8 +131,9 @@ export const OptionsSidebar: React.FC<OptionsSidebarProps> = ({
             </div>
 
             {/* Section Content */}
-            {isOpen && (
-              <div className="p-4 bg-white dark:bg-zinc-900">
+            <div id={`qr-option-${sec.key}`} role="region" aria-labelledby={`qr-option-heading-${sec.key}`} hidden={!isOpen} className="p-4 bg-white dark:bg-zinc-900">
+              {isOpen && (
+                <>
                 {sec.key === "encoding" && (
                   <EncodingSection config={config} onChange={onChange} />
                 )}
@@ -156,8 +155,9 @@ export const OptionsSidebar: React.FC<OptionsSidebarProps> = ({
                 {sec.key === "output" && (
                   <OutputSection config={config} onChange={onChange} />
                 )}
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
         );
       })}

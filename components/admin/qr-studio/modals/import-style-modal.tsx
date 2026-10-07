@@ -114,7 +114,7 @@ export const ImportStyleModal: React.FC<ImportStyleModalProps> = ({
             />
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="p-6 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 flex flex-col items-center justify-center text-center gap-2 cursor-pointer transition-colors"
+              className="p-6 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 flex flex-col items-center justify-center text-center gap-2 cursor-pointer"
             >
               <FileJson className="size-8 text-brand" />
               <div>
@@ -182,7 +182,7 @@ export const ImportStyleModal: React.FC<ImportStyleModalProps> = ({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
+                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
                 Importing…
               </>
             ) : (

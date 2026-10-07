@@ -149,7 +149,7 @@ export const CompareView: React.FC<CompareViewProps> = ({
             value={selectedStyleId}
             onChange={(e) => handleStyleSelect(e.target.value)}
             disabled={isLoading || styles.length === 0}
-            className="flex-1 sm:w-56 h-9 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+            className="flex-1 sm:w-56 min-h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
           >
             {styles.map((s) => (
               <option key={s.id} value={s.id}>

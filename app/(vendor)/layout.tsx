@@ -21,12 +21,12 @@ export default async function VendorLayout({
       <AmbientBackdrop />
 
       {/* Vendor Portal Top Bar */}
-      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/85 dark:bg-zinc-900/85 px-4 sm:px-6 backdrop-blur-md transition-colors">
+      <header className="sticky top-0 z-30 flex h-16 w-full min-w-0 items-center justify-between gap-2 border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/85 dark:bg-zinc-900/85 px-4 sm:px-6 backdrop-blur-md">
         {/* Left: Vendor Logo & Name */}
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           <Link
             href="/vendor"
-            className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg min-h-[44px]"
+            className="flex min-w-0 items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg min-h-[44px]"
             aria-label="Vendor Portal Home"
           >
             <div className="size-9 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0 overflow-hidden shadow-xs">
@@ -58,7 +58,7 @@ export default async function VendorLayout({
         </div>
 
         {/* Right: Theme Toggle & User Menu */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
           <ThemeToggle />
           <UserNavDropdown
             user={{
@@ -74,7 +74,7 @@ export default async function VendorLayout({
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+      <main className="flex-1 min-w-0 w-full max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
         {children}
       </main>
     </div>

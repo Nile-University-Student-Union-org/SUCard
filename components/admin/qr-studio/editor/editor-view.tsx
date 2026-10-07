@@ -31,9 +31,14 @@ export function EditorView({ initialStyle }: EditorViewProps) {
   const [futureConfigs, setFutureConfigs] = useState<QrStyleConfig[]>([]);
 
   // Autosave status
-  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved">("saved");
+  const [saveStatus, setSaveStatus] = useState<"saved" | "saving" | "unsaved" | "error">("saved");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const lastSavedConfigRef = useRef<string>(JSON.stringify(initialStyle.draftConfig));
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const latestConfigRef = useRef(config);
+  const draftRevisionRef = useRef(0);
+  const saveInFlightRef = useRef(false);
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveDraftRef = useRef<() => Promise<void>>(async () => {});
 
   // Modals state
   const [isPublishOpen, setIsPublishOpen] = useState(false);
@@ -59,6 +64,7 @@ export function EditorView({ initialStyle }: EditorViewProps) {
   // Push new state with undo support
   const handleConfigChange = useCallback(
     (updater: (prev: QrStyleConfig) => QrStyleConfig) => {
+      draftRevisionRef.current += 1;
       setConfig((prev) => {
         const next = updater(prev);
         // Avoid adding identical state to history
@@ -66,6 +72,7 @@ export function EditorView({ initialStyle }: EditorViewProps) {
           setPastConfigs((history) => [...history.slice(-30), prev]);
           setFutureConfigs([]);
           setSaveStatus("unsaved");
+          setSaveError(null);
         }
         return next;
       });
@@ -75,28 +82,40 @@ export function EditorView({ initialStyle }: EditorViewProps) {
 
   const handleUndo = useCallback(() => {
     if (pastConfigs.length === 0) return;
+    draftRevisionRef.current += 1;
     const previous = pastConfigs[pastConfigs.length - 1];
     setPastConfigs((p) => p.slice(0, p.length - 1));
     setFutureConfigs((f) => [config, ...f]);
     setConfig(previous);
     setSaveStatus("unsaved");
+    setSaveError(null);
   }, [pastConfigs, config]);
 
   const handleRedo = useCallback(() => {
     if (futureConfigs.length === 0) return;
+    draftRevisionRef.current += 1;
     const next = futureConfigs[0];
     setFutureConfigs((f) => f.slice(1));
     setPastConfigs((p) => [...p, config]);
     setConfig(next);
     setSaveStatus("unsaved");
+    setSaveError(null);
   }, [futureConfigs, config]);
 
-  const handleResetSection = useCallback((sectionKey: keyof QrStyleConfig) => {
-    handleConfigChange((prev) => ({
-      ...prev,
-      [sectionKey]: structuredClone(NUSU_SIGNATURE_CONFIG[sectionKey]),
-    }));
-    toast.info(`Reset ${String(sectionKey)} to default`);
+  const handleResetSection = useCallback((sectionKey: keyof QrStyleConfig | "color") => {
+    if (sectionKey === "color") {
+      handleConfigChange((prev) => ({
+        ...prev,
+        modules: structuredClone(NUSU_SIGNATURE_CONFIG.modules),
+        background: structuredClone(NUSU_SIGNATURE_CONFIG.background),
+      }));
+    } else {
+      handleConfigChange((prev) => ({
+        ...prev,
+        [sectionKey]: structuredClone(NUSU_SIGNATURE_CONFIG[sectionKey]),
+      }));
+    }
+    toast.info(`Reset ${sectionKey} to default`);
   }, [handleConfigChange]);
 
   const handleResetAll = useCallback(() => {
@@ -107,7 +126,7 @@ export function EditorView({ initialStyle }: EditorViewProps) {
   const handleNameChange = async (newName: string) => {
     try {
       const res = await updateStyle(styleData.id, { name: newName });
-      setStyleData(res.style);
+      setStyleData((current) => ({ ...current, name: res.style.name }));
       toast.success("Style renamed");
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to rename style";
@@ -118,6 +137,11 @@ export function EditorView({ initialStyle }: EditorViewProps) {
   // Keyboard shortcut listener for Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable || target.closest("input, textarea, select, [contenteditable]") || target.closest("[role='dialog']"))
+      ) return;
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
         if (e.shiftKey) {
           e.preventDefault();
@@ -135,37 +159,61 @@ export function EditorView({ initialStyle }: EditorViewProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleUndo, handleRedo]);
 
-  // Debounced Autosave Effect
+  const saveDraft = useCallback(async () => {
+    if (saveInFlightRef.current) return;
+    const draft = latestConfigRef.current;
+    const serialized = JSON.stringify(draft);
+    const revision = draftRevisionRef.current;
+    if (serialized === lastSavedConfigRef.current) {
+      setSaveStatus("saved");
+      setSaveError(null);
+      return;
+    }
+
+    saveInFlightRef.current = true;
+    setSaveStatus("saving");
+    setSaveError(null);
+    try {
+      await updateStyle(styleData.id, { draftConfig: draft });
+      lastSavedConfigRef.current = serialized;
+      if (draftRevisionRef.current === revision && JSON.stringify(latestConfigRef.current) === serialized) {
+        setSaveStatus("saved");
+      } else {
+        setSaveStatus("unsaved");
+        if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+        saveTimeoutRef.current = setTimeout(() => void saveDraftRef.current(), 600);
+      }
+    } catch (err) {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+      setSaveError(err instanceof Error ? err.message : "Draft could not be saved.");
+      setSaveStatus("error");
+    } finally {
+      saveInFlightRef.current = false;
+    }
+  }, [styleData.id]);
   useEffect(() => {
+    saveDraftRef.current = saveDraft;
+  }, [saveDraft]);
+
+  // Save requests are serialized; only the current draft can be marked saved.
+  useEffect(() => {
+    latestConfigRef.current = config;
     const currentSerialized = JSON.stringify(config);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     if (currentSerialized === lastSavedConfigRef.current) {
+      if (!saveInFlightRef.current) setSaveStatus("saved");
       return;
     }
 
     setSaveStatus("unsaved");
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current);
-    }
-
-    saveTimeoutRef.current = setTimeout(async () => {
-      setSaveStatus("saving");
-      try {
-        const res = await updateStyle(styleData.id, { draftConfig: config });
-        lastSavedConfigRef.current = JSON.stringify(config);
-        setStyleData(res.style);
-        setSaveStatus("saved");
-      } catch (err) {
-        console.warn("Autosave draft failed:", err);
-        setSaveStatus("unsaved");
-      }
-    }, 600);
+    saveTimeoutRef.current = setTimeout(() => void saveDraftRef.current(), 600);
 
     return () => {
       if (saveTimeoutRef.current) {
         clearTimeout(saveTimeoutRef.current);
       }
     };
-  }, [config, styleData.id]);
+  }, [config]);
 
   // Unsaved changes warning on browser tab close / navigation
   useEffect(() => {
@@ -205,6 +253,8 @@ export function EditorView({ initialStyle }: EditorViewProps) {
         onRedo={handleRedo}
         onResetAll={handleResetAll}
         saveStatus={saveStatus}
+        saveError={saveError}
+        onRetrySave={() => void saveDraft()}
         onNameChange={handleNameChange}
         onOpenPublish={() => setIsPublishOpen(true)}
         onOpenDownload={() => setIsDownloadOpen(true)}

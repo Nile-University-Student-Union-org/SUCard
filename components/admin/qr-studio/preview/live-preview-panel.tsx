@@ -93,12 +93,12 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
       {/* PREVIEW TOOLBAR */}
       <div className="p-2.5 sm:p-3 border-b border-slate-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-zinc-900/90 shrink-0">
         {/* Mode Selector */}
-        <div className="flex items-center gap-1 bg-white dark:bg-zinc-800 p-1 rounded-xl border border-slate-200 dark:border-zinc-700">
+        <div className="flex flex-wrap items-center gap-1 max-w-full bg-white dark:bg-zinc-800 p-1 rounded-xl border border-slate-200 dark:border-zinc-700">
           <button
             type="button"
             onClick={() => setMode("qr")}
             className={cn(
-              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
               mode === "qr"
                 ? "bg-brand text-white shadow-xs"
                 : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
@@ -113,7 +113,7 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("card")}
             className={cn(
-              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
               mode === "card"
                 ? "bg-brand text-white shadow-xs"
                 : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
@@ -128,7 +128,7 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("web")}
             className={cn(
-              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
               mode === "web"
                 ? "bg-brand text-white shadow-xs"
                 : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
@@ -143,7 +143,7 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("compare")}
             className={cn(
-              "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer",
+              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
               mode === "compare"
                 ? "bg-brand text-white shadow-xs"
                 : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
@@ -163,11 +163,12 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             size="sm"
             onClick={handleRandomizeSample}
             disabled={isRandomizing}
-            className="h-8 px-2.5 text-xs font-bold normal-case rounded-lg"
+            className="min-h-11 px-2.5 text-xs font-bold normal-case rounded-lg"
+            aria-label="Randomize sample token"
             title="Randomize payload to test density across different codes"
           >
             {isRandomizing ? (
-              <Loader2 className="size-3.5 animate-spin mr-1" />
+              <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none mr-1" />
             ) : (
               <Shuffle className="size-3.5 mr-1 text-sky-500" />
             )}
@@ -182,12 +183,13 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
                 setSurround((s) => (s.startsWith("checker") ? "light" : "checker-light"))
               }
               className={cn(
-                "p-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer",
+                "size-11 flex items-center justify-center rounded-md text-xs font-bold cursor-pointer",
                 surround === "light" || surround === "checker-light"
                   ? "bg-slate-200 dark:bg-zinc-700 text-foreground"
                   : "text-muted-foreground"
               )}
               title="Light surround"
+              aria-label="Light surround"
             >
               <Sun className="size-3.5" />
             </button>
@@ -197,12 +199,13 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
                 setSurround((s) => (s.startsWith("checker") ? "dark" : "checker-dark"))
               }
               className={cn(
-                "p-1.5 rounded-md text-xs font-bold transition-colors cursor-pointer",
+                "size-11 flex items-center justify-center rounded-md text-xs font-bold cursor-pointer",
                 surround === "dark" || surround === "checker-dark"
                   ? "bg-slate-200 dark:bg-zinc-700 text-foreground"
                   : "text-muted-foreground"
               )}
               title="Dark surround"
+              aria-label="Dark surround"
             >
               <Moon className="size-3.5" />
             </button>
@@ -217,7 +220,7 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
                   type="button"
                   onClick={() => setZoom(z)}
                   className={cn(
-                    "px-2 py-1 rounded-md text-[11px] font-bold font-mono transition-colors cursor-pointer",
+                    "min-h-11 px-2 rounded-md text-[11px] font-bold font-mono cursor-pointer",
                     zoom === z
                       ? "bg-brand text-white shadow-2xs"
                       : "text-muted-foreground hover:text-foreground"
@@ -245,13 +248,13 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
       {/* PREVIEW CANVAS WORKSPACE */}
       <div
         className={cn(
-          "flex-1 min-h-[360px] sm:min-h-[460px] p-4 sm:p-8 flex items-center justify-center overflow-auto transition-colors relative",
+          "flex-1 min-h-[360px] sm:min-h-[460px] p-4 sm:p-8 flex items-center justify-center overflow-auto relative",
           surroundBgClass
         )}
       >
         {mode === "qr" ? (
           <div
-            className="flex items-center justify-center p-4 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-black/10 dark:border-white/10 transition-all duration-200"
+            className="flex items-center justify-center p-4 rounded-2xl bg-white dark:bg-zinc-900 shadow-xl border border-black/10 dark:border-white/10 duration-200"
             style={getContainerStyle()}
           >
             <QrSvgPreview

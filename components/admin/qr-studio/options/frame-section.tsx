@@ -141,7 +141,7 @@ export const FrameSection: React.FC<FrameSectionProps> = ({ config, onChange }) 
             onChange={(e) => handleLabelChange(e.target.value)}
             placeholder="e.g. SCAN TO REDEEM"
             maxLength={24}
-            className="w-full h-9 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
+            className="w-full min-h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
           />
           <span className="text-[10px] text-muted-foreground block text-right font-mono">
             {frame.label.length}/24 chars

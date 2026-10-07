@@ -100,7 +100,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({ config, onChange }) =>
             type="button"
             onClick={() => handleLogoTypeChange("none")}
             className={cn(
-              "p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer",
+              "p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold cursor-pointer",
               logo.type === "none"
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -112,7 +112,7 @@ export const LogoSection: React.FC<LogoSectionProps> = ({ config, onChange }) =>
             type="button"
             onClick={() => handleLogoTypeChange("nusu")}
             className={cn(
-              "p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition-all cursor-pointer",
+              "p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold cursor-pointer",
               logo.type === "nusu"
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"

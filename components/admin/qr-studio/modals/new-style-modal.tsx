@@ -105,7 +105,7 @@ export const NewStyleModal: React.FC<NewStyleModalProps> = ({
                     type="button"
                     onClick={() => setSelectedPreset(presetKey)}
                     className={cn(
-                      "p-3 rounded-2xl border-2 flex flex-col items-center text-center gap-2 transition-all cursor-pointer",
+                      "p-3 rounded-2xl border-2 flex flex-col items-center text-center gap-2 cursor-pointer",
                       isSelected
                         ? "bg-brand/5 border-brand ring-2 ring-brand/30 shadow-sm"
                         : "bg-white dark:bg-zinc-800/80 border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -154,7 +154,7 @@ export const NewStyleModal: React.FC<NewStyleModalProps> = ({
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
+                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
                 Creating…
               </>
             ) : (

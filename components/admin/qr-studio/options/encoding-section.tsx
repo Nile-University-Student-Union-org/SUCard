@@ -113,7 +113,7 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
             type="button"
             onClick={() => handleVersionModeChange("auto")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.encoding.version === null
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -125,7 +125,7 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
             type="button"
             onClick={() => handleVersionModeChange("fixed")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.encoding.version !== null
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -163,7 +163,7 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
             type="button"
             onClick={() => handleMaskModeChange("auto")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.encoding.mask === null
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -175,7 +175,7 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
             type="button"
             onClick={() => handleMaskModeChange("fixed")}
             className={cn(
-              "h-9 rounded-xl border text-xs font-bold transition-all cursor-pointer",
+              "h-9 rounded-xl border text-xs font-bold cursor-pointer",
               config.encoding.mask !== null
                 ? "bg-brand text-white border-brand shadow-xs"
                 : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"
@@ -186,14 +186,14 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
         </div>
 
         {config.encoding.mask !== null && (
-          <div className="flex items-center gap-1.5 pt-1 overflow-x-auto">
+          <div className="flex flex-wrap items-center gap-1.5 pt-1">
             {[0, 1, 2, 3, 4, 5, 6, 7].map((m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => handleMaskValueChange(m)}
                 className={cn(
-                  "size-8 rounded-lg border font-mono font-bold text-xs transition-all cursor-pointer",
+                  "size-11 rounded-lg border font-mono font-bold text-xs cursor-pointer",
                   config.encoding.mask === m
                     ? "bg-brand text-white border-brand shadow-2xs"
                     : "bg-white dark:bg-zinc-800 text-foreground border-slate-200 dark:border-zinc-700 hover:border-brand/40"

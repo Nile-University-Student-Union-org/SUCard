@@ -216,14 +216,14 @@ export function StylesLibraryView() {
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs">
         {/* Status Tabs */}
-        <div className="flex items-center gap-1 overflow-x-auto p-1 bg-slate-100 dark:bg-zinc-800 rounded-xl">
+        <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-zinc-800 rounded-xl">
           {(["all", "published", "draft", "archived"] as const).map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setStatusFilter(tab)}
               className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer",
+                "min-h-11 px-3 rounded-lg text-xs font-bold capitalize cursor-pointer",
                 statusFilter === tab
                   ? "bg-white dark:bg-zinc-900 text-brand dark:text-brand-soft shadow-xs font-black"
                   : "text-muted-foreground hover:text-foreground"
@@ -242,7 +242,7 @@ export function StylesLibraryView() {
             placeholder="Search styles by name…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-9 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+            className="w-full h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
           />
         </div>
       </div>
@@ -311,7 +311,7 @@ export function StylesLibraryView() {
               <div
                 key={style.id}
                 className={cn(
-                  "rounded-2xl border-2 bg-white dark:bg-zinc-900 shadow-sm hover:shadow-md transition-all flex flex-col justify-between overflow-hidden group",
+                  "rounded-2xl border-2 bg-white dark:bg-zinc-900 shadow-sm flex flex-col justify-between overflow-hidden group",
                   style.isDefaultPrint
                     ? "border-brand dark:border-brand-soft ring-1 ring-brand/30"
                     : "border-slate-200 dark:border-zinc-800"
@@ -320,7 +320,7 @@ export function StylesLibraryView() {
                 {/* Visual Preview Canvas Top */}
                 <Link
                   href={`/admin/qr-studio/${style.id}`}
-                  className="p-6 bg-slate-50 dark:bg-zinc-950/60 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-center relative cursor-pointer group-hover:brightness-95 transition-all"
+                  className="p-6 bg-slate-50 dark:bg-zinc-950/60 border-b border-slate-100 dark:border-zinc-800/80 flex items-center justify-center relative cursor-pointer"
                   title="Click to open editor"
                 >
                   <div className="w-44 h-44 sm:w-48 sm:h-48 p-3 rounded-2xl bg-white dark:bg-zinc-900 shadow-md border border-slate-200 dark:border-zinc-800 flex items-center justify-center">
@@ -362,7 +362,7 @@ export function StylesLibraryView() {
                     <div className="flex items-center justify-between gap-2">
                       <Link
                         href={`/admin/qr-studio/${style.id}`}
-                        className="font-heading text-lg sm:text-xl uppercase tracking-wide text-foreground hover:text-brand transition-colors truncate"
+                        className="font-heading text-lg sm:text-xl uppercase tracking-wide text-foreground hover:text-brand truncate"
                       >
                         {style.name}
                       </Link>
@@ -382,7 +382,7 @@ export function StylesLibraryView() {
                       href={`/admin/qr-studio/${style.id}`}
                       variant="primary"
                       size="sm"
-                      className="h-8 px-3 text-xs font-bold normal-case rounded-lg shadow-2xs"
+                      className="min-h-11 px-3 text-xs font-bold normal-case rounded-lg shadow-2xs"
                     >
                       Open Editor
                     </ButtonLink>
@@ -395,7 +395,7 @@ export function StylesLibraryView() {
                           setDuplicatingStyle(style);
                           setDuplicateName(`${style.name} (Copy)`);
                         }}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="size-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
                         title="Duplicate style"
                         aria-label="Duplicate style"
                       >
@@ -406,7 +406,7 @@ export function StylesLibraryView() {
                       <button
                         type="button"
                         onClick={() => handleExport(style)}
-                        className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                        className="size-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
                         title="Export JSON"
                         aria-label="Export JSON"
                       >
@@ -418,7 +418,7 @@ export function StylesLibraryView() {
                         <button
                           type="button"
                           onClick={() => handleSetDefault(style, "print")}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-brand hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                          className="size-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-brand hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
                           title="Set as Default for Physical Print"
                           aria-label="Set as default print"
                         >
@@ -430,7 +430,7 @@ export function StylesLibraryView() {
                         <button
                           type="button"
                           onClick={() => handleSetDefault(style, "web")}
-                          className="p-1.5 rounded-lg text-muted-foreground hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors cursor-pointer"
+                          className="size-11 flex items-center justify-center rounded-lg text-muted-foreground hover:text-sky-500 hover:bg-slate-100 dark:hover:bg-zinc-800 cursor-pointer"
                           title="Set as Default for Student Web Card"
                           aria-label="Set as default web"
                         >
@@ -444,7 +444,7 @@ export function StylesLibraryView() {
                           type="button"
                           onClick={() => setArchivingStyle(style)}
                           className={cn(
-                            "p-1.5 rounded-lg transition-colors cursor-pointer",
+                            "size-11 flex items-center justify-center rounded-lg cursor-pointer",
                             style.status === "archived"
                               ? "text-emerald-600 hover:bg-emerald-50"
                               : "text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-zinc-800"
@@ -523,7 +523,7 @@ export function StylesLibraryView() {
             >
               {isDuplicating ? (
                 <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
                   Duplicating…
                 </>
               ) : (
@@ -580,7 +580,7 @@ export function StylesLibraryView() {
           >
             {isArchiving ? (
               <>
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
+                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
                 Updating…
               </>
             ) : archivingStyle?.status === "archived" ? (

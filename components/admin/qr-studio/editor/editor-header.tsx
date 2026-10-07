@@ -30,7 +30,9 @@ export interface EditorHeaderProps {
   onUndo: () => void;
   onRedo: () => void;
   onResetAll: () => void;
-  saveStatus: "saved" | "saving" | "unsaved";
+  saveStatus: "saved" | "saving" | "unsaved" | "error";
+  saveError: string | null;
+  onRetrySave: () => void;
   onNameChange: (newName: string) => void;
   onOpenPublish: () => void;
   onOpenDownload: () => void;
@@ -46,6 +48,8 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
   onRedo,
   onResetAll,
   saveStatus,
+  saveError,
+  onRetrySave,
   onNameChange,
   onOpenPublish,
   onOpenDownload,
@@ -70,7 +74,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
       <div className="flex items-center gap-3 min-w-0">
         <Link
           href="/admin/qr-studio"
-          className="p-2 rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-foreground transition-all cursor-pointer shrink-0"
+          className="size-11 flex items-center justify-center rounded-xl border border-slate-200 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 hover:bg-slate-100 dark:hover:bg-zinc-700 text-foreground cursor-pointer shrink-0"
           aria-label="Back to QR Studio library"
           title="Back to styles library"
         >
@@ -82,20 +86,26 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             {isEditingName ? (
               <form
                 onSubmit={handleNameSubmit}
-                className="flex items-center gap-1.5"
+                className="flex items-center gap-1.5 min-w-0"
               >
                 <input
                   type="text"
+                  aria-label="Style name"
                   value={nameValue}
                   onChange={(e) => setNameValue(e.target.value)}
-                  onBlur={() => handleNameSubmit()}
+                  onBlur={(event) => {
+                    if (!event.currentTarget.form?.contains(event.relatedTarget)) {
+                      handleNameSubmit();
+                    }
+                  }}
                   maxLength={80}
-                  className="h-8 rounded-lg border-2 border-brand px-2 text-sm font-black font-heading uppercase text-foreground bg-white dark:bg-zinc-800 focus:outline-none"
+                  className="min-w-0 max-w-[min(55vw,18rem)] h-11 rounded-lg border-2 border-brand px-2 text-sm font-black font-heading uppercase text-foreground bg-white dark:bg-zinc-800 focus:outline-none"
                   autoFocus
                 />
                 <button
                   type="submit"
-                  className="p-1 rounded bg-brand text-white cursor-pointer"
+                  className="size-11 flex items-center justify-center rounded bg-brand text-white cursor-pointer"
+                  aria-label="Save style name"
                 >
                   <Check className="size-3.5" />
                 </button>
@@ -111,8 +121,9 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     setNameValue(styleData.name);
                     setIsEditingName(true);
                   }}
-                  className="opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-foreground p-1 transition-opacity cursor-pointer"
+                  className="size-11 flex items-center justify-center text-muted-foreground hover:text-foreground cursor-pointer"
                   title="Rename style"
+                  aria-label="Rename style"
                 >
                   <Pencil className="size-3" />
                 </button>
@@ -147,16 +158,24 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           </div>
 
           {/* Autosave Status */}
-          <div className="flex items-center gap-2 mt-0.5">
+          <div className="flex items-center gap-2 mt-0.5" role="status" aria-live="polite">
             {saveStatus === "saving" ? (
               <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-mono">
-                <Loader2 className="size-3 animate-spin text-brand" />
+                <Loader2 className="size-3 animate-spin motion-reduce:animate-none text-brand" />
                 Saving draft…
               </span>
             ) : saveStatus === "saved" ? (
               <span className="text-[11px] text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-mono">
                 <CheckCircle2 className="size-3" />
                 Saved
+              </span>
+            ) : saveStatus === "error" ? (
+              <span className="text-xs text-rose-700 dark:text-rose-300 flex flex-wrap items-center gap-2">
+                <AlertCircle className="size-4 shrink-0" />
+                Draft not saved: {saveError ?? "Please try again."}
+                <button type="button" onClick={onRetrySave} className="min-h-11 px-2 font-bold underline underline-offset-2 rounded focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand">
+                  Retry save
+                </button>
               </span>
             ) : (
               <span className="text-[11px] text-amber-600 dark:text-amber-400 flex items-center gap-1 font-mono">
@@ -176,7 +195,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             type="button"
             onClick={onUndo}
             disabled={!canUndo}
-            className="p-1.5 rounded-lg text-slate-600 dark:text-zinc-300 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="size-11 flex items-center justify-center rounded-lg text-slate-600 dark:text-zinc-300 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             title="Undo (Ctrl+Z)"
             aria-label="Undo"
           >
@@ -186,7 +205,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
             type="button"
             onClick={onRedo}
             disabled={!canRedo}
-            className="p-1.5 rounded-lg text-slate-600 dark:text-zinc-300 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+            className="size-11 flex items-center justify-center rounded-lg text-slate-600 dark:text-zinc-300 hover:text-foreground disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             title="Redo (Ctrl+Shift+Z)"
             aria-label="Redo"
           >
@@ -199,7 +218,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           variant="surface"
           size="sm"
           onClick={onResetAll}
-          className="h-9 px-2.5 text-xs font-bold normal-case rounded-xl text-muted-foreground hover:text-foreground"
+          className="min-h-11 px-2.5 text-xs font-bold normal-case rounded-xl text-muted-foreground hover:text-foreground"
           title="Reset to default config"
         >
           <RotateCcw className="size-3.5 mr-1" />
@@ -211,7 +230,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           variant="surface"
           size="sm"
           onClick={onOpenHistory}
-          className="h-9 px-2.5 text-xs font-bold normal-case rounded-xl"
+          className="min-h-11 px-2.5 text-xs font-bold normal-case rounded-xl"
           title="View published versions"
         >
           <History className="size-3.5 mr-1 text-brand" />
@@ -223,7 +242,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           variant="surface"
           size="sm"
           onClick={onOpenDownload}
-          className="h-9 px-2.5 text-xs font-bold normal-case rounded-xl"
+          className="min-h-11 px-2.5 text-xs font-bold normal-case rounded-xl"
           title="Export SVG or PNG"
         >
           <Download className="size-3.5 mr-1 text-sky-500" />
@@ -235,14 +254,16 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
           variant="primary"
           size="sm"
           onClick={onOpenPublish}
-          disabled={isBlocked}
+          disabled={isBlocked || saveStatus !== "saved"}
           className={cn(
-            "h-9 px-4 text-xs font-bold normal-case rounded-xl shadow-xs",
+            "min-h-11 px-4 text-xs font-bold normal-case rounded-xl shadow-xs",
             isBlocked && "opacity-50 cursor-not-allowed"
           )}
           title={
             isBlocked
               ? "Cannot publish: Fix blocking scan-safety checks first"
+              : saveStatus !== "saved"
+              ? "Save the draft before publishing"
               : "Publish immutable version"
           }
         >

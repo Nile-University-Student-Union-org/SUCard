@@ -155,7 +155,7 @@ export const PublishModal: React.FC<PublishModalProps> = ({
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
+                  <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
                   Publishing…
                 </>
               ) : (

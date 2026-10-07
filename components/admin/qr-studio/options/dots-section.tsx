@@ -97,7 +97,7 @@ export const DotsSection: React.FC<DotsSectionProps> = ({ config, onChange }) =>
                 type="button"
                 onClick={() => handleShapeChange(shape.id)}
                 className={cn(
-                  "p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 transition-all cursor-pointer",
+                  "p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1.5 cursor-pointer",
                   isSelected
                     ? "bg-brand text-white border-brand shadow-sm font-bold"
                     : "bg-white dark:bg-zinc-800 text-charcoal dark:text-zinc-200 border-slate-200 dark:border-zinc-700 hover:border-brand/40"
