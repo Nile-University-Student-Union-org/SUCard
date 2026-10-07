@@ -6,6 +6,7 @@ export const user = pgTable("user", {
   id: text("id").primaryKey(), name: text("name").notNull(), email: text("email").notNull().unique(),
   emailVerified: boolean("email_verified").notNull().default(false), image: text("image"),
   role: text("role", { enum: ["super_admin", "admin", "cashier", "vendor_manager", "student"] }).notNull().default("student"),
+  disabledAt: timestamp("disabled_at", { withTimezone: true }),
   createdAt: time("created_at"), updatedAt: time("updated_at"),
 });
 export const session = pgTable("session", {
