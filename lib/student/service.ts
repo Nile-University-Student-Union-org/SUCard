@@ -6,6 +6,7 @@ import { buildQrPayload, formatSerial, generateToken } from "@/lib/cards/token";
 import { getSettings } from "@/lib/settings/service";
 import { claimDecision, computeAreas, decideFlow, matchesStudentEmail, parseClaimQr } from "./rules";
 import { UNIVERSITY_ID_REGEX, type Area, type CardSummary, type ClaimErrorCode, type StudentProfile } from "./types";
+import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
 
 export class StudentError extends Error {
   constructor(public status: number, message: string, public code?: string) { super(message); }
@@ -53,8 +54,9 @@ export async function completeProfile(userId: string, universityId: string) {
     await tx.insert(auditLog).values({ actorId: userId, action: "students.registered", entity: "student", entityId: userId,
       data: { universityId, cardFlow: decision.flow, cardId: card?.id ?? null } });
     return { duplicate: false as const, profile: profileJson(profile), card: card ? cardSummary(card) : null };
-  }).then((result) => {
+  }).then(async (result) => {
     if (result.duplicate) throw new StudentError(409, "This university ID is already registered. Contact SU.");
+    if (result.card) await syncGoogleWalletForStudent(userId);
     return { profile: result.profile, card: result.card };
   });
 }
@@ -129,5 +131,6 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     const code = result.error as ClaimErrorCode;
     throw new StudentError(code === "rate_limited" ? 429 : code === "invalid_qr" ? 400 : 409, messages[code], code);
   }
+  await syncGoogleWalletForStudent(userId);
   return result;
 }
