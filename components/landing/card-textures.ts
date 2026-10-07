@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import QRCode from "qrcode";
+import { CARD_ART } from "./card-art";
 
 /** Card face texture size — ISO ID-1 ratio (85.6 × 54 mm ≈ 1.585). */
 export const CARD_TEX_W = 2560;
@@ -267,37 +268,76 @@ function paintBack(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null,
   ctx.fillRect(0, h - 22, w, 22);
 }
 
-function paintStrap(ctx: CanvasRenderingContext2D, w: number, h: number, icon: HTMLImageElement | null) {
+export const STRAP_TEX_W = 2048;
+export const STRAP_TEX_H = 640;
+
+function paintStrap(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null) {
+  const w = STRAP_TEX_W;
+  const h = STRAP_TEX_H;
   const heading = fontFamily("--font-heading", "Impact, sans-serif");
+
+  // Body: navy, slightly lighter down the middle so the ribbon reads as rounded fabric.
   const body = ctx.createLinearGradient(0, 0, 0, h);
-  body.addColorStop(0, "#0B2747");
-  body.addColorStop(0.5, NAVY);
-  body.addColorStop(1, "#0B2747");
+  body.addColorStop(0, "#0A2240");
+  body.addColorStop(0.5, "#123A66");
+  body.addColorStop(1, "#0A2240");
   ctx.fillStyle = body;
   ctx.fillRect(0, 0, w, h);
 
-  // Woven texture
-  ctx.fillStyle = "rgba(255,255,255,0.035)";
-  for (let y = 0; y < h; y += 6) ctx.fillRect(0, y, w, 2);
+  // Twill weave: fine diagonal threads.
+  ctx.save();
+  ctx.lineWidth = 2;
+  for (let x = -h; x < w + h; x += 9) {
+    ctx.strokeStyle = (x / 9) % 2 === 0 ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.10)";
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x + h * 0.35, h);
+    ctx.stroke();
+  }
+  ctx.restore();
 
-  // Edge stripes
-  ctx.fillStyle = SKY;
-  ctx.fillRect(0, 14, w, 10);
-  ctx.fillRect(0, h - 24, w, 10);
+  // Edge piping: sky band + thin white rule, both sides.
+  for (const top of [true, false]) {
+    const y = top ? 0 : h;
+    const dir = top ? 1 : -1;
+    ctx.fillStyle = "rgba(0,0,0,0.35)";
+    ctx.fillRect(0, top ? 0 : h - 14, w, 14);
+    ctx.fillStyle = SKY;
+    ctx.fillRect(0, top ? y + 22 * dir : y + 22 * dir - 34, w, 34);
+    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillRect(0, top ? y + 70 * dir : y + 70 * dir - 6, w, 6);
+  }
 
+  // Artwork: SU icon · NUSU · SU icon · NUSU, evenly spaced so the tile repeats seamlessly.
   ctx.fillStyle = "#FFFFFF";
   ctx.textBaseline = "middle";
-  ctx.font = `400 120px ${heading}`;
-  const unit = w / 2;
-  for (let i = 0; i < 2; i++) {
-    const x0 = i * unit;
-    if (icon) {
-      const ih = 120;
-      const iw = (icon.width / icon.height) * ih;
-      ctx.drawImage(icon, x0 + 70, h / 2 - ih / 2, iw, ih);
+  ctx.textAlign = "center";
+  ctx.font = `400 270px ${heading}`;
+  ctx.shadowColor = "rgba(0,0,0,0.35)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+  const slot = w / 4;
+  for (let i = 0; i < 4; i++) {
+    const cx = slot * i + slot / 2;
+    if (i % 2 === 0) {
+      if (icon) {
+        const ih = 250;
+        const iw = (icon.width / icon.height) * ih;
+        ctx.drawImage(icon, cx - iw / 2, h / 2 - ih / 2, iw, ih);
+      }
+    } else {
+      ctx.letterSpacing = "24px";
+      ctx.fillText("NUSU", cx + 12, h / 2 + 10);
+      ctx.letterSpacing = "0px";
     }
-    spacedText(ctx, "NUSU", x0 + 240, h / 2 + 6, 18);
   }
+  ctx.shadowColor = "transparent";
+  ctx.textAlign = "left";
+}
+
+/** Draws an artist-supplied PNG over the whole face (stretched to the card ratio). */
+function paintArt(ctx: CanvasRenderingContext2D, art: HTMLImageElement) {
+  ctx.drawImage(art, 0, 0, CARD_TEX_W, CARD_TEX_H);
 }
 
 export type CardTextures = {
@@ -314,11 +354,11 @@ export type CardTextures = {
 export function createCardTextures(maxAnisotropy: number): CardTextures {
   const front = canvasOf(CARD_TEX_W, CARD_TEX_H);
   const back = canvasOf(CARD_TEX_W, CARD_TEX_H);
-  const strap = canvasOf(1024, 160);
+  const strap = canvasOf(STRAP_TEX_W, STRAP_TEX_H);
   paintBase(front.ctx, CARD_TEX_W, CARD_TEX_H);
   paintBase(back.ctx, CARD_TEX_W, CARD_TEX_H);
   strap.ctx.fillStyle = NAVY;
-  strap.ctx.fillRect(0, 0, 1024, 160);
+  strap.ctx.fillRect(0, 0, STRAP_TEX_W, STRAP_TEX_H);
 
   const textures = {
     front: makeTexture(front.canvas, maxAnisotropy),
@@ -332,18 +372,22 @@ export function createCardTextures(maxAnisotropy: number): CardTextures {
   void (async () => {
     const heading = fontFamily("--font-heading", "Impact");
     const sans = fontFamily("--font-sans", "sans-serif");
-    const [logo, icon] = await Promise.all([
+    const [logo, icon, frontArt, backArt] = await Promise.all([
       loadImage("/brand/su-logo-white@hd.png"),
       loadImage("/brand/su-icon-white@hd.png"),
+      CARD_ART.front ? loadImage(CARD_ART.front) : null,
+      CARD_ART.back ? loadImage(CARD_ART.back) : null,
       document.fonts.load(`400 100px ${heading}`).catch(() => null),
       document.fonts.load(`600 100px ${sans}`).catch(() => null),
       document.fonts.load(`700 100px ${sans}`).catch(() => null),
       document.fonts.load(`500 100px ${sans}`).catch(() => null),
     ]);
     if (disposed) return;
-    await paintFront(front.ctx, logo, icon);
-    paintBack(back.ctx, icon, logo);
-    paintStrap(strap.ctx, 1024, 160, icon);
+    if (frontArt) paintArt(front.ctx, frontArt);
+    else await paintFront(front.ctx, logo, icon);
+    if (backArt) paintArt(back.ctx, backArt);
+    else paintBack(back.ctx, icon, logo);
+    paintStrap(strap.ctx, icon);
     textures.front.needsUpdate = true;
     textures.back.needsUpdate = true;
     textures.strap.needsUpdate = true;

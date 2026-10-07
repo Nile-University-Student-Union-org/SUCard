@@ -13,7 +13,7 @@ import {
   type RapierRigidBody,
   type RigidBodyProps,
 } from "@react-three/rapier";
-import { Environment, Lightformer, useCursor } from "@react-three/drei";
+import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/drei";
 import { MeshLineGeometry, MeshLineMaterial } from "meshline";
 import { CARD_TEX_H, CARD_TEX_W, SLOT, createCardTextures } from "./card-textures";
 
@@ -29,13 +29,21 @@ const px = (v: number) => (v / CARD_TEX_W) * CARD_W;
 const SLOT_Y = CARD_H / 2 - px(SLOT.cy);
 const SLOT_W = px(SLOT.w);
 const SLOT_H = px(SLOT.h);
-const RING_R = 0.13;
+// Hardware stack, bottom to top: split ring through the slot → swivel eye → barrel → strap end cap.
+const STRAP_W = 0.6;
+const RING_R = 0.15;
 const RING_Y = SLOT_Y + RING_R;
-const CLAMP_Y = RING_Y + RING_R + 0.09;
-const HANG_Y = CLAMP_Y + 0.1; // where the strap attaches, in card space
+const EYE_R = 0.055;
+const EYE_Y = SLOT_Y + RING_R * 2 + 0.028;
+const BARREL_H = 0.13;
+const BARREL_Y = EYE_Y + EYE_R + BARREL_H / 2 - 0.008;
+const CAP_H = 0.2;
+const CAP_Y = BARREL_Y + BARREL_H / 2 + CAP_H / 2 - 0.01;
+const HANG_Y = CAP_Y + CAP_H / 2 - 0.03; // where the strap attaches, in card space
 
+export const CAMERA_FOV = 25;
 const SEGMENT = 0.95;
-const ANCHOR_Y = 4.25;
+const ANCHOR_Y = 4.5;
 
 function cardShape(withSlot: boolean) {
   const s = new THREE.Shape();
@@ -141,8 +149,9 @@ function Band({ onGrab }: { onGrab?: () => void }) {
       front: face(textures.front),
       back: face(textures.back),
       edge: new THREE.MeshPhysicalMaterial({ color: "#0A2240", roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.2 }),
-      metal: new THREE.MeshStandardMaterial({ color: "#D9E2EC", metalness: 1, roughness: 0.22 }),
-      clamp: new THREE.MeshStandardMaterial({ color: "#1B2738", metalness: 0.75, roughness: 0.35 }),
+      metal: new THREE.MeshStandardMaterial({ color: "#DCE4EC", metalness: 1, roughness: 0.18 }),
+      cap: new THREE.MeshPhysicalMaterial({ color: "#C7D1DB", metalness: 1, roughness: 0.32, clearcoat: 0.6, clearcoatRoughness: 0.2 }),
+      capLine: new THREE.MeshStandardMaterial({ color: "#7D8A98", metalness: 1, roughness: 0.4 }),
     };
   }, [textures]);
   useEffect(() => () => Object.values(materials).forEach((m) => m.dispose()), [materials]);
@@ -152,8 +161,9 @@ function Band({ onGrab }: { onGrab?: () => void }) {
     const material = new MeshLineMaterial({
       map: textures.strap,
       useMap: 1,
-      repeat: new THREE.Vector2(-2.5, 1),
-      lineWidth: 0.44,
+      repeat: new THREE.Vector2(-1.75, 1),
+      // meshline widths are in clip space: world width = lineWidth * tan(fov / 2).
+      lineWidth: STRAP_W / Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV / 2)),
       color: new THREE.Color("#FFFFFF"),
       resolution: new THREE.Vector2(1, 1),
     });
@@ -307,18 +317,26 @@ function Band({ onGrab }: { onGrab?: () => void }) {
               position={[0, 0, -(CARD_DEPTH / 2 + BEVEL + 0.0006)]}
               rotation={[0, Math.PI, 0]}
             />
-            {/* Ring through the slot, then the strap clamp */}
-            <mesh material={materials.metal} position={[0, RING_Y, 0]} rotation={[0, Math.PI / 2, 0]}>
-              <torusGeometry args={[RING_R, 0.022, 20, 48]} />
+            {/* Split ring through the slot (turned so it reads as a ring from the front) */}
+            <mesh material={materials.metal} position={[0, RING_Y, 0]} rotation={[0, Math.PI * 0.32, 0]}>
+              <torusGeometry args={[RING_R, 0.019, 24, 64]} />
             </mesh>
-            <group position={[0, CLAMP_Y, 0]}>
-              <mesh material={materials.clamp}>
-                <boxGeometry args={[0.42, 0.2, 0.09]} />
-              </mesh>
-              <mesh material={materials.metal} position={[0, -0.075, 0]}>
-                <boxGeometry args={[0.44, 0.05, 0.1]} />
-              </mesh>
-            </group>
+            {/* Swivel eye, interlocked with the ring */}
+            <mesh material={materials.metal} position={[0, EYE_Y, 0]} rotation={[0, -Math.PI * 0.18, 0]}>
+              <torusGeometry args={[EYE_R, 0.014, 16, 40]} />
+            </mesh>
+            {/* Swivel barrel */}
+            <mesh material={materials.metal} position={[0, BARREL_Y, 0]}>
+              <cylinderGeometry args={[0.032, 0.042, BARREL_H, 32]} />
+            </mesh>
+            <mesh material={materials.metal} position={[0, BARREL_Y - BARREL_H / 2 + 0.012, 0]}>
+              <cylinderGeometry args={[0.05, 0.05, 0.024, 32]} />
+            </mesh>
+            {/* End cap crimped onto the strap */}
+            <RoundedBox args={[STRAP_W + 0.04, CAP_H, 0.075]} radius={0.03} smoothness={5} position={[0, CAP_Y, 0]} material={materials.cap} />
+            <mesh material={materials.capLine} position={[0, CAP_Y - CAP_H * 0.28, 0]}>
+              <boxGeometry args={[STRAP_W + 0.042, 0.012, 0.077]} />
+            </mesh>
           </group>
         </RigidBody>
       </group>

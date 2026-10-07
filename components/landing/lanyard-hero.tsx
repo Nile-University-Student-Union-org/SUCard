@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useSyncExternalStore } from "react"
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
 import { Hand, Sparkles } from "lucide-react";
-import { LanyardScene } from "./lanyard-scene";
+import { CAMERA_FOV, LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
 
 function checkWebGLSupport(): boolean {
@@ -90,7 +90,7 @@ export function LanyardHero() {
           <Canvas
             dpr={[1, 2]}
             frameloop={isFrameloopActive ? "always" : "never"}
-            camera={{ position: [0, 0, 13], fov: 25 }}
+            camera={{ position: [0, 0, 13], fov: CAMERA_FOV }}
             gl={{
               alpha: true,
               antialias: true,
@@ -101,7 +101,11 @@ export function LanyardHero() {
             }}
             aria-hidden="true"
             className="w-full h-full"
-            style={{ pointerEvents: "auto" }}
+            style={{
+              pointerEvents: "auto",
+              maskImage: "linear-gradient(to bottom, transparent 0, #000 72px)",
+              WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 72px)",
+            }}
           >
             <LanyardScene onCardGrab={() => setHasInteracted(true)} />
           </Canvas>
