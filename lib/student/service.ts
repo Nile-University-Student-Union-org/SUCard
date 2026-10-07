@@ -103,6 +103,11 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     const serialNumber = typeof serial === "number" ? serial : serial ? Number(/^SU-(\d+)$/i.exec(serial)?.[1] ?? NaN) : null;
     const [card] = await tx.select().from(cards).where(token ? eq(cards.token, token) : eq(cards.serialNumber, serialNumber ?? -1)).for("update");
     const [active] = await tx.select().from(cards).where(and(eq(cards.studentId, userId), eq(cards.status, "active"))).for("update");
+    // Re-scanning the card you already own is not an error: just return it.
+    if (card?.status === "active" && card.studentId === userId) {
+      await logAttempt("already_yours", card.id);
+      return { card: cardSummary(card) };
+    }
     const decision = claimDecision(card ?? null, active?.type ?? null, (await getSettings(tx as unknown as typeof db)).allowDigitalUpgrade);
     if (decision !== "link" && decision !== "upgrade") {
       await logAttempt(decision, card?.id);
