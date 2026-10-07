@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useRef, useCallback, useSyncExternalStore } from "react";
 import { QrCode, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { TabBar, type TabBarItem } from "@/components/ui/tab-bar";
@@ -39,15 +39,23 @@ const TABS: TabBarItem<TabKey>[] = [
   },
 ];
 
+function subscribeOnline(onChange: () => void) {
+  window.addEventListener("online", onChange);
+  window.addEventListener("offline", onChange);
+  return () => {
+    window.removeEventListener("online", onChange);
+    window.removeEventListener("offline", onChange);
+  };
+}
+
 export function ScannerManager({
   initialContext,
   user,
   areas,
 }: ScannerManagerProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("scan");
-  const [isOnline, setIsOnline] = useState(() =>
-    typeof navigator !== "undefined" ? navigator.onLine : true
-  );
+  // Server render assumes online, so hydration matches; the browser then reports the real state.
+  const isOnline = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
 
   // Scan state
   const [isValidating, setIsValidating] = useState(false);
@@ -70,19 +78,6 @@ export function ScannerManager({
   const lastScannedQrRef = useRef<string | null>(null);
   const lastScannedTimeRef = useRef<number>(0);
 
-  // Online / Offline listener
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
 
   const handleQrDecoded = useCallback(
     async (qrString: string) => {
