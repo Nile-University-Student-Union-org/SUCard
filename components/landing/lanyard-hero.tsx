@@ -3,7 +3,6 @@
 import React, { useCallback, useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { Canvas } from "@react-three/fiber";
 import * as THREE from "three";
-import { Hand, Sparkles } from "lucide-react";
 import { CAMERA_FOV, LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
 import { LanyardSkeleton } from "./lanyard-skeleton";
@@ -52,7 +51,6 @@ function useIsTabVisible() {
 
 export function LanyardHero() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [hasInteracted, setHasInteracted] = useState(false);
   const [sceneReady, setSceneReady] = useState(false);
   const handleReady = useCallback(() => setSceneReady(true), []);
   const [inView, setInView] = useState(true);
@@ -117,26 +115,13 @@ export function LanyardHero() {
               WebkitMaskComposite: "source-in",
             }}
           >
-            <LanyardScene onCardGrab={() => setHasInteracted(true)} onReady={handleReady} />
+            <LanyardScene onReady={handleReady} />
           </Canvas>
 
           <LanyardSkeleton
             done={sceneReady}
             className={`transition-opacity ${sceneReady ? "opacity-0 duration-200" : "opacity-100 duration-500"}`}
           />
-
-          {/* Interactive Tactile Hint Pill */}
-          <div
-            className={`absolute bottom-6 sm:bottom-8 left-1/2 -translate-x-1/2 z-20 pointer-events-none transition-all duration-500 ${
-              hasInteracted ? "opacity-0 translate-y-2 pointer-events-none" : "opacity-100 translate-y-0"
-            }`}
-          >
-            <div className="inline-flex items-center gap-2 whitespace-nowrap px-3.5 py-1.5 rounded-full bg-white/85 dark:bg-zinc-900/85 border-2 border-slate-200/80 dark:border-zinc-800 shadow-md backdrop-blur-md text-xs font-semibold text-charcoal dark:text-zinc-200">
-              <Hand className="size-3.5 text-brand dark:text-brand-soft animate-bounce" />
-              <span>DRAG · TAP TO FLIP</span>
-              <Sparkles className="size-3 text-sky-500 animate-pulse" />
-            </div>
-          </div>
         </>
       )}
     </div>

@@ -1,18 +1,12 @@
-"use client";
-
+import { Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Utensils,
-  Laptop,
-  Trophy,
-  Lock,
-} from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanyardCard } from "@/components/landing/lanyard-card";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { CurrentOffers } from "@/components/landing/current-offers";
 
 export default function HomePage() {
   return (
@@ -112,68 +106,9 @@ export default function HomePage() {
 
         <HowItWorks />
 
-        {/* Benefits & Privileges Strip */}
-        <section className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="rounded-2xl bg-slate-100/80 dark:bg-zinc-900/60 border-2 border-slate-200 dark:border-zinc-800 p-8 sm:p-12">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-              <div className="flex items-start gap-4">
-                <div className="size-10 rounded-tactile bg-brand/10 dark:bg-brand-soft/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
-                  <Utensils className="size-5" />
-                </div>
-                <div>
-                  <h4 className="font-heading text-lg text-charcoal dark:text-white uppercase mb-1">
-                    Dining & Cafes
-                  </h4>
-                  <p className="text-xs text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                    Enjoy up to 25% off at campus eateries and partner food chains.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="size-10 rounded-tactile bg-brand/10 dark:bg-brand-soft/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
-                  <Laptop className="size-5" />
-                </div>
-                <div>
-                  <h4 className="font-heading text-lg text-charcoal dark:text-white uppercase mb-1">
-                    Tech & Supplies
-                  </h4>
-                  <p className="text-xs text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                    Special student pricing on hardware, books, and printing services.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="size-10 rounded-tactile bg-brand/10 dark:bg-brand-soft/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
-                  <Trophy className="size-5" />
-                </div>
-                <div>
-                  <h4 className="font-heading text-lg text-charcoal dark:text-white uppercase mb-1">
-                    Sports & Events
-                  </h4>
-                  <p className="text-xs text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                    Priority access to NUSU tournaments, trips, and campus gym facilities.
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-4">
-                <div className="size-10 rounded-tactile bg-brand/10 dark:bg-brand-soft/20 flex items-center justify-center text-brand dark:text-brand-soft shrink-0">
-                  <Lock className="size-5" />
-                </div>
-                <div>
-                  <h4 className="font-heading text-lg text-charcoal dark:text-white uppercase mb-1">
-                    Cryptographic Security
-                  </h4>
-                  <p className="text-xs text-ash dark:text-zinc-400 font-medium leading-relaxed">
-                    Tamper-proof digital signatures protect your identity and card validity.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        <Suspense fallback={<div aria-hidden="true" className="h-[30rem]" />}>
+          <CurrentOffers />
+        </Suspense>
 
         {/* CTA Banner Section */}
         <section className="relative w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 text-center">
