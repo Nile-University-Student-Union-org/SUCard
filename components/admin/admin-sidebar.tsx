@@ -100,17 +100,6 @@ export function AdminSidebar({ onCloseMobile, isMobile = false }: AdminSidebarPr
         )}
       </div>
 
-      {/* Union Badge */}
-      <div className="px-6 py-3 border-b border-[#1D4B80]/40 bg-[#0A223E]/40">
-        <div className="flex items-center justify-between text-xs text-white/70">
-          <span className="font-medium">Staff Portal</span>
-          <span className="inline-flex items-center gap-1 font-mono text-[11px] text-sky-300 font-semibold">
-            <span className="size-1.5 rounded-full bg-[#018BCE]" />
-            v1.0
-          </span>
-        </div>
-      </div>
-
       {/* Navigation List */}
       <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Admin Navigation">
         {navItems.map((item) => {
