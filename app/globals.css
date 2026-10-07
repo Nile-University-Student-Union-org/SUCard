@@ -515,3 +515,7 @@ html[data-theme-transition="active"]::view-transition-new(root) {
   0% { top: -14cqw; }
   100% { top: 100%; }
 }
+@keyframes phone-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
