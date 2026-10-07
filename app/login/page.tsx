@@ -2,16 +2,21 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Eye, EyeOff, Loader2, AlertCircle, Lock, Mail } from "lucide-react";
+import { Mail, ArrowLeft, Info } from "lucide-react";
 import { signIn } from "@/lib/auth/client";
-import { Button } from "@/components/ui/button";
+import { AuthFeedback } from "@/components/ui/auth-feedback";
+import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
+import { MicrosoftSignInButton } from "@/components/ui/microsoft-sign-in-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
+import { Alert } from "@/components/ui/alert";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { AmbientBackdrop } from "@/components/ui/ambient-backdrop";
 
 const loginSchema = z.object({
   email: z
@@ -25,8 +30,11 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [showPassword, setShowPassword] = useState(false);
-  const [authError, setAuthError] = useState<string | null>(null);
+  const [authError, setAuthError] = useState<{
+    variant: "error" | "lockout" | "warning";
+    message: string;
+  } | null>(null);
+  const [microsoftInfo, setMicrosoftInfo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -44,6 +52,7 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     setIsLoading(true);
     setAuthError(null);
+    setMicrosoftInfo(null);
 
     try {
       const res = await signIn.email({
@@ -52,167 +61,255 @@ export default function LoginPage() {
       });
 
       if (res.error) {
-        setAuthError(res.error.message || "Invalid email or password. Please try again.");
+        const status = res.error.status;
+        const msg = res.error.message || "";
+
+        if (status === 429 || msg.toLowerCase().includes("too many") || msg.toLowerCase().includes("rate limit")) {
+          setAuthError({
+            variant: "lockout",
+            message: "Too many attempts. Try again in a minute.",
+          });
+        } else if (
+          status === 403 ||
+          msg.toLowerCase().includes("disabled") ||
+          msg.includes("This account is disabled. Contact an SU super admin.")
+        ) {
+          setAuthError({
+            variant: "error",
+            message: "This account is disabled. Contact an SU super admin.",
+          });
+        } else {
+          setAuthError({
+            variant: "error",
+            message: msg || "Invalid email or password. Please try again.",
+          });
+        }
         setIsLoading(false);
         return;
       }
 
       router.push("/admin/cards");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to sign in. Please try again.";
-      setAuthError(message);
+    } catch (err: unknown) {
+      const errorObj = err as { status?: number; message?: string };
+      if (errorObj?.status === 429) {
+        setAuthError({
+          variant: "lockout",
+          message: "Too many attempts. Try again in a minute.",
+        });
+      } else {
+        const message = err instanceof Error ? err.message : "Failed to sign in. Please try again.";
+        setAuthError({
+          variant: "error",
+          message,
+        });
+      }
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center p-4 sm:p-6 bg-[#0F3056] overflow-hidden selection:bg-[#018BCE] selection:text-white">
-      {/* Subtle brand geometry / arches */}
-      <div
-        className="pointer-events-none absolute -top-32 -left-32 size-96 rounded-full border-2 border-[#018BCE]/20 bg-[#0F548D]/20 blur-2xl"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute top-1/4 -right-24 size-80 rounded-full border border-[#018BCE]/30 bg-[#018BCE]/15 blur-xl"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute -bottom-36 left-1/3 size-[28rem] rounded-full border-2 border-[#0F548D]/40 bg-[#0F548D]/20 blur-3xl"
-        aria-hidden="true"
-      />
-      {/* Geometric concentric arcs matching logo style */}
-      <div
-        className="pointer-events-none absolute top-10 right-10 size-64 rounded-full border border-white/5"
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute top-10 right-10 size-96 rounded-full border border-white/5"
-        aria-hidden="true"
-      />
+    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
+      {/* 1. Left Brand Panel (Desktop Split Layout) */}
+      <div className="hidden lg:flex lg:col-span-5 relative bg-[#0F3056] text-white flex-col justify-between p-12 overflow-hidden border-r border-[#0A2240] shadow-2xl">
+        {/* Decorative subtle ambient background shapes */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+          <div className="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-[#018BCE]/20 blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-[#0F548D]/40 blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full border border-white/5" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[350px] h-[350px] rounded-full border border-white/10" />
+        </div>
 
-      <div className="relative z-10 w-full max-w-md">
-        <Card className="shadow-2xl border-white/15 bg-white backdrop-blur-md rounded-2xl overflow-hidden py-0">
-          <CardHeader className="pt-8 pb-4 text-center items-center">
-            {/* Full color NUSU logo */}
-            <div className="mb-3 flex justify-center">
+        {/* Top: Logo & Back Link */}
+        <div className="relative z-10 flex items-center justify-between">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-sky-200 hover:text-white transition-colors group"
+          >
+            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to home</span>
+          </Link>
+          <span className="px-2.5 py-1 rounded-full bg-white/10 text-[10px] font-bold uppercase tracking-wider text-sky-200">
+            2026/27
+          </span>
+        </div>
+
+        {/* Middle: Brand Hero Message */}
+        <div className="relative z-10 space-y-6 my-auto max-w-sm">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 p-3 border border-white/20 backdrop-blur-xs flex items-center justify-center shadow-lg">
+            <Image
+              src="/brand/su-icon-white@hd.png"
+              alt="NUSU Icon"
+              width={48}
+              height={48}
+              className="w-full h-full object-contain"
+              priority
+            />
+          </div>
+
+          <div className="space-y-2">
+            <h1 className="font-heading text-4xl xl:text-5xl uppercase tracking-wider text-white leading-tight">
+              SU CARD
+            </h1>
+            <p className="text-sm xl:text-base text-sky-100/90 leading-relaxed font-normal">
+              Digital &amp; physical membership for Nile University Student Union.
+            </p>
+          </div>
+
+          <div className="pt-2 flex items-center gap-3 text-xs text-sky-200/80">
+            <span className="size-2 rounded-full bg-[#018BCE] animate-pulse" />
+            <span>One identity for campus access, events, and member perks.</span>
+          </div>
+        </div>
+
+        {/* Bottom: Footer Info */}
+        <div className="relative z-10 pt-6 border-t border-white/10 flex items-center justify-between text-xs text-sky-200/60">
+          <span>Nile University Student Union</span>
+          <span>NUSU &copy; {new Date().getFullYear()}</span>
+        </div>
+      </div>
+
+      {/* 2. Right Form Panel (Universal Sign In) */}
+      <div className="flex-1 lg:col-span-7 flex flex-col justify-between p-4 sm:p-8 lg:p-12 relative z-10">
+        <AmbientBackdrop />
+
+        {/* Top Bar for Mobile & Desktop Right */}
+        <div className="w-full max-w-md mx-auto flex items-center justify-between mb-6">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-xs font-bold text-ash dark:text-zinc-400 hover:text-foreground transition-colors group min-h-[44px]"
+          >
+            <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
+            <span>Home</span>
+          </Link>
+          <ThemeToggle />
+        </div>
+
+        {/* Form Container */}
+        <main className="w-full max-w-md mx-auto my-auto">
+          <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-2xl overflow-hidden p-6 sm:p-8">
+            {/* Mobile Header Logo */}
+            <div className="lg:hidden mb-6 flex justify-center">
               <Image
                 src="/brand/su-logo-color.png"
                 alt="Nile University Student Union Logo"
-                width={190}
-                height={56}
-                className="h-11 w-auto object-contain"
+                width={180}
+                height={52}
+                className="h-10 w-auto object-contain dark:hidden"
+                priority
+              />
+              <Image
+                src="/brand/su-logo-white@hd.png"
+                alt="Nile University Student Union Logo"
+                width={180}
+                height={52}
+                className="h-10 w-auto object-contain hidden dark:block"
                 priority
               />
             </div>
-            <CardTitle className="font-heading text-2xl sm:text-3xl uppercase tracking-wide text-[#0F3056]">
-              Staff Sign In
-            </CardTitle>
-            <CardDescription className="text-slate-600 text-xs sm:text-sm max-w-xs mx-auto">
-              Enter your student union staff credentials to manage cards and batches.
-            </CardDescription>
-          </CardHeader>
 
-          <CardContent className="px-6 sm:px-8 pb-8 pt-2">
-            {authError && (
-              <div
-                role="alert"
-                aria-live="polite"
-                className="mb-5 flex items-start gap-2.5 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-medium animate-in fade-in-50 duration-200"
-              >
-                <AlertCircle className="size-4 shrink-0 mt-0.5 text-red-600" />
-                <span>{authError}</span>
+            {/* Title & Subtitle */}
+            <div className="space-y-1.5 text-center sm:text-left mb-6">
+              <h2 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
+                SIGN IN
+              </h2>
+              <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium">
+                Students, SU staff and partners
+              </p>
+            </div>
+
+            {/* Microsoft Info Alert */}
+            {microsoftInfo && (
+              <div className="mb-5">
+                <Alert
+                  variant="info"
+                  size="sm"
+                  title="Notice"
+                  description={microsoftInfo}
+                  icon={<Info className="size-4 text-sky-600 dark:text-sky-400" />}
+                  dismissible
+                  onDismiss={() => setMicrosoftInfo(null)}
+                />
               </div>
             )}
 
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
-              {/* Email field */}
-              <div className="space-y-1.5 text-left">
-                <Label htmlFor="email" className="text-xs font-semibold text-slate-700">
-                  Staff Email
-                </Label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Mail className="size-4" />
-                  </div>
-                  <Input
-                    id="email"
-                    type="email"
-                    autoComplete="email"
-                    placeholder="name@nu.edu.eg"
-                    disabled={isLoading}
-                    aria-invalid={errors.email ? "true" : undefined}
-                    aria-describedby={errors.email ? "email-error" : undefined}
-                    className="h-10 pl-9 pr-3 text-sm rounded-lg border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:border-[#018BCE] focus-visible:ring-[#018BCE]"
-                    {...register("email")}
-                  />
-                </div>
-                {errors.email && (
-                  <p id="email-error" className="text-xs text-red-600 font-medium pt-0.5">
-                    {errors.email.message}
-                  </p>
-                )}
+            {/* Error Feedback */}
+            {authError && (
+              <div className="mb-5">
+                <AuthFeedback
+                  variant={authError.variant}
+                  message={authError.message}
+                />
               </div>
+            )}
 
-              {/* Password field */}
-              <div className="space-y-1.5 text-left">
-                <Label htmlFor="password" className="text-xs font-semibold text-slate-700">
-                  Password
-                </Label>
-                <div className="relative">
-                  <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                    <Lock className="size-4" />
-                  </div>
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    autoComplete="current-password"
-                    placeholder="••••••••••••"
-                    disabled={isLoading}
-                    aria-invalid={errors.password ? "true" : undefined}
-                    aria-describedby={errors.password ? "password-error" : undefined}
-                    className="h-10 pl-9 pr-10 text-sm rounded-lg border-slate-300 bg-white text-slate-900 placeholder:text-slate-400 focus-visible:border-[#018BCE] focus-visible:ring-[#018BCE]"
-                    {...register("password")}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 focus:outline-none focus-visible:text-[#018BCE]"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    tabIndex={0}
-                  >
-                    {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p id="password-error" className="text-xs text-red-600 font-medium pt-0.5">
-                    {errors.password.message}
-                  </p>
-                )}
-              </div>
-
-              {/* Submit button */}
-              <Button
-                type="submit"
+            {/* Primary Action: Microsoft Sign In */}
+            <div className="mb-6">
+              <MicrosoftSignInButton
                 disabled={isLoading}
-                className="w-full h-10 mt-2 bg-[#0F3056] text-white hover:bg-[#0F548D] active:bg-[#0F3056] text-sm font-semibold rounded-lg shadow transition-all cursor-pointer disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                    Signing in…
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                onSignInError={(msg) => {
+                  setMicrosoftInfo(msg);
+                  setAuthError(null);
+                }}
+              />
+            </div>
 
-        {/* Security badge at bottom */}
-        <p className="mt-6 text-center text-xs text-white/60">
-          Authorized personnel only. Nile University Student Union.
-        </p>
+            {/* "or" Divider */}
+            <div className="relative my-6 text-center">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
+              </div>
+              <div className="relative flex justify-center text-xs tracking-wider">
+                <span className="bg-white dark:bg-zinc-900 px-3 text-ash dark:text-zinc-500 font-bold uppercase text-[11px]">
+                  or sign in with email
+                </span>
+              </div>
+            </div>
+
+            {/* Email + Password Form */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
+              <Input
+                id="email"
+                type="email"
+                label="Email address"
+                autoComplete="email"
+                placeholder="name@nu.edu.eg"
+                disabled={isLoading}
+                leftIcon={<Mail className="size-4" />}
+                error={errors.email?.message}
+                {...register("email")}
+              />
+
+              <Input
+                id="password"
+                type="password"
+                label="Password"
+                autoComplete="current-password"
+                placeholder="••••••••••••"
+                disabled={isLoading}
+                showPasswordToggle
+                error={errors.password?.message}
+                {...register("password")}
+              />
+
+              <div className="pt-2">
+                <AuthSubmitButton
+                  isLoading={isLoading}
+                  loadingLabel="Signing in…"
+                  variant="primary"
+                  size="lg"
+                  className="w-full text-sm font-bold"
+                >
+                  Sign in
+                </AuthSubmitButton>
+              </div>
+            </form>
+          </Card>
+        </main>
+
+        {/* Right Panel Footer */}
+        <footer className="w-full max-w-md mx-auto mt-6 text-center text-xs text-ash dark:text-zinc-500">
+          <p>SU Card &bull; Nile University Student Union</p>
+        </footer>
       </div>
     </div>
   );

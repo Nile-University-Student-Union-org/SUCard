@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -10,73 +11,127 @@ import {
   Store,
   Tag,
   QrCode,
+  Users,
+  ScrollText,
   Settings,
   X,
 } from "lucide-react";
 import { cn } from "cn";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 
 interface NavItem {
   title: string;
   href?: string;
   icon: React.ComponentType<{ className?: string }>;
-  active?: boolean;
   soon?: boolean;
 }
 
-const navItems: NavItem[] = [
+interface NavGroup {
+  label?: string;
+  superAdminOnly?: boolean;
+  items: NavItem[];
+}
+
+const navGroups: NavGroup[] = [
   {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    soon: true,
+    label: "Overview",
+    items: [
+      {
+        title: "Dashboard",
+        icon: LayoutDashboard,
+        soon: true,
+      },
+    ],
   },
   {
-    title: "Cards",
-    href: "/admin/cards",
-    icon: CreditCard,
-    active: true,
+    label: "Cards",
+    items: [
+      {
+        title: "Cards",
+        href: "/admin/cards",
+        icon: CreditCard,
+      },
+    ],
   },
   {
-    title: "Students",
-    icon: GraduationCap,
-    soon: true,
+    label: "Members",
+    items: [
+      {
+        title: "Students",
+        icon: GraduationCap,
+        soon: true,
+      },
+      {
+        title: "Vendors",
+        icon: Store,
+        soon: true,
+      },
+      {
+        title: "Offers",
+        icon: Tag,
+        soon: true,
+      },
+    ],
   },
   {
-    title: "Vendors",
-    icon: Store,
-    soon: true,
+    label: "Design",
+    items: [
+      {
+        title: "QR Studio",
+        icon: QrCode,
+        soon: true,
+      },
+    ],
   },
   {
-    title: "Offers",
-    icon: Tag,
-    soon: true,
+    label: "Administration",
+    superAdminOnly: true,
+    items: [
+      {
+        title: "Staff",
+        href: "/admin/staff",
+        icon: Users,
+      },
+      {
+        title: "Audit log",
+        href: "/admin/audit",
+        icon: ScrollText,
+      },
+    ],
   },
   {
-    title: "QR Studio",
-    icon: QrCode,
-    soon: true,
-  },
-  {
-    title: "Settings",
-    icon: Settings,
-    soon: true,
+    label: "System",
+    items: [
+      {
+        title: "Settings",
+        icon: Settings,
+        soon: true,
+      },
+    ],
   },
 ];
 
 interface AdminSidebarProps {
+  role?: string;
   onCloseMobile?: () => void;
   isMobile?: boolean;
 }
 
-export function AdminSidebar({ onCloseMobile, isMobile = false }: AdminSidebarProps) {
+export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }: AdminSidebarProps) {
   const pathname = usePathname();
+  const isSuperAdmin = role === "super_admin";
 
   return (
-    <aside className="flex flex-col h-full w-64 bg-[#0F3056] text-white border-r border-[#1D4B80] select-none">
+    <aside className={cn(
+      "flex flex-col w-64 bg-[#0F3056] text-white border-r border-[#0A2240] select-none shadow-xl",
+      isMobile ? "h-full" : "sticky top-0 h-screen"
+    )}>
       {/* Sidebar Header & Brand */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-[#1D4B80]/60">
-        <Link href="/admin/cards" className="flex items-center gap-3 focus-visible:outline-sky-400">
+      <div className="flex items-center justify-between px-6 py-5 border-b border-white/10">
+        <Link
+          href="/admin/cards"
+          className="flex items-center gap-3 focus-visible:outline-sky-400 focus-visible:ring-2 focus-visible:ring-sky-400 rounded-lg"
+        >
           <Image
             src="/brand/su-logo-white@hd.png"
             alt="SU Card Logo"
@@ -87,83 +142,105 @@ export function AdminSidebar({ onCloseMobile, isMobile = false }: AdminSidebarPr
           />
         </Link>
         {isMobile && onCloseMobile && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
+          <button
+            type="button"
             onClick={onCloseMobile}
-            className="text-white/80 hover:text-white hover:bg-white/10"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer"
             aria-label="Close menu"
           >
             <X className="size-5" />
-          </Button>
+          </button>
         )}
       </div>
 
       {/* Navigation List */}
-      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Admin Navigation">
-        {navItems.map((item) => {
-          const isItemActive = item.href ? pathname.startsWith(item.href) : false;
-          const Icon = item.icon;
-
-          if (item.soon || !item.href) {
-            return (
-              <div
-                key={item.title}
-                className="flex items-center justify-between px-3 py-2.5 rounded-lg text-sm text-white/45 cursor-not-allowed transition-colors"
-                aria-disabled="true"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="size-4.5 text-white/40" />
-                  <span className="font-medium">{item.title}</span>
-                </div>
-                <Badge
-                  variant="secondary"
-                  className="h-4.5 px-1.5 text-[10px] bg-white/10 text-white/60 border-none font-medium"
-                >
-                  Soon
-                </Badge>
-              </div>
-            );
+      <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-4 no-scrollbar" aria-label="Admin Navigation">
+        {navGroups.map((group) => {
+          if (group.superAdminOnly && !isSuperAdmin) {
+            return null;
           }
 
           return (
-            <Link
-              key={item.title}
-              href={item.href}
-              onClick={onCloseMobile}
-              className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all group",
-                isItemActive
-                  ? "bg-[#018BCE] text-white shadow-md shadow-[#018BCE]/20 font-semibold"
-                  : "text-white/80 hover:text-white hover:bg-[#174273]"
+            <div key={group.label || "default"} className="space-y-1">
+              {group.label && (
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-200/60">
+                  {group.label}
+                </div>
               )}
-            >
-              <div className="flex items-center gap-3">
-                <Icon
-                  className={cn(
-                    "size-4.5 transition-colors",
-                    isItemActive ? "text-white" : "text-white/70 group-hover:text-white"
-                  )}
-                />
-                <span>{item.title}</span>
-              </div>
-              {isItemActive && (
-                <span className="size-1.5 rounded-full bg-white animate-pulse" aria-hidden="true" />
-              )}
-            </Link>
+              {group.items.map((item) => {
+                const isItemActive = item.href ? pathname === item.href || (item.href !== "/admin" && pathname.startsWith(item.href)) : false;
+                const Icon = item.icon;
+
+                if (item.soon || !item.href) {
+                  return (
+                    <div
+                      key={item.title}
+                      className="flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-white/40 cursor-not-allowed transition-colors"
+                      aria-disabled="true"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className="size-4 text-white/30 shrink-0" />
+                        <span className="truncate">{item.title}</span>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className="h-5 px-1.5 text-[9px] bg-white/10 text-white/50 border-none font-bold uppercase"
+                      >
+                        Soon
+                      </Badge>
+                    </div>
+                  );
+                }
+
+                return (
+                  <Link
+                    key={item.title}
+                    href={item.href}
+                    onClick={onCloseMobile}
+                    className={cn(
+                      "flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-all group min-h-[40px] cursor-pointer",
+                      isItemActive
+                        ? "bg-[#018BCE] text-white shadow-sm font-extrabold"
+                        : "text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.98]"
+                    )}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Icon
+                        className={cn(
+                          "size-4 shrink-0 transition-colors",
+                          isItemActive ? "text-white" : "text-white/70 group-hover:text-white"
+                        )}
+                      />
+                      <span className="truncate">{item.title}</span>
+                    </div>
+                    {isItemActive && (
+                      <span className="size-1.5 rounded-full bg-white shrink-0" aria-hidden="true" />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
           );
         })}
       </nav>
 
       {/* Sidebar Footer info */}
-      <div className="p-4 border-t border-[#1D4B80]/60 bg-[#0A223E]/30 text-xs text-white/60 space-y-2">
-        <div className="flex items-center gap-2 text-white/80 font-medium">
-          <Image src="/brand/su-icon-white@hd.png" alt="" width={14} height={17} className="h-4 w-auto" />
-          <span>NUSU Admin Hub</span>
+      <div className="p-4 border-t border-white/10 bg-[#0A2240]/40 text-xs text-white/60 flex items-center gap-3">
+        <Image
+          src="/brand/su-icon-white@hd.png"
+          alt="NUSU Icon"
+          width={16}
+          height={16}
+          className="h-4 w-auto object-contain shrink-0"
+        />
+        <div className="min-w-0 space-y-0.5">
+          <p className="text-[11px] font-bold text-white/80 uppercase tracking-wide truncate">
+            Nile University SU
+          </p>
+          <p className="text-[10px] leading-tight text-white/45 truncate">
+            SU Card &bull; 2026/27
+          </p>
         </div>
-        <p className="text-[11px] leading-tight text-white/50">
-          Nile University Student Union Physical & Digital Cards
-        </p>
       </div>
     </aside>
   );

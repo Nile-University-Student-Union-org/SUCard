@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @import "tw-animate-css";
-@import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -10,6 +9,29 @@
   --font-sans: var(--font-sans), "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-heading: var(--font-heading), "Anton", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: var(--font-mono), monospace;
+  --font-display: var(--font-heading), "Anton", sans-serif;
+
+  /* SU Card / Canvas Brand Tokens */
+  --color-brand: var(--brand);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-wash: var(--brand-wash);
+
+  --color-canvas-navy: var(--canvas-navy);
+  --color-canvas-navy-dark: var(--canvas-navy-dark);
+  --color-macaw-blue: var(--color-macaw-blue);
+  --color-macaw-blue-dark: var(--macaw-blue-dark);
+  --color-eel-dark-blue: var(--color-eel-dark-blue);
+
+  --color-midnight: var(--midnight);
+  --color-midnight-card: var(--midnight-card);
+  --color-midnight-surface: var(--midnight-surface);
+  --color-graphite: var(--color-graphite);
+  --color-ash: var(--color-ash);
+  --color-charcoal: var(--color-charcoal);
+  --color-paper: var(--color-paper);
+  --color-ink: var(--color-ink);
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -18,11 +40,16 @@
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
+
   --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-good: var(--chart-good);
+  --color-chart-warning: var(--chart-warning);
+  --color-chart-critical: var(--chart-critical);
+
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -40,50 +67,79 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+
+  --radius-tactile: 12px;
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
+  --radius-xl: calc(var(--radius) * 1.33);
+  --radius-2xl: calc(var(--radius) * 1.66);
+  --radius-3xl: calc(var(--radius) * 2);
 }
 
 :root {
-  /* Light Theme (SU Card Brand) */
+  --radius: 12px;
+
+  /* Surfaces & Text (Light Theme) */
   --background: #F4F7FB;
   --foreground: #0A1E38;
   --card: #FFFFFF;
   --card-foreground: #0A1E38;
   --popover: #FFFFFF;
   --popover-foreground: #0A1E38;
-  
-  /* Primary = Navy #0F3056 */
+
+  /* SU Card Primary Brand = Navy #0F3056 */
   --primary: #0F3056;
   --primary-foreground: #FFFFFF;
-  
-  /* Secondary = Light Navy Tint */
+
+  /* Secondary = Pale Navy Wash */
   --secondary: #E8EFF7;
   --secondary-foreground: #0F3056;
-  
+
   /* Muted */
   --muted: #EDF2F8;
-  --muted-foreground: #586B84;
-  
+  --muted-foreground: #475569;
+
   /* Accent & Ring = Sky #018BCE */
   --accent: #E1F1FB;
   --accent-foreground: #0F548D;
   --ring: #018BCE;
-  
-  /* Destructive */
+
+  /* Destructive & Status */
   --destructive: #DC2626;
   --destructive-foreground: #FFFFFF;
-  
+
   /* Borders & Inputs */
   --border: #E2E8F0;
   --input: #CBD5E1;
-  
-  /* Sidebar (Navy with white text) */
+
+  /* The Canvas Brand Token Mappings for SU Card (Light) */
+  --brand: #0F3056;
+  --brand-dark: #0A2240;
+  --brand-soft: #8FB8E8;
+  --brand-wash: #E8EFF7;
+  --brand-button-foreground: #FFFFFF;
+
+  --canvas-navy: #0F3056;
+  --canvas-navy-dark: #0A2240;
+  --color-macaw-blue: #018BCE;
+  --macaw-blue-dark: #0170A8;
+  --color-eel-dark-blue: #0F548D;
+
+  --midnight: #0A1E38;
+  --midnight-card: #FFFFFF;
+  --midnight-surface: #EDF2F8;
+
+  --color-graphite: #334155;
+  --color-ash: #475569;
+  --color-charcoal: #2D3748;
+  --color-paper: #FFFFFF;
+  --color-ink: #000000;
+
+  --scrollbar-thumb: #CBD5E1;
+  --scrollbar-thumb-hover: #94A3B8;
+
+  /* Sidebar */
   --sidebar: #0F3056;
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #018BCE;
@@ -92,78 +148,288 @@
   --sidebar-accent-foreground: #FFFFFF;
   --sidebar-border: #1D4B80;
   --sidebar-ring: #018BCE;
-  
-  /* Brand Charts */
+
+  /* Charts */
   --chart-1: #0F3056;
   --chart-2: #0F548D;
   --chart-3: #018BCE;
   --chart-4: #38BDF8;
   --chart-5: #0A223E;
-  
-  --radius: 0.75rem;
+  --chart-good: #16A34A;
+  --chart-warning: #F59E0B;
+  --chart-critical: #DC2626;
 }
 
 .dark {
-  /* Dark Theme */
+  /* Surfaces & Text (Dark Theme - Midnight Blue Base) */
   --background: #081424;
   --foreground: #F4F7FB;
   --card: #0D223C;
   --card-foreground: #F4F7FB;
   --popover: #0D223C;
   --popover-foreground: #F4F7FB;
-  
-  /* Primary in dark */
+
+  /* Primary */
   --primary: #018BCE;
   --primary-foreground: #FFFFFF;
-  
+
   /* Secondary */
-  --secondary: #143358;
+  --secondary: #143054;
   --secondary-foreground: #F4F7FB;
-  
+
   /* Muted */
-  --muted: #112845;
-  --muted-foreground: #90A4BC;
-  
+  --muted: #143054;
+  --muted-foreground: #94A3B8;
+
   /* Accent */
   --accent: #173E6D;
   --accent-foreground: #FFFFFF;
   --ring: #018BCE;
-  
+
   /* Destructive */
   --destructive: #EF4444;
   --destructive-foreground: #FFFFFF;
-  
+
   /* Borders & Inputs */
   --border: #1C3E66;
   --input: #234B79;
-  
+
+  /* The Canvas Brand Token Mappings for SU Card (Dark) */
+  --brand: #52A5E8;
+  --brand-dark: #3577B5;
+  --brand-soft: #5B9BE6;
+  --brand-wash: #112845;
+  --brand-button-foreground: #081424;
+
+  --canvas-navy: #0F3056;
+  --canvas-navy-dark: #0A2240;
+  --color-macaw-blue: #018BCE;
+  --macaw-blue-dark: #0170A8;
+  --color-eel-dark-blue: #38BDF8;
+
+  --midnight: #081424;
+  --midnight-card: #0D223C;
+  --midnight-surface: #143054;
+
+  --color-graphite: #CBD5E1;
+  --color-ash: #94A3B8;
+  --color-charcoal: #E2E8F0;
+  --color-paper: #FFFFFF;
+  --color-ink: #000000;
+
+  --scrollbar-thumb: #1C3E66;
+  --scrollbar-thumb-hover: #2B578E;
+
   /* Sidebar */
-  --sidebar: #091A30;
+  --sidebar: #06101D;
   --sidebar-foreground: #FFFFFF;
   --sidebar-primary: #018BCE;
   --sidebar-primary-foreground: #FFFFFF;
-  --sidebar-accent: #123055;
+  --sidebar-accent: #0E223D;
   --sidebar-accent-foreground: #FFFFFF;
-  --sidebar-border: #183C66;
+  --sidebar-border: #152E4E;
   --sidebar-ring: #018BCE;
-  
-  /* Brand Charts */
-  --chart-1: #018BCE;
+
+  /* Charts */
+  --chart-1: #52A5E8;
   --chart-2: #38BDF8;
-  --chart-3: #0F548D;
+  --chart-3: #018BCE;
   --chart-4: #60A5FA;
   --chart-5: #93C5FD;
+  --chart-good: #22C55E;
+  --chart-warning: #FBBF24;
+  --chart-critical: #EF4444;
 }
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    letter-spacing: -0.011em;
   }
   h1, h2, h3, h4, h5, h6 {
-    @apply tracking-tight;
+    font-family: var(--font-heading), "Anton", sans-serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  /* Tactile Card Frame */
+  .card-tactile {
+    @apply rounded-[12px] border-2 border-border bg-card
+           shadow-xs hover:shadow-md transition-all duration-200 hover:border-brand/60 dark:hover:border-brand-soft/60;
+  }
+
+  /* Filter / Selection Pill with 44px touch ergonomics */
+  .pill-selector {
+    @apply inline-flex items-center gap-2 px-3.5 sm:px-4 py-2 min-h-[44px] rounded-[12px] text-xs sm:text-[13px] font-semibold
+           border-2 transition-all duration-150 select-none cursor-pointer;
+  }
+}
+
+@layer utilities {
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Thin scrollbar with quiet contrast and rounded inset thumb */
+  .thin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+  .thin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: var(--scrollbar-thumb-hover);
+  }
+
+  /* Safe Area Insets for iOS Home Indicator and Notch */
+  .pb-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 1rem));
+  }
+  .pt-safe {
+    padding-top: max(1rem, env(safe-area-inset-top, 1rem));
+  }
+
+  .touch-pan-x {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+  }
+
+  .animate-shake {
+    animation: shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-slide-in-right {
+    animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-slide-in-left {
+    animation: slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-slide-in-top {
+    animation: slideInTop 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-scale-in {
+    animation: scaleIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-dropdown-pop {
+    animation: dropdownPop 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+    transform-origin: top right;
+  }
+
+  .animate-page-enter {
+    animation: pageEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-card-enter {
+    animation: cardEnter 0.38s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  }
+
+  .animate-pulse-glow {
+    animation: pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-skip-badge-pop {
+    animation: skipBadgePop 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Keyframes */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-6px); }
+  40%, 80% { transform: translateX(6px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes slideInTop {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes dropdownPop {
+  0% { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  60% { opacity: 1; transform: scale(1.008) translateY(1px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes pageEnter {
+  0% { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes cardEnter {
+  0% { opacity: 0; transform: translateY(12px) scale(0.98); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.1); }
+}
+
+@keyframes skipBadgePop {
+  0% { opacity: 0; transform: scale(0.75) translateY(6px); }
+  30% { opacity: 1; transform: scale(1.06) translateY(-2px); }
+  60% { opacity: 1; transform: scale(1) translateY(0); }
+  80% { opacity: 0.95; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.92) translateY(-4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-slide-in-top,
+  .animate-scale-in,
+  .animate-dropdown-pop,
+  .animate-page-enter,
+  .animate-card-enter,
+  .animate-pulse-glow,
+  .animate-skip-badge-pop {
+    animation: none !important;
+    transform: none !important;
   }
 }
 /* Anton has a single weight: never fake-bold it, and give it brand letter spacing.
@@ -187,5 +453,10 @@
   label[for],
   select {
     cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"],
+  [data-disabled] {
+    cursor: not-allowed;
   }
 }

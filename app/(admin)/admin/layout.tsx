@@ -13,10 +13,10 @@ export default async function AdminLayout({
   const user = await requireAdminPage();
 
   return (
-    <div className="min-h-screen flex bg-background">
+    <div className="min-h-screen flex bg-background text-foreground">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:flex-shrink-0 lg:sticky lg:top-0 lg:h-screen">
-        <AdminSidebar />
+      <div className="hidden lg:flex lg:shrink-0">
+        <AdminSidebar role={user.role} />
       </div>
 
       {/* Main Content Area */}
