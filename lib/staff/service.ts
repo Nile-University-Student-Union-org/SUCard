@@ -42,7 +42,8 @@ export async function listStaff(selfId: string): Promise<StaffMember[]> {
 export async function createStaff(input: CreateStaffRequest, actorId: string): Promise<StaffMember> {
   const ctx = await auth.$context;
   if (await ctx.internalAdapter.findUserByEmail(input.email)) throw new StaffError(409, "A user with this email already exists");
-  const hash = await ctx.password.hash(randomBytes(32).toString("base64url"));
+  // Use the password the admin typed; without one the account is reachable only via the emailed set-password link.
+  const hash = await ctx.password.hash(input.password ?? randomBytes(32).toString("base64url"));
   let created;
   try {
     created = await ctx.internalAdapter.createUser({ email: input.email, name: input.name, emailVerified: true, role: input.role }, { method: "email-password" });

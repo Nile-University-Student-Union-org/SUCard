@@ -17,4 +17,4 @@ export type PasswordResetRequest = { email: string; redirectTo?: string };
  * Reset revokes all sessions. */
 export type PasswordReset = { token: string; newPassword: string };
 /** Account creation: POST /api/admin/staff, /api/admin/vendors/[id]/accounts, or /api/vendor/cashiers
- * queues a one-time set-password link. Existing password fields are accepted for compatibility but ignored. */
+ * queues a one-time set-password link; an optional password sets the initial password (useful until email delivery is configured). */

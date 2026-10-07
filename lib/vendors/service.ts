@@ -195,7 +195,8 @@ export async function createAccount(vendorId: string, input: z.infer<typeof acco
   } else if (input.branchId) throw new VendorError(400, "Vendor manager cannot have a branch");
   const ctx = await auth.$context;
   if (await ctx.internalAdapter.findUserByEmail(input.email)) throw new VendorError(409, "Email already exists");
-  const hash = await ctx.password.hash(randomBytes(32).toString("base64url"));
+  // Use the password the admin typed; without one the account is reachable only via the emailed set-password link.
+  const hash = await ctx.password.hash(input.password ?? randomBytes(32).toString("base64url"));
   let created: {
     id: string;
   };
