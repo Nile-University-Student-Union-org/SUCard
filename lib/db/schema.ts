@@ -1,4 +1,4 @@
-import { boolean, integer, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { boolean, check, integer, index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
 const time = (name: string) => timestamp(name, { withTimezone: true }).notNull().defaultNow();
@@ -40,8 +40,25 @@ export const cards = pgTable("cards", {
   token: text("token").notNull().unique(),
   status: text("status", { enum: ["unassigned", "active", "void"] }).notNull().default("unassigned"),
   studentId: text("student_id").references(() => user.id), linkedAt: timestamp("linked_at", { withTimezone: true }),
-  voidReason: text("void_reason"), createdAt: time("created_at"),
+  linkedBy: text("linked_by").references(() => user.id, { onDelete: "set null" }),
+  voidReason: text("void_reason"), voidedAt: timestamp("voided_at", { withTimezone: true }),
+  voidedBy: text("voided_by").references(() => user.id, { onDelete: "set null" }), createdAt: time("created_at"),
 }, (t) => [index("cards_batch_id_idx").on(t.batchId), uniqueIndex("cards_active_student_idx").on(t.studentId).where(sql`${t.status} = 'active'`)]);
+export const studentProfiles = pgTable("student_profiles", {
+  userId: text("user_id").primaryKey().references(() => user.id, { onDelete: "cascade" }),
+  universityId: text("university_id").notNull().unique(),
+  cardFlow: text("card_flow", { enum: ["digital", "physical"] }).notNull(),
+  status: text("status", { enum: ["active", "suspended"] }).notNull().default("active"),
+  suspendReason: text("suspend_reason"), registeredAt: time("registered_at"),
+}, (t) => [check("student_profiles_university_id_format", sql`${t.universityId} ~ '^[0-9]{9}$'`)]);
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(), value: jsonb("value").notNull(),
+  updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }), updatedAt: time("updated_at"),
+});
+export const cardClaimAttempts = pgTable("card_claim_attempts", {
+  id: uuid("id").primaryKey().defaultRandom(), userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  cardId: uuid("card_id").references(() => cards.id, { onDelete: "set null" }), result: text("result").notNull(), createdAt: time("created_at"),
+}, (t) => [index("card_claim_attempts_user_created_idx").on(t.userId, t.createdAt)]);
 export const auditLog = pgTable("audit_log", {
   id: uuid("id").primaryKey().defaultRandom(), actorId: text("actor_id").references(() => user.id, { onDelete: "set null" }),
   action: text("action").notNull(), entity: text("entity").notNull(), entityId: text("entity_id").notNull(),

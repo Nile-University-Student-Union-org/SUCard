@@ -1,0 +1,1 @@
+ALTER TABLE "student_profiles" ADD CONSTRAINT "student_profiles_university_id_format" CHECK ("student_profiles"."university_id" ~ '^[0-9]{9}$');

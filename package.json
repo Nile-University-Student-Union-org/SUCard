@@ -13,7 +13,8 @@
     "db:up": "docker compose -f compose.dev.yml up -d",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:students": "tsx scripts/seed-dev-students.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
