@@ -57,12 +57,6 @@ export default function HomePage() {
 
       {/* Main Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-12 sm:py-16 text-center max-w-4xl mx-auto">
-        {/* Card Badge */}
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-brand/10 dark:bg-brand/20 border border-brand/25 dark:border-brand-soft/30 backdrop-blur-md text-xs sm:text-sm font-bold text-brand dark:text-brand-soft mb-8 shadow-2xs">
-          <span className="size-2 rounded-full bg-brand dark:bg-brand-soft animate-pulse" />
-          Official Membership System
-        </div>
-
         {/* Hero Title in Anton */}
         <h1 className="font-heading text-6xl sm:text-8xl md:text-9xl tracking-wider uppercase text-charcoal dark:text-white font-normal drop-shadow-xs mb-4">
           SU CARD
