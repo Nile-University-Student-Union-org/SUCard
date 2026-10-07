@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   if (!person) return json({ error: "Unauthorized" }, 401);
   if (person.disabledAt) return json({ error: "Forbidden" }, 403);
   try {
-    const { key } = await parseBody(request, z.object({ key: z.enum(["student", "admin"]) }).strict());
+    const { key } = await parseBody(request, z.object({ key: z.enum(["student", "admin", "scanner", "vendor"]) }).strict());
     const area = (await getAreas(person)).find((value) => value.key === key);
     if (!area) return json({ error: "Forbidden" }, 403);
     const response = NextResponse.json({ href: area.href }, { headers: { "Cache-Control": "no-store" } });

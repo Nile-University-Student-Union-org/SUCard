@@ -3,10 +3,10 @@ export const UNIVERSITY_ID_REGEX = /^\d{9}$/;
 export type CardFlow = "digital" | "physical";
 export type StudentStatus = "active" | "suspended";
 export type ClaimErrorCode = "not_su_card" | "already_linked" | "cancelled" | "already_has_card" | "rate_limited" | "invalid_qr";
-export type Area = { key: "student" | "admin"; label: string; href: string };
+export type Area = { key: "student" | "admin" | "scanner" | "vendor"; label: string; href: string };
 export type IssuanceSetting = { mode: CardFlow; physicalQuotaRemaining: number | null };
 export type OfficeSetting = { location: string; hours: string };
-export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; studentEmailPattern: string; office: OfficeSetting };
+export type Settings = { issuance: IssuanceSetting; allowDigitalUpgrade: boolean; studentEmailPattern: string; office: OfficeSetting; semesters: { name: string; start: string; end: string }[] };
 export type ApiError = { error: string; code?: ClaimErrorCode | string };
 export type CardSummary = { id: string; type: CardFlow; serial: string; status: "unassigned" | "active" | "void"; qr: string; linkedAt: string | null };
 

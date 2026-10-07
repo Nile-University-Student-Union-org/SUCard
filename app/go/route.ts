@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     const [profile] = await db.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, person.id));
     const [microsoft] = await db.select({ id: account.id }).from(account).where(and(eq(account.userId, person.id), eq(account.providerId, "microsoft")));
     const needsProfile = !profile && !!microsoft && matchesStudentEmail(person.email, (await getSettings()).studentEmailPattern);
-    const preferred = /(?:^|;\s*)sucard_area=(student|admin)(?:;|$)/.exec(request.headers.get("cookie") ?? "")?.[1];
+    const preferred = /(?:^|;\s*)sucard_area=(student|admin|scanner|vendor)(?:;|$)/.exec(request.headers.get("cookie") ?? "")?.[1];
     destination = goDestination(areas, needsProfile, preferred);
   }
   const response = NextResponse.redirect(new URL(destination, request.url));
