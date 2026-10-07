@@ -54,3 +54,4 @@ Fonts: **Anton** (display/headings), **Poppins** (body/UI). Logos in `public/bra
 - Shared contracts: `lib/cards/types.ts` (cards API JSON) and `lib/auth/guards.ts` (auth helpers). Keep signatures stable.
 - Never cache scan/claim/auth decisions.
 - Don't commit; the orchestrator reviews and commits.
+- Never use the "sparkles" icon (lucide Sparkles / Sparkle / WandSparkles / stars, or any similar AI-sparkle glyph) in any UI, in any project. Pick a meaningful icon or none.

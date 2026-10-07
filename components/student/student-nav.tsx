@@ -224,10 +224,10 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
         .su-liquid-glass-bar {
           backdrop-filter: blur(28px) saturate(180%);
           -webkit-backdrop-filter: blur(28px) saturate(180%);
-          transition: background 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                      box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                      border-radius 0.3s cubic-bezier(0.16, 1, 0.3, 1),
-                      transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+          transition: background-color 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                      box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                      border-radius 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+                      transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .su-liquid-glass-bar-dark {
           background: rgba(3, 7, 18, 0.68);
@@ -318,6 +318,9 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
           will-change: transform;
         }
         @media (prefers-reduced-motion: reduce) {
+          .su-liquid-glass-bar {
+            transition: none !important;
+          }
           .su-animate-nav-click-burst,
           .su-animate-nav-click-ripple,
           .su-animate-nav-click-glint,
@@ -334,14 +337,14 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
       <div
         ref={containerRef}
         className={cn(
-          "fixed inset-x-0 z-50 px-3.5 sm:px-6 pointer-events-none transition-all duration-300 pt-[env(safe-area-inset-top,0px)]",
+          "fixed inset-x-0 z-50 px-3.5 sm:px-6 pointer-events-none transition-[top] duration-200 ease-out pt-[env(safe-area-inset-top,0px)] motion-reduce:transition-none",
           isScrolled ? "top-2 sm:top-3.5" : "top-3 sm:top-5",
           className
         )}
       >
         <header
           className={cn(
-            "pointer-events-auto relative mx-auto w-full max-w-[820px] transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] su-liquid-glass-bar",
+            "pointer-events-auto relative mx-auto w-full max-w-[820px] su-liquid-glass-bar",
             isDark
               ? cn(
                   "su-liquid-glass-bar-dark",
@@ -351,7 +354,7 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                   "su-liquid-glass-bar-light",
                   isScrolled && "su-liquid-glass-bar-scrolled scale-[0.99]"
                 ),
-            mobileOpen ? "rounded-3xl shadow-2xl" : "rounded-full"
+            mobileOpen ? "rounded-3xl shadow-2xl" : "rounded-[28px] sm:rounded-full"
           )}
         >
           {/* Specular Caustic Glass Refraction Sweep */}
@@ -527,7 +530,7 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                 aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 title={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 className={cn(
-                  "group/theme relative size-8 sm:size-9 min-h-[44px] min-w-[44px] sm:min-h-0 sm:min-w-0 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer active:scale-90 select-none",
+                  "group/theme relative size-11 sm:size-9 min-h-[44px] min-w-[44px] sm:min-h-9 sm:min-w-9 rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none",
                   isDark
                     ? "bg-white/15 hover:bg-white/25 ring-1 ring-white/25 shadow-xs"
                     : "bg-[#0F3056]/[0.05] hover:bg-[#0F3056]/10 ring-1 ring-black/[0.06] shadow-2xs"
@@ -571,7 +574,7 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                 type="button"
                 onClick={() => setMobileOpen(!mobileOpen)}
                 className={cn(
-                  "md:hidden relative size-8.5 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center active:scale-90 transition-all duration-150 cursor-pointer",
+                  "md:hidden relative size-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center active:scale-90 transition-[transform,background-color,color] duration-150 ease-out motion-reduce:transition-none cursor-pointer",
                   isDark
                     ? "bg-white/15 hover:bg-white/25 ring-1 ring-white/25 text-white"
                     : "bg-white/60 hover:bg-white/90 ring-1 ring-black/[0.06] text-[#0F3056]"
@@ -582,23 +585,23 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                 <div className="w-4 h-3 flex flex-col justify-between items-center relative pointer-events-none">
                   <span
                     className={cn(
-                      "w-4 h-0.5 rounded-full transition-all duration-200",
+                      "w-4 h-0.5 rounded-full transition-transform duration-200 ease-out origin-center motion-reduce:transition-none",
                       isDark ? "bg-white" : "bg-[#0F3056]",
-                      mobileOpen && "rotate-45 translate-y-[5px]"
+                      mobileOpen && "translate-y-[5px] rotate-45"
                     )}
                   />
                   <span
                     className={cn(
-                      "w-4 h-0.5 rounded-full transition-all duration-150",
+                      "w-4 h-0.5 rounded-full transition-opacity duration-200 ease-out motion-reduce:transition-none",
                       isDark ? "bg-white" : "bg-[#0F3056]",
-                      mobileOpen && "opacity-0 scale-x-0"
+                      mobileOpen && "opacity-0"
                     )}
                   />
                   <span
                     className={cn(
-                      "w-4 h-0.5 rounded-full transition-all duration-200",
+                      "w-4 h-0.5 rounded-full transition-transform duration-200 ease-out origin-center motion-reduce:transition-none",
                       isDark ? "bg-white" : "bg-[#0F3056]",
-                      mobileOpen && "-rotate-45 -translate-y-[5px]"
+                      mobileOpen && "-translate-y-[5px] -rotate-45"
                     )}
                   />
                 </div>
@@ -609,152 +612,154 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
           {/* Mobile Expanded Menu Dropdown */}
           <div
             className={cn(
-              "md:hidden transition-all duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden",
+              "md:hidden grid transition-[grid-template-rows,opacity,transform] duration-200 ease-out origin-top-right motion-reduce:transition-none",
               mobileOpen
-                ? "max-h-[32rem] opacity-100 px-3.5 pb-4 pt-1 pointer-events-auto"
-                : "max-h-0 opacity-0 px-3.5 pb-0 pt-0 pointer-events-none"
+                ? "grid-rows-[1fr] opacity-100 scale-100 translate-y-0 pointer-events-auto"
+                : "grid-rows-[0fr] opacity-0 scale-95 -translate-y-1 pointer-events-none"
             )}
           >
-            <div
-              className={cn(
-                "h-px w-full mb-3",
-                isDark ? "bg-white/15" : "bg-[#0F3056]/10"
-              )}
-            />
-
-            <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
-              {NAV_ITEMS.map((link) => {
-                const active = isActiveRoute(link.href);
-                const Icon = link.icon;
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    aria-current={active ? "page" : undefined}
-                    onClick={() => setMobileOpen(false)}
-                    className={cn(
-                      "min-h-[44px] px-4 flex items-center justify-between rounded-xl text-[14px] font-medium transition-all duration-200 active:scale-[0.98]",
-                      active
-                        ? isDark
-                          ? "bg-white/20 text-white font-bold shadow-xs ring-1 ring-white/20"
-                          : "bg-white/95 text-[#0F3056] font-bold shadow-xs ring-1 ring-black/[0.05]"
-                        : isDark
-                        ? "text-white/80 hover:text-white hover:bg-white/10"
-                        : "text-[#0F3056]/75 hover:text-[#0F3056] hover:bg-black/[0.04]"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className="size-4 shrink-0" />
-                      <span>{link.label}</span>
-                    </div>
-                    <ArrowRight
-                      className={cn(
-                        "size-3.5 transition-transform duration-200",
-                        active
-                          ? isDark
-                            ? "text-white translate-x-0.5"
-                            : "text-[#0F3056] translate-x-0.5"
-                          : "opacity-35"
-                      )}
-                    />
-                  </Link>
-                );
-              })}
-            </nav>
-
-            {/* User Account Section on Mobile */}
-            {user && (
+            <div className="overflow-hidden px-3.5 pb-4 pt-1">
               <div
                 className={cn(
-                  "mt-3 pt-3 border-t flex flex-col gap-2",
-                  isDark ? "border-white/15" : "border-[#0F3056]/10"
+                  "h-px w-full mb-3",
+                  isDark ? "bg-white/15" : "bg-[#0F3056]/10"
                 )}
-              >
-                {/* User Info Header */}
+              />
+
+              <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
+                {NAV_ITEMS.map((link) => {
+                  const active = isActiveRoute(link.href);
+                  const Icon = link.icon;
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      aria-current={active ? "page" : undefined}
+                      onClick={() => setMobileOpen(false)}
+                      className={cn(
+                        "min-h-[44px] px-4 flex items-center justify-between rounded-xl text-[14px] font-medium transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none",
+                        active
+                          ? isDark
+                            ? "bg-white/20 text-white font-bold shadow-xs ring-1 ring-white/20"
+                            : "bg-white/95 text-[#0F3056] font-bold shadow-xs ring-1 ring-black/[0.05]"
+                          : isDark
+                          ? "text-white/80 hover:text-white hover:bg-white/10"
+                          : "text-[#0F3056]/75 hover:text-[#0F3056] hover:bg-black/[0.04]"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="size-4 shrink-0" />
+                        <span>{link.label}</span>
+                      </div>
+                      <ArrowRight
+                        className={cn(
+                          "size-3.5 transition-transform duration-150 ease-out",
+                          active
+                            ? isDark
+                              ? "text-white translate-x-0.5"
+                              : "text-[#0F3056] translate-x-0.5"
+                            : "opacity-35"
+                        )}
+                      />
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              {/* User Account Section on Mobile */}
+              {user && (
                 <div
                   className={cn(
-                    "p-2.5 rounded-xl flex items-center justify-between gap-3 border",
-                    isDark
-                      ? "bg-white/5 border-white/10 text-white"
-                      : "bg-black/[0.03] border-black/[0.06] text-[#0F3056]"
+                    "mt-3 pt-3 border-t flex flex-col gap-2",
+                    isDark ? "border-white/15" : "border-[#0F3056]/10"
                   )}
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <UserAvatar name={user.name} size={32} shape="rounded" className="shrink-0" />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-xs font-bold truncate leading-tight">{user.name}</p>
-                      <p
-                        className={cn(
-                          "text-[10px] truncate",
-                          isDark ? "text-white/60" : "text-muted-foreground"
-                        )}
-                      >
-                        {user.email}
-                      </p>
-                    </div>
-                  </div>
-                  <span
+                  {/* User Info Header */}
+                  <div
                     className={cn(
-                      "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 border",
+                      "p-2.5 rounded-xl flex items-center justify-between gap-3 border",
                       isDark
-                        ? "bg-white/15 text-white border-white/20"
-                        : "bg-[#0F3056]/10 text-[#0F3056] border-[#0F3056]/20"
+                        ? "bg-white/5 border-white/10 text-white"
+                        : "bg-black/[0.03] border-black/[0.06] text-[#0F3056]"
                     )}
                   >
-                    {user.role === "super_admin"
-                      ? "Super Admin"
-                      : user.role === "admin"
-                      ? "Admin"
-                      : user.role === "cashier"
-                      ? "Cashier"
-                      : user.role === "vendor_manager"
-                      ? "Vendor Manager"
-                      : "Student"}
-                  </span>
-                </div>
-
-                {/* Switch Area Links (if any) */}
-                {otherAreas.length > 0 && (
-                  <div className="flex flex-col gap-1 pt-1">
-                    {otherAreas.map((area) => (
-                      <button
-                        key={area.href}
-                        type="button"
-                        onClick={() => handleSwitchArea(area)}
-                        className={cn(
-                          "min-h-[44px] flex items-center justify-between w-full px-3.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.98] cursor-pointer text-left",
-                          isDark
-                            ? "bg-white/10 hover:bg-white/15 text-white ring-1 ring-white/15"
-                            : "bg-white/80 hover:bg-white text-[#0F3056] ring-1 ring-black/[0.06]"
-                        )}
-                      >
-                        <span>{area.label}</span>
-                        <ArrowRight className="size-3.5 opacity-60" />
-                      </button>
-                    ))}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <UserAvatar name={user.name} size={32} shape="rounded" className="shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-bold truncate leading-tight">{user.name}</p>
+                        <p
+                          className={cn(
+                            "text-[10px] truncate",
+                            isDark ? "text-white/60" : "text-muted-foreground"
+                          )}
+                        >
+                          {user.email}
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className={cn(
+                        "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 border",
+                        isDark
+                          ? "bg-white/15 text-white border-white/20"
+                          : "bg-[#0F3056]/10 text-[#0F3056] border-[#0F3056]/20"
+                      )}
+                    >
+                      {user.role === "super_admin"
+                        ? "Super Admin"
+                        : user.role === "admin"
+                        ? "Admin"
+                        : user.role === "cashier"
+                        ? "Cashier"
+                        : user.role === "vendor_manager"
+                        ? "Vendor Manager"
+                        : "Student"}
+                    </span>
                   </div>
-                )}
 
-                {/* Sign Out Action */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    setIsLogoutModalOpen(true);
-                  }}
-                  className={cn(
-                    "min-h-[44px] flex items-center justify-between w-full px-3.5 rounded-xl text-xs font-semibold transition-all duration-200 active:scale-[0.98] cursor-pointer text-left",
-                    "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-500/15"
+                  {/* Switch Area Links (if any) */}
+                  {otherAreas.length > 0 && (
+                    <div className="flex flex-col gap-1 pt-1">
+                      {otherAreas.map((area) => (
+                        <button
+                          key={area.href}
+                          type="button"
+                          onClick={() => handleSwitchArea(area)}
+                          className={cn(
+                            "min-h-[44px] flex items-center justify-between w-full px-3.5 rounded-xl text-xs font-semibold transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none cursor-pointer text-left",
+                            isDark
+                              ? "bg-white/10 hover:bg-white/15 text-white ring-1 ring-white/15"
+                              : "bg-white/80 hover:bg-white text-[#0F3056] ring-1 ring-black/[0.06]"
+                          )}
+                        >
+                          <span>{area.label}</span>
+                          <ArrowRight className="size-3.5 opacity-60" />
+                        </button>
+                      ))}
+                    </div>
                   )}
-                >
-                  <div className="flex items-center gap-2">
-                    <LogOut className="size-4 text-rose-600 dark:text-rose-400" />
-                    <span>Sign out</span>
-                  </div>
-                  <ArrowRight className="size-3.5 text-rose-600 dark:text-rose-400 opacity-60" />
-                </button>
-              </div>
-            )}
+
+                  {/* Sign Out Action */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setIsLogoutModalOpen(true);
+                    }}
+                    className={cn(
+                      "min-h-[44px] flex items-center justify-between w-full px-3.5 rounded-xl text-xs font-semibold transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none cursor-pointer text-left",
+                      "text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 dark:hover:bg-rose-500/15"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <LogOut className="size-4 text-rose-600 dark:text-rose-400" />
+                      <span>Sign out</span>
+                    </div>
+                    <ArrowRight className="size-3.5 text-rose-600 dark:text-rose-400 opacity-60" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </header>
       </div>
