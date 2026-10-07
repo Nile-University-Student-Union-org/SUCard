@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.agents
+.claude
+.reference
+secrets/
+.env*
+*.pem
+*.tsbuildinfo
+coverage
+exports/
+.data/
+docs/design/
+docs/SU branding.pdf
