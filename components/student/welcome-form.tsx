@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { User, Mail, CreditCard,  AlertCircle } from "lucide-react";
+import { User, Mail, CreditCard, AlertCircle } from "lucide-react";
 import { UNIVERSITY_ID_REGEX } from "@/lib/student/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -181,10 +181,11 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
                 type="submit"
                 variant="primary"
                 size="lg"
-                disabled={isLoading}
+                loading={isLoading}
+                loadingText="Setting up your account…"
                 className="w-full text-sm font-bold min-h-[48px] normal-case"
               >
-                {isLoading ? "Setting up your account…" : "Continue"}
+                Continue
               </Button>
             </div>
           </form>

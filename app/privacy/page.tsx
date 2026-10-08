@@ -133,7 +133,7 @@ export default async function PrivacyPage() {
   flushParagraph();
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col justify-between relative isolate overflow-hidden selection:bg-brand selection:text-white">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col justify-between relative isolate overflow-hidden selection:bg-brand selection:text-white">
       <AmbientBackdrop />
 
       {/* Top Bar Navigation */}

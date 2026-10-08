@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Image from "next/image";
-import { CreditCard, ShieldCheck, ChevronRight, Loader2, AlertTriangle } from "lucide-react";
+import { CreditCard, ShieldCheck, ChevronRight, Loader2, AlertTriangle, QrCode, Store } from "lucide-react";
 import type { Area } from "@/lib/student/types";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AmbientBackdrop } from "@/components/ui/ambient-backdrop";
@@ -34,6 +34,18 @@ const AREA_METADATA: Record<
     description: "Admin console — manage cards, members, and settings",
     iconBg: "bg-brand/10 dark:bg-brand/20",
     iconColor: "text-brand dark:text-brand-soft",
+  },
+  scanner: {
+    icon: QrCode,
+    description: "Cashier scanner — scan student cards and verify discounts",
+    iconBg: "bg-emerald-500/10 dark:bg-emerald-500/20",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
+  },
+  vendor: {
+    icon: Store,
+    description: "Vendor portal — manage partner offers, cashiers, and redemption stats",
+    iconBg: "bg-amber-500/10 dark:bg-amber-500/20",
+    iconColor: "text-amber-600 dark:text-amber-400",
   },
 };
 
@@ -80,7 +92,7 @@ export function ChooseTiles({ areas, userName }: ChooseTilesProps) {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-slate-50 dark:bg-zinc-950 text-foreground p-4 sm:p-8 relative isolate selection:bg-brand selection:text-white">
+    <div className="min-h-[100dvh] flex flex-col justify-between bg-slate-50 dark:bg-zinc-950 text-foreground p-4 sm:p-8 relative isolate selection:bg-brand selection:text-white">
       <AmbientBackdrop />
 
       {/* Top Bar */}
@@ -180,6 +192,7 @@ export function ChooseTiles({ areas, userName }: ChooseTilesProps) {
                 className={cn(
                   "w-full p-5 rounded-2xl sm:rounded-3xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md",
                   "hover:border-brand/60 dark:hover:border-sky-500/60 hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft",
                   "motion-reduce:hover:transform-none motion-reduce:active:transform-none motion-reduce:transition-none",
                   "transition-all duration-200 cursor-pointer text-left flex items-center justify-between gap-4 group min-h-[96px]",
                   isLoading && "ring-2 ring-brand dark:ring-sky-400 opacity-90",

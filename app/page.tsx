@@ -10,7 +10,7 @@ import { CurrentOffers } from "@/components/landing/current-offers";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen flex flex-col justify-between bg-background text-foreground overflow-clip selection:bg-brand selection:text-white">
+    <div className="relative min-h-[100dvh] flex flex-col justify-between bg-background text-foreground overflow-clip selection:bg-brand selection:text-white">
       {/* Ambient background brand glows */}
       <div
         className="pointer-events-none absolute -top-40 -left-40 size-[30rem] rounded-full bg-brand/10 dark:bg-brand/15 blur-3xl"
@@ -154,7 +154,7 @@ export default function HomePage() {
                 variant="accent"
                 className="w-full sm:w-auto min-h-[48px] px-8 text-base font-bold shadow-lg"
               >
-                <span>Get started</span>
+                <span>Get your card</span>
                 <ArrowRight className="size-5 ml-1.5" />
               </ButtonLink>
             </div>
@@ -164,8 +164,8 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="relative z-20 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 border-t border-border/60 text-xs text-ash dark:text-zinc-500">
-        <div className="flex items-center justify-center">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
             <Image
               src="/brand/su-icon-color.png"
               alt="NUSU Icon"
@@ -181,9 +181,30 @@ export default function HomePage() {
               className="size-6 object-contain hidden dark:block"
             />
             <p>
-              &copy; {new Date().getFullYear()} Nile University Student Union (NUSU). All rights reserved.
+              &copy; {new Date().getFullYear()} Nile University Student Union (NUSU).
             </p>
           </div>
+
+          <nav className="flex items-center gap-4 sm:gap-6 text-xs font-semibold" aria-label="Footer links">
+            <Link
+              href="/privacy"
+              className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+            >
+              Privacy Notice
+            </Link>
+            <Link
+              href="/login"
+              className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="#how-it-works"
+              className="hover:text-foreground transition-colors min-h-[44px] inline-flex items-center"
+            >
+              How It Works
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

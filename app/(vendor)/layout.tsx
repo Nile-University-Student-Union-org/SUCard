@@ -17,7 +17,7 @@ export default async function VendorLayout({
   const areas = await getAreas(person);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-zinc-950 text-foreground relative isolate">
+    <div className="min-h-[100dvh] flex flex-col bg-slate-50 dark:bg-zinc-950 text-foreground relative isolate">
       <AmbientBackdrop />
 
       {/* Vendor Portal Top Bar */}

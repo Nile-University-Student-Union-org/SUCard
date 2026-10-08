@@ -237,7 +237,7 @@ function LoginContent() {
       : null;
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
+    <div className="min-h-[100dvh] bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white">
       {/* 1. Left Brand Panel (Desktop Split Layout) */}
       <div className="hidden lg:flex lg:col-span-5 relative bg-gradient-to-b from-[#0F3056] via-[#0D2849] to-[#0A1E38] text-white flex-col justify-between p-8 xl:p-10 overflow-hidden border-r border-[#0A2240] shadow-2xl animate-login-panel">
         {/* Background decorative dot-grid texture & ambient glows/rings */}
@@ -629,7 +629,7 @@ function LoginContent() {
 function LoginSkeleton() {
   return (
     <div
-      className="min-h-screen bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white"
+      className="min-h-[100dvh] bg-background text-foreground flex flex-col lg:grid lg:grid-cols-12 relative isolate selection:bg-brand selection:text-white"
       role="status"
       aria-label="Loading sign in"
     >

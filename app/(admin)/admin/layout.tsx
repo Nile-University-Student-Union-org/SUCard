@@ -15,7 +15,7 @@ export default async function AdminLayout({
   const areas = await getAreas({ ...user, disabledAt: null });
 
   return (
-    <div className="min-h-screen flex bg-background text-foreground">
+    <div className="min-h-[100dvh] flex bg-background text-foreground">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex lg:shrink-0">
         <AdminSidebar role={user.role} />

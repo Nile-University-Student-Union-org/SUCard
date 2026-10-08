@@ -379,7 +379,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             onClick={handleAddToGoogleWallet}
             disabled={walletLoading}
             aria-label="Add to Google Wallet"
-            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-all active:scale-[0.99] motion-reduce:active:scale-100 motion-reduce:transition-none"
+            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-all active:scale-[0.99] motion-reduce:active:scale-100 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
           >
             {walletLoading ? (
               <>

@@ -86,7 +86,7 @@ export function ScannerHeader({
             aria-label={muted ? "Unmute scanner sound" : "Mute scanner sound"}
             aria-pressed={muted}
             className={cn(
-              "p-2 rounded-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95",
+              "p-2 rounded-xl transition-all min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer active:scale-95 focus-visible:outline-none",
               muted
                 ? "bg-white/10 text-white/70 hover:bg-white/15 focus-visible:ring-2 focus-visible:ring-white/40"
                 : "bg-sky-500/20 text-sky-300 border border-sky-400/30 hover:bg-sky-500/30 focus-visible:ring-2 focus-visible:ring-sky-400"
