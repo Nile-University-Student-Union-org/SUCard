@@ -6,6 +6,7 @@ import type { StaffMember } from "@/lib/staff/types";
 import { type StaffUser } from "@/lib/auth/guards";
 import { listStaff } from "./api";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { StaffTable } from "./staff-table";
 import { AddStaffModal } from "./add-staff-modal";
 import { EditStaffModal } from "./edit-staff-modal";
@@ -81,25 +82,20 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
   return (
     <div className="space-y-6">
       {/* Page Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
-            STAFF
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage who can sign in to the SU Card admin panel.
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          onClick={() => setIsAddOpen(true)}
-          className="normal-case font-bold h-11 px-5 shadow-xs"
-        >
-          <UserPlus className="size-4 mr-2 stroke-[2.5]" />
-          <span>Add staff</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="STAFF"
+        description="Manage who can sign in to the SU Card admin panel."
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => setIsAddOpen(true)}
+            className="normal-case font-bold h-11 px-5 shadow-xs"
+          >
+            <UserPlus className="size-4 mr-2 stroke-[2.5]" />
+            <span>Add staff</span>
+          </Button>
+        }
+      />
 
       {/* Staff Table / Cards */}
       <StaffTable

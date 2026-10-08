@@ -8,7 +8,6 @@ import {
   Mail,
   AlertTriangle,
   RotateCcw,
-  Loader2,
   Users,
   Layers,
   ArrowRightLeft,
@@ -19,6 +18,7 @@ import {
 import { toast } from "sonner";
 import type { Settings, SettingsResponse } from "@/lib/student/types";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { StatTile } from "@/components/ui/stat-tile";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -260,14 +260,10 @@ export function SettingsManager({ role }: SettingsManagerProps) {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Page Header */}
-      <div>
-        <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
-          SETTINGS
-        </h1>
-        <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-          Manage card issuance rules, physical quota, office collection details, and access patterns.
-        </p>
-      </div>
+      <PageHeader
+        title="SETTINGS"
+        description="Manage card issuance rules, physical quota, office collection details, and access patterns."
+      />
 
       {/* Primary Status Hierarchy: Mode, Quota, Stock, and Queue */}
       <section aria-label="Issuance Status & Overview" className="space-y-4">
@@ -514,17 +510,11 @@ export function SettingsManager({ role }: SettingsManagerProps) {
             type="submit"
             variant="primary"
             size="lg"
-            disabled={isSaving}
+            loading={isSaving}
+            loadingText="Saving…"
             className="font-bold min-h-[44px] normal-case px-6"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Save Changes"
-            )}
+            Save Changes
           </Button>
         </div>
       </form>
@@ -574,18 +564,12 @@ export function SettingsManager({ role }: SettingsManagerProps) {
           </Button>
           <Button
             variant="primary"
-            disabled={isSaving}
+            loading={isSaving}
+            loadingText="Saving…"
             onClick={() => void executeSave()}
             className="normal-case font-bold min-h-[44px]"
           >
-            {isSaving ? (
-              <>
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
-                Saving…
-              </>
-            ) : (
-              "Confirm & Save"
-            )}
+            Confirm & Save
           </Button>
         </ModalFooter>
       </Modal>
@@ -626,18 +610,12 @@ export function SettingsManager({ role }: SettingsManagerProps) {
           </Button>
           <Button
             variant="primary"
-            disabled={isSwitching}
+            loading={isSwitching}
+            loadingText="Switching…"
             onClick={handleBulkSwitchToDigital}
             className="normal-case font-bold min-h-[44px]"
           >
-            {isSwitching ? (
-              <>
-                <Loader2 className="size-4 mr-1.5 animate-spin" />
-                Switching…
-              </>
-            ) : (
-              `Confirm & Switch ${data.stats.pendingPhysicalStudents} Students`
-            )}
+            {`Confirm & Switch ${data.stats.pendingPhysicalStudents} Students`}
           </Button>
         </ModalFooter>
       </Modal>

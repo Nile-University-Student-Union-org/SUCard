@@ -413,6 +413,13 @@
     animation: loginCardEnter 0.5s cubic-bezier(0.22, 1, 0.36, 1) 80ms backwards;
     will-change: transform, opacity;
   }
+
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
 }
 
 /* Keyframes */

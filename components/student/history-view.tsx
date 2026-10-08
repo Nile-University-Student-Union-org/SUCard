@@ -10,11 +10,11 @@ import {
   ArrowRight,
   CheckCircle2,
   Receipt,
-  Loader2,
 } from "lucide-react";
 import type { StudentHistoryResponse } from "@/lib/analytics/types";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
 import {
@@ -208,37 +208,31 @@ export function HistoryView() {
           }
         />
       ) : redemptions.length === 0 ? (
-        <Card className="p-8 text-center space-y-5 border border-border bg-card">
-          <div className="size-14 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto border border-brand/20 shadow-xs">
-            <Receipt className="size-7" />
-          </div>
-          <div className="max-w-md mx-auto space-y-1.5">
-            <h2 className="font-heading text-xl uppercase tracking-wider text-foreground">
-              No Redemptions Yet
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              No discounts redeemed yet. Show your card QR code at partner spots around campus to start saving!
-            </p>
-          </div>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-2">
-            <ButtonLink
-              href="/deals"
-              variant="primary"
-              className="w-full sm:w-auto min-h-[44px] font-bold text-sm"
-            >
-              <Tag className="size-4 mr-2" />
-              Browse Student Deals
-            </ButtonLink>
-            <ButtonLink
-              href="/card"
-              variant="outline"
-              className="w-full sm:w-auto min-h-[44px] font-semibold text-sm border-slate-300 dark:border-zinc-700"
-            >
-              <CreditCard className="size-4 mr-2" />
-              View My Card
-            </ButtonLink>
-          </div>
-        </Card>
+        <EmptyState
+          icon={<Receipt />}
+          title="No Redemptions Yet"
+          hint="No discounts redeemed yet. Show your card QR code at partner spots around campus to start saving!"
+          action={
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-1 w-full">
+              <ButtonLink
+                href="/deals"
+                variant="primary"
+                className="w-full sm:w-auto min-h-[44px] font-bold text-sm"
+              >
+                <Tag className="size-4 mr-2" />
+                Browse Student Deals
+              </ButtonLink>
+              <ButtonLink
+                href="/card"
+                variant="outline"
+                className="w-full sm:w-auto min-h-[44px] font-semibold text-sm border-slate-300 dark:border-zinc-700"
+              >
+                <CreditCard className="size-4 mr-2" />
+                View My Card
+              </ButtonLink>
+            </div>
+          }
+        />
       ) : (
         <div className="space-y-6">
           {groupedRedemptions.map((group) => (
@@ -324,20 +318,12 @@ export function HistoryView() {
               <Button
                 variant="outline"
                 onClick={() => fetchHistory(nextCursor)}
-                disabled={loadingMore}
+                loading={loadingMore}
+                loadingText="Loading more…"
                 className="w-full sm:w-auto min-w-[160px] min-h-[44px] font-semibold"
               >
-                {loadingMore ? (
-                  <>
-                    <Loader2 className="size-4 mr-2 animate-spin motion-reduce:animate-none" />
-                    Loading more…
-                  </>
-                ) : (
-                  <>
-                    Load older redemptions
-                    <ArrowRight className="size-4 ml-2" />
-                  </>
-                )}
+                Load older redemptions
+                <ArrowRight className="size-4 ml-2" />
               </Button>
             </div>
           )}

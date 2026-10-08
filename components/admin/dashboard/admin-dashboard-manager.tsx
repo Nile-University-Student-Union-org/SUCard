@@ -25,6 +25,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { StatTile } from "@/components/ui/stat-tile";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { SegmentedControl } from "@/components/ui/segmented-control";
@@ -193,58 +195,52 @@ export function AdminDashboardManager() {
 
   return (
     <div className="space-y-6">
-      {/* Top Header & Range Selection */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
-              DASHBOARD
-            </h1>
-            {isUpdating ? (
-              <Badge
-                variant="secondary"
-                className="gap-1.5 py-1 px-2.5 text-[11px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse motion-reduce:animate-none"
-              >
-                <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
-                <span>Updating…</span>
-              </Badge>
-            ) : lastUpdated ? (
-              <span
-                className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-ash dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/80 font-mono"
-                title="Data timestamp (Cairo)"
-              >
-                <Clock className="size-3" />
-                <span>Updated {formatLastUpdatedTime(lastUpdated)}</span>
-              </span>
-            ) : null}
+      {/* Top Header */}
+      <PageHeader
+        title="DASHBOARD"
+        description="Real-time analytics, student adoption, vendor performance, and card usage."
+        badge={
+          isUpdating ? (
+            <Badge
+              variant="secondary"
+              className="gap-1.5 py-1 px-2.5 text-[11px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse motion-reduce:animate-none"
+            >
+              <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
+              <span>Updating…</span>
+            </Badge>
+          ) : lastUpdated ? (
+            <span
+              className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium text-ash dark:text-zinc-400 bg-slate-100 dark:bg-zinc-800/80 border border-slate-200 dark:border-zinc-700/80 font-mono"
+              title="Data timestamp (Cairo)"
+            >
+              <Clock className="size-3" />
+              <span>Updated {formatLastUpdatedTime(lastUpdated)}</span>
+            </span>
+          ) : null
+        }
+        actions={
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="surface"
+              size="sm"
+              onClick={handleExportRedemptions}
+              className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
+            >
+              <Download className="size-3.5 mr-1.5" />
+              Export Scans CSV
+            </Button>
+            <Button
+              variant="surface"
+              size="sm"
+              onClick={handleExportVendors}
+              className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
+            >
+              <Download className="size-3.5 mr-1.5" />
+              Export Vendors CSV
+            </Button>
           </div>
-          <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-            Real-time analytics, student adoption, vendor performance, and card usage.
-          </p>
-        </div>
-
-        {/* Export Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button
-            variant="surface"
-            size="sm"
-            onClick={handleExportRedemptions}
-            className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
-          >
-            <Download className="size-3.5 mr-1.5" />
-            Export Scans CSV
-          </Button>
-          <Button
-            variant="surface"
-            size="sm"
-            onClick={handleExportVendors}
-            className="normal-case font-bold min-h-[44px] h-11 px-4 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700 hover:bg-muted"
-          >
-            <Download className="size-3.5 mr-1.5" />
-            Export Vendors CSV
-          </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Date Range & Filter Chips Bar */}
       <div className="space-y-3 p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
@@ -561,11 +557,10 @@ export function AdminDashboardManager() {
                 <CardContent className="p-0">
                   {data.leaderboard.length === 0 ? (
                     <div className="p-8">
-                      <StatusState
-                        layout="panel"
-                        icon={<Store className="size-8 text-muted-foreground" />}
-                        title="No vendor activity"
-                        description="No redemptions logged for vendors in this period."
+                      <EmptyState
+                        icon={<Store className="size-6 text-muted-foreground" />}
+                        title="NO VENDOR ACTIVITY"
+                        hint="No redemptions logged for vendors in this period."
                       />
                     </div>
                   ) : (
@@ -574,7 +569,7 @@ export function AdminDashboardManager() {
                       <div className="hidden md:block w-full overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
+                            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
                               <th className="px-4 py-3">#</th>
                               <th
                                 className="px-4 py-3 cursor-pointer hover:text-foreground"
@@ -624,7 +619,7 @@ export function AdminDashboardManager() {
                                   key={vendor.id}
                                   className="hover:bg-muted/30 transition-colors group"
                                 >
-                                  <td className="px-4 py-3.5 font-mono text-ash dark:text-zinc-500 font-bold">
+                                  <td className="px-4 py-3.5 font-mono tabular-nums text-ash dark:text-zinc-500 font-bold">
                                     {idx + 1}
                                   </td>
                                   <td className="px-4 py-3.5">
@@ -658,16 +653,16 @@ export function AdminDashboardManager() {
                                       {vendor.category}
                                     </Badge>
                                   </td>
-                                  <td className="px-4 py-3.5 text-right font-mono font-bold text-foreground">
+                                  <td className="px-4 py-3.5 text-right font-mono tabular-nums font-bold text-foreground">
                                     {formatNumber(vendor.redemptions)}
                                   </td>
-                                  <td className="px-4 py-3.5 text-right font-mono text-muted-foreground">
+                                  <td className="px-4 py-3.5 text-right font-mono tabular-nums text-muted-foreground">
                                     {formatNumber(vendor.uniqueStudents)}
                                   </td>
-                                  <td className="px-4 py-3.5 text-right font-mono">
+                                  <td className="px-4 py-3.5 text-right font-mono tabular-nums">
                                     <span
                                       className={cn(
-                                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold",
+                                        "inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold tabular-nums",
                                         change.isPositive
                                           ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                                           : change.isNegative

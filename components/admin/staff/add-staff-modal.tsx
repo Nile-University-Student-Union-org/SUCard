@@ -12,7 +12,6 @@ import {
   Check,
   ShieldCheck,
   Shield,
-  Loader2,
   AlertCircle,
   Mail,
 } from "lucide-react";
@@ -373,17 +372,11 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingText="Adding staff…"
               className="normal-case font-bold h-11 min-h-[44px]"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Adding staff…
-                </>
-              ) : (
-                "Add staff member"
-              )}
+              Add staff member
             </Button>
           </ModalFooter>
         </form>

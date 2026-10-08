@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "cn";
 import type { VendorDto, VendorCategory } from "@/lib/vendors/types";
@@ -97,13 +98,12 @@ export function VendorsTable({
 
   if (vendors.length === 0) {
     return (
-      <StatusState
+      <EmptyState
         icon={<Store className="size-6" />}
-        variant="default"
         title="No vendors found"
-        description="No partner vendors match your search criteria. Add a new vendor to get started."
-        actions={
-          <Button variant="primary" onClick={onAddNew} className="normal-case font-bold mt-2">
+        hint="No partner vendors match your search criteria. Add a new vendor to get started."
+        action={
+          <Button variant="primary" onClick={onAddNew} className="normal-case font-bold mt-2 min-h-[44px]">
             Add new vendor
           </Button>
         }
@@ -116,8 +116,8 @@ export function VendorsTable({
       {/* Desktop Table View */}
       <div className="hidden md:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <table className="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr className="border-b border-border bg-muted/40 text-muted-foreground text-xs font-bold uppercase tracking-wider">
+          <thead className="sticky top-0 z-10 bg-slate-50/95 dark:bg-zinc-900/95 backdrop-blur-xs">
+            <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase tracking-wider">
               <th className="px-5 py-3.5">Vendor</th>
               <th className="px-4 py-3.5">Category</th>
               <th className="px-4 py-3.5">Status</th>
@@ -210,19 +210,19 @@ export function VendorsTable({
                   </td>
 
                   {/* Contract End */}
-                  <td className="px-4 py-4">
+                  <td className="px-4 py-4 tabular-nums">
                     {vendor.contractEnd ? (
                       <div className="space-y-1">
-                        <span className="text-xs font-medium text-foreground block font-mono">
+                        <span className="text-xs font-medium text-foreground block font-mono tabular-nums">
                           {vendor.contractEnd}
                         </span>
                         {contractStatus.expired ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 tabular-nums">
                             <AlertTriangle className="size-3" />
                             Expired
                           </span>
                         ) : contractStatus.expiring ? (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20 tabular-nums">
                             <AlertTriangle className="size-3" />
                             {contractStatus.daysLeft}d left
                           </span>

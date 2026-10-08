@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { toast } from "sonner";
-import { ShieldAlert, Loader2, AlertTriangle } from "lucide-react";
+import { ShieldAlert, AlertTriangle } from "lucide-react";
 import type { StaffMember } from "@/lib/staff/types";
 import { resetStaffTwoFactor, ApiError } from "./api";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
@@ -94,17 +94,11 @@ export function ResetTwoFactorDialog({
           type="button"
           variant="primary"
           onClick={handleReset}
-          disabled={isSubmitting}
+          loading={isSubmitting}
+          loadingText="Resetting 2FA…"
           className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white h-11 min-h-[44px]"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="size-4 mr-2 animate-spin" />
-              <span>Resetting 2FA…</span>
-            </>
-          ) : (
-            <span>Reset 2FA</span>
-          )}
+          <span>Reset 2FA</span>
         </Button>
       </ModalFooter>
     </Modal>

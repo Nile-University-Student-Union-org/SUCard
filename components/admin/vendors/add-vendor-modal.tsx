@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Plus, Loader2, Check, Tag, Users, ArrowRight, Store, AlertCircle } from "lucide-react";
+import { Plus, Check, Tag, Users, ArrowRight, Store, AlertCircle } from "lucide-react";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -429,20 +429,12 @@ export function AddVendorModal({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingText="Creating vendor…"
               className="normal-case font-bold h-11 min-h-[44px] px-5"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  <span>Creating vendor…</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="size-4 mr-1.5 stroke-[2.5]" />
-                  <span>Create vendor</span>
-                </>
-              )}
+              <Plus className="size-4 mr-1.5 stroke-[2.5]" />
+              <span>Create vendor</span>
             </Button>
           </ModalFooter>
         </form>

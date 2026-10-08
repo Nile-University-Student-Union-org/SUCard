@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { copyToClipboard } from "@/lib/clipboard";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { AuthSubmitButton } from "@/components/ui/auth-submit-button";
@@ -197,14 +198,10 @@ export function AccountManager({ user }: AccountManagerProps) {
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
       {/* Header */}
-      <div className="space-y-1">
-        <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
-          MY ACCOUNT
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Manage your personal staff profile and credentials.
-        </p>
-      </div>
+      <PageHeader
+        title="MY ACCOUNT"
+        description="Manage your personal staff profile and credentials."
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
         {/* Profile Card & 2FA Info (Left Col) */}
@@ -552,10 +549,12 @@ export function AccountManager({ user }: AccountManagerProps) {
               <Button
                 type="submit"
                 variant="primary"
-                disabled={isRegenerating || !regenPassword}
+                loading={isRegenerating}
+                loadingText="Generating…"
+                disabled={!regenPassword}
                 className="normal-case font-bold h-11 min-h-[44px]"
               >
-                {isRegenerating ? "Generating…" : "Generate new codes"}
+                Generate new codes
               </Button>
             </ModalFooter>
           </form>

@@ -10,7 +10,6 @@ import {
   ShieldCheck,
   ShieldAlert,
   RotateCcw,
-  Loader2,
   AlertTriangle,
   ArrowRightLeft,
   Download,
@@ -36,6 +35,8 @@ import {
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
+import { PageHeader } from "@/components/ui/page-header";
 import { Alert } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -466,18 +467,10 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white">
-            STUDENTS
-          </h1>
-          <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-            Search Nile University students, inspect card status, manage suspensions, and export records.
-          </p>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center gap-2 flex-wrap">
+      <PageHeader
+        title="STUDENTS"
+        description="Search Nile University students, inspect card status, manage suspensions, and export records."
+        actions={
           <Button
             variant="surface"
             size="sm"
@@ -487,8 +480,8 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             <Download className="size-3.5 mr-1.5" />
             Export Students CSV
           </Button>
-        </div>
-      </div>
+        }
+      />
 
       {/* Search & Filter Bar */}
       <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs space-y-3">
@@ -724,14 +717,25 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             </div>
           ) : students.length === 0 ? (
             <div className="p-8">
-              <StatusState
-                layout="panel"
-                icon={<GraduationCap className="size-8 text-muted-foreground" />}
+              <EmptyState
+                icon={<GraduationCap className="size-8" />}
                 title={searchQuery ? "No matching students" : "No students found"}
-                description={
+                hint={
                   searchQuery
                     ? `No students matching "${searchQuery}". Try a different name, email, or university ID.`
                     : "No students registered for this filter selection."
+                }
+                action={
+                  searchQuery ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleSearchChange("")}
+                      className="normal-case font-bold min-h-[44px]"
+                    >
+                      Clear search
+                    </Button>
+                  ) : undefined
                 }
               />
             </div>
@@ -797,7 +801,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                           </TableCell>
 
                           {/* University ID */}
-                          <TableCell className="font-mono text-xs font-bold py-3.5">
+                          <TableCell className="font-mono text-xs font-bold py-3.5 tabular-nums">
                             {student.profile.universityId}
                           </TableCell>
 
@@ -816,12 +820,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                           </TableCell>
 
                           {/* Signed up date */}
-                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground">
+                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground tabular-nums">
                             {formatCairoDateOnly(student.registeredAt || student.profile.registeredAt)}
                           </TableCell>
 
                           {/* Last redemption */}
-                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground">
+                          <TableCell className="py-3.5 text-xs font-mono text-muted-foreground tabular-nums">
                             {student.lastRedemptionAt
                               ? formatCairoDateOnly(student.lastRedemptionAt)
                               : "—"}
@@ -1073,17 +1077,11 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   <Button
                     variant="outline"
                     onClick={handleLoadMore}
-                    disabled={isLoadingMore}
+                    loading={isLoadingMore}
+                    loadingText="Loading more…"
                     className="font-bold normal-case text-xs min-h-[44px] px-6"
                   >
-                    {isLoadingMore ? (
-                      <>
-                        <Loader2 className="size-4 mr-2 animate-spin" />
-                        Loading more…
-                      </>
-                    ) : (
-                      "Load more students"
-                    )}
+                    Load more students
                   </Button>
                 </div>
               )}
@@ -1257,17 +1255,11 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             <Button
               type="submit"
               variant="primary"
-              disabled={isLinking}
+              loading={isLinking}
+              loadingText="Linking…"
               className="normal-case font-bold min-h-[44px]"
             >
-              {isLinking ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  Linking…
-                </>
-              ) : (
-                "Link Card"
-              )}
+              Link Card
             </Button>
           </ModalFooter>
         </form>
@@ -1328,17 +1320,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             <Button
               type="submit"
               variant="destructive"
-              disabled={isVoiding || !voidReason.trim()}
+              loading={isVoiding}
+              loadingText="Voiding…"
+              disabled={!voidReason.trim()}
               className="normal-case font-bold min-h-[44px]"
             >
-              {isVoiding ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  Voiding…
-                </>
-              ) : (
-                "Confirm & Void Card"
-              )}
+              Confirm & Void Card
             </Button>
           </ModalFooter>
         </form>
@@ -1390,21 +1377,23 @@ export function StudentsManager({ role }: StudentsManagerProps) {
             <Button
               type="button"
               variant="primary"
-              disabled={isChangingFlow}
+              loading={isChangingFlow}
+              loadingText="Updating…"
               onClick={() => handleChangeFlow("digital")}
               className="normal-case font-bold min-h-[44px]"
             >
-              {isChangingFlow ? "Updating…" : "Switch to Digital"}
+              Switch to Digital
             </Button>
           ) : (
             <Button
               type="button"
               variant="primary"
-              disabled={isChangingFlow}
+              loading={isChangingFlow}
+              loadingText="Updating…"
               onClick={() => handleChangeFlow("physical")}
               className="normal-case font-bold min-h-[44px]"
             >
-              {isChangingFlow ? "Updating…" : "Switch to Physical"}
+              Switch to Physical
             </Button>
           )}
         </ModalFooter>
@@ -1453,11 +1442,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           <Button
             type="button"
             variant="primary"
-            disabled={isRoleChanging}
+            loading={isRoleChanging}
+            loadingText="Promoting…"
             onClick={handlePromoteAdmin}
             className="normal-case font-bold min-h-[44px]"
           >
-            {isRoleChanging ? "Promoting…" : "Confirm Promotion"}
+            Confirm Promotion
           </Button>
         </ModalFooter>
       </Modal>
@@ -1505,11 +1495,12 @@ export function StudentsManager({ role }: StudentsManagerProps) {
           <Button
             type="button"
             variant="destructive"
-            disabled={isRoleChanging}
+            loading={isRoleChanging}
+            loadingText="Revoking…"
             onClick={handleRevokeAdmin}
             className="normal-case font-bold min-h-[44px]"
           >
-            {isRoleChanging ? "Revoking…" : "Confirm Role Removal"}
+            Confirm Role Removal
           </Button>
         </ModalFooter>
       </Modal>

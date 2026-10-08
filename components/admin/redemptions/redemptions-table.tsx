@@ -4,6 +4,7 @@ import React from "react";
 import { Check, Store, Ban, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "cn";
 import type { RedemptionDto } from "@/lib/vendors/types";
@@ -73,11 +74,10 @@ export function RedemptionsTable({
 
   if (redemptions.length === 0) {
     return (
-      <StatusState
-        icon={<Store className="size-6" />}
-        variant="default"
-        title="No redemption records match"
-        description="Scans and discount transactions will be logged in this ledger."
+      <EmptyState
+        icon={<Store className="size-6 text-muted-foreground" />}
+        title="NO REDEMPTION RECORDS"
+        hint="Scans and discount transactions will be logged in this ledger."
       />
     );
   }
@@ -105,7 +105,7 @@ export function RedemptionsTable({
       <div className="hidden lg:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
+            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
               <th className="px-4 py-3.5">Time (Cairo)</th>
               <th className="px-4 py-3.5">Vendor</th>
               <th className="px-4 py-3.5">Cashier</th>
@@ -113,7 +113,7 @@ export function RedemptionsTable({
               <th className="px-4 py-3.5">Offer</th>
               <th className="px-3 py-3.5">Result</th>
               <th className="px-3 py-3.5 text-center">Confirmed</th>
-              <th className="px-3 py-3.5">Bill</th>
+              <th className="px-3 py-3.5 text-right">Bill</th>
               <th className="px-4 py-3.5 text-right">Actions</th>
             </tr>
           </thead>
@@ -131,7 +131,7 @@ export function RedemptionsTable({
                   )}
                 >
                   {/* Time */}
-                  <td className="px-4 py-3.5 font-mono text-muted-foreground whitespace-nowrap">
+                  <td className="px-4 py-3.5 font-mono tabular-nums text-muted-foreground whitespace-nowrap">
                     {formatTimestamp(r.createdAt)}
                   </td>
 
@@ -152,21 +152,21 @@ export function RedemptionsTable({
                     {r.studentName ? (
                       <div className={cn("space-y-0.5", isVoided && "line-through")}>
                         <span className="font-bold text-foreground block">{r.studentName}</span>
-                        <span className="font-mono text-[11px] text-muted-foreground block">{r.universityId}</span>
+                        <span className="font-mono tabular-nums text-[11px] text-muted-foreground block">{r.universityId}</span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground/60">—</span>
+                      <span className="text-muted-foreground/40">—</span>
                     )}
                   </td>
 
                   {/* Offer */}
-                  <td className="px-4 py-3.5 max-w-[180px] truncate">
+                  <td className="px-4 py-3.5 max-w-[180px] truncate" title={r.offerTitle || undefined}>
                     {r.offerTitle ? (
                       <span className={cn("font-semibold text-brand dark:text-brand-soft truncate block", isVoided && "line-through")}>
                         {r.offerTitle}
                       </span>
                     ) : (
-                      <span className="text-muted-foreground/60">—</span>
+                      <span className="text-muted-foreground/40">—</span>
                     )}
                   </td>
 
@@ -196,7 +196,7 @@ export function RedemptionsTable({
                   </td>
 
                   {/* Bill */}
-                  <td className="px-3 py-3.5 font-mono whitespace-nowrap">
+                  <td className="px-3 py-3.5 font-mono tabular-nums text-right whitespace-nowrap">
                     {r.billAmount ? (
                       <span className={cn("font-bold text-foreground", isVoided && "line-through")}>
                         EGP {parseFloat(r.billAmount).toFixed(2)}

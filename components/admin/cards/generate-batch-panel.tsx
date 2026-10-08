@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Loader2, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon } from "lucide-react";
+import { Plus, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon } from "lucide-react";
 import { BATCH_LABEL_MAX, BATCH_COUNT_MAX, type Batch } from "@/lib/cards/types";
 import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { listStyles } from "@/components/admin/qr-studio/api";
@@ -356,20 +356,12 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
               <Button
                 type="submit"
                 variant="primary"
-                disabled={isSubmitting}
+                loading={isSubmitting}
+                loadingText="Generating…"
                 className="w-full sm:w-auto min-h-[44px] px-6 text-sm font-bold normal-case shadow-xs"
               >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                    Generating…
-                  </>
-                ) : (
-                  <>
-                    <Plus className="size-4 mr-1.5 stroke-[2.5]" />
-                    Generate batch
-                  </>
-                )}
+                <Plus className="size-4 mr-1.5 stroke-[2.5]" />
+                Generate batch
               </Button>
             </div>
           </form>
@@ -425,17 +417,11 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
             type="button"
             variant="primary"
             onClick={handleConfirmGenerate}
-            disabled={isSubmitting}
+            loading={isSubmitting}
+            loadingText="Generating batch…"
             className="normal-case min-h-[44px]"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Generating batch…
-              </>
-            ) : (
-              "Confirm & Generate"
-            )}
+            Confirm & Generate
           </Button>
         </ModalFooter>
       </Modal>

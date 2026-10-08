@@ -7,7 +7,6 @@ import {
   RotateCcw,
   AlertTriangle,
   Ban,
-  Loader2,
   Palette,
   Truck,
   ArrowRight,
@@ -22,6 +21,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
@@ -255,11 +255,10 @@ export function BatchesTable({
         ) : batches.length === 0 ? (
           /* Empty State */
           <div className="p-8">
-            <StatusState
-              layout="panel"
-              icon={<Inbox className="size-7 text-muted-foreground" />}
+            <EmptyState
+              icon={<Inbox className="size-7" />}
               title="No cards yet"
-              description="Generate your first batch of physical membership cards using the form above."
+              hint="Generate your first batch of physical membership cards using the form above."
             />
           </div>
         ) : (
@@ -339,7 +338,7 @@ export function BatchesTable({
                         </TableCell>
 
                         {/* Serials Range */}
-                        <TableCell className="text-xs font-mono py-3.5 whitespace-nowrap">
+                        <TableCell className="text-xs font-mono py-3.5 whitespace-nowrap tabular-nums">
                           <span className="bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md text-[10px] font-bold text-charcoal dark:text-zinc-200">
                             {batch.firstSerial}
                           </span>
@@ -350,7 +349,7 @@ export function BatchesTable({
                         </TableCell>
 
                         {/* Card Count */}
-                        <TableCell className="text-right text-xs font-bold text-charcoal dark:text-white py-3.5">
+                        <TableCell className="text-right text-xs font-bold text-charcoal dark:text-white py-3.5 tabular-nums">
                           {formatNumber(batch.count)}
                         </TableCell>
 
@@ -664,17 +663,11 @@ export function BatchesTable({
             <Button
               type="submit"
               variant="primary"
-              disabled={isUpdatingStatus}
+              loading={isUpdatingStatus}
+              loadingText="Updating…"
               className="normal-case font-bold min-h-[44px]"
             >
-              {isUpdatingStatus ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  Updating…
-                </>
-              ) : (
-                "Confirm Transition"
-              )}
+              Confirm Transition
             </Button>
           </ModalFooter>
         </form>
@@ -733,17 +726,12 @@ export function BatchesTable({
             <Button
               type="submit"
               variant="primary"
-              disabled={isRestyling || !restyleVersionId}
+              disabled={!restyleVersionId}
+              loading={isRestyling}
+              loadingText="Restyling…"
               className="normal-case font-bold min-h-[44px]"
             >
-              {isRestyling ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  Restyling…
-                </>
-              ) : (
-                "Save & Restyle Batch"
-              )}
+              Save & Restyle Batch
             </Button>
           </ModalFooter>
         </form>
@@ -807,17 +795,12 @@ export function BatchesTable({
             <Button
               type="submit"
               variant="destructive"
-              disabled={isVoiding || !voidReason.trim()}
+              disabled={!voidReason.trim()}
+              loading={isVoiding}
+              loadingText="Voiding…"
               className="normal-case font-bold min-h-[44px]"
             >
-              {isVoiding ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin" />
-                  Voiding…
-                </>
-              ) : (
-                "Confirm & Void Cards"
-              )}
+              Confirm & Void Cards
             </Button>
           </ModalFooter>
         </form>

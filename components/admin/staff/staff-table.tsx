@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   Dropdown,
   DropdownTrigger,
@@ -124,11 +125,10 @@ export function StaffTable({
         ) : staff.length === 0 ? (
           /* Empty State */
           <div className="p-8">
-            <StatusState
-              layout="panel"
-              icon={<Users className="size-7 text-muted-foreground" />}
+            <EmptyState
+              icon={<Users className="size-7" />}
               title="No staff members found"
-              description="Click 'Add staff' above to create the first admin account."
+              hint="Click 'Add staff' above to create the first admin account."
             />
           </div>
         ) : (

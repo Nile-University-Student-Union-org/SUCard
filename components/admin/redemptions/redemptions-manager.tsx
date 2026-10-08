@@ -12,6 +12,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { StatTile } from "@/components/ui/stat-tile";
 import { listRedemptions, listVendorsForFilter } from "./api";
@@ -152,34 +153,29 @@ export function RedemptionsManager() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
-              REDEMPTIONS LEDGER
-            </h1>
-            {isLoading && redemptions.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse motion-reduce:animate-none">
-                <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
-                <span>Updating…</span>
-              </span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Comprehensive audit log of cashier scans, verified discounts, and voided transactions.
-          </p>
-        </div>
-
-        <Button
-          variant="outline"
-          onClick={() => fetchRedemptions()}
-          disabled={isLoading}
-          className="normal-case font-bold min-h-[44px] h-11 px-4 rounded-xl border-border shrink-0 self-start sm:self-auto cursor-pointer"
-        >
-          <RotateCcw className={`size-4 mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
-          <span>Refresh</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="REDEMPTIONS LEDGER"
+        description="Comprehensive audit log of cashier scans, verified discounts, and voided transactions."
+        badge={
+          isLoading && redemptions.length > 0 ? (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-brand/10 text-brand dark:text-brand-soft border border-brand/20 animate-pulse motion-reduce:animate-none">
+              <Loader2 className="size-3 animate-spin motion-reduce:animate-none" />
+              <span>Updating…</span>
+            </span>
+          ) : null
+        }
+        actions={
+          <Button
+            variant="outline"
+            onClick={() => fetchRedemptions()}
+            loading={isLoading && redemptions.length === 0}
+            className="normal-case font-bold min-h-[44px] h-11 px-4 rounded-xl border-border shrink-0 cursor-pointer"
+          >
+            <RotateCcw className={`size-4 mr-1.5 ${isLoading ? "animate-spin" : ""}`} />
+            <span>Refresh</span>
+          </Button>
+        }
+      />
 
       {/* Summary KPI Tiles - Explicitly scoped to loaded records */}
       <div className="space-y-2">
@@ -318,20 +314,12 @@ export function RedemptionsManager() {
             variant="outline"
             size="lg"
             onClick={handleLoadMore}
-            disabled={isLoadingMore}
+            loading={isLoadingMore}
+            loadingText="Loading more records…"
             className="normal-case font-bold min-h-[44px] h-12 px-8 rounded-2xl border-border bg-card shadow-xs cursor-pointer"
           >
-            {isLoadingMore ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                <span>Loading more records…</span>
-              </>
-            ) : (
-              <>
-                <ChevronDown className="size-4 mr-1.5" />
-                <span>Load more records</span>
-              </>
-            )}
+            <ChevronDown className="size-4 mr-1.5" />
+            <span>Load more records</span>
           </Button>
         </div>
       )}

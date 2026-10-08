@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
-import { LogOut, ShieldAlert, Loader2 } from "lucide-react";
+import { LogOut, ShieldAlert } from "lucide-react";
 import { Modal, ModalBody, ModalFooter } from "./modal";
 import { Button } from "./button";
 import { UserAvatar } from "./user-avatar";
@@ -142,17 +142,13 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
           </Button>
           <Button
             variant="destructive"
-            disabled={isSubmitting}
+            loading={isSubmitting}
+            loadingText="Signing out…"
             onClick={handleConfirm}
             className="w-full sm:w-auto normal-case"
-            aria-busy={isSubmitting}
           >
-            {isSubmitting ? (
-              <Loader2 className="h-4 w-4 animate-spin motion-reduce:animate-none" />
-            ) : (
-              <LogOut className="h-4 w-4" />
-            )}
-            {isSubmitting ? "Signing out…" : error ? "Try again" : confirmText}
+            <LogOut className="h-4 w-4" />
+            {error ? "Try again" : confirmText}
           </Button>
         </div>
       </ModalFooter>

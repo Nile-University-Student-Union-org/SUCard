@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { CountBadge } from "@/components/ui/count-badge";
 import { OverflowScroller } from "@/components/ui/overflow-scroller";
+import { PageHeader } from "@/components/ui/page-header";
 import { listVendors } from "./api";
 import { VendorsTable } from "./vendors-table";
 import { AddVendorModal } from "./add-vendor-modal";
@@ -101,25 +102,20 @@ export function VendorsManager() {
   return (
     <div className="space-y-6">
       {/* Page Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
-            PARTNER VENDORS
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage stores, discounts, and staff scanner accounts.
-          </p>
-        </div>
-
-        <Button
-          variant="primary"
-          onClick={() => setIsAddModalOpen(true)}
-          className="normal-case font-bold h-11 px-5 shadow-xs shrink-0 cursor-pointer"
-        >
-          <Plus className="size-4 mr-2 stroke-[2.5]" />
-          <span>Add vendor</span>
-        </Button>
-      </div>
+      <PageHeader
+        title="PARTNER VENDORS"
+        description="Manage stores, discounts, and staff scanner accounts."
+        actions={
+          <Button
+            variant="primary"
+            onClick={() => setIsAddModalOpen(true)}
+            className="normal-case font-bold h-11 px-5 shadow-xs shrink-0 cursor-pointer"
+          >
+            <Plus className="size-4 mr-2 stroke-[2.5]" />
+            <span>Add vendor</span>
+          </Button>
+        }
+      />
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">

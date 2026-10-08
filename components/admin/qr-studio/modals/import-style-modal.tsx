@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { QrSvgPreview } from "../qr-svg-preview";
 import { importStyle } from "../api";
 import { toast } from "sonner";
-import { Upload, FileJson, Loader2, AlertCircle } from "lucide-react";
+import { Upload, FileJson, AlertCircle } from "lucide-react";
 
 export interface ImportStyleModalProps {
   isOpen: boolean;
@@ -177,17 +177,12 @@ export const ImportStyleModal: React.FC<ImportStyleModalProps> = ({
           <Button
             type="submit"
             variant="primary"
-            disabled={isSubmitting || !importedConfig || !styleName.trim()}
+            loading={isSubmitting}
+            loadingText="Importing…"
+            disabled={!importedConfig || !styleName.trim()}
             className="normal-case font-bold"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-                Importing…
-              </>
-            ) : (
-              "Import Style"
-            )}
+            Import Style
           </Button>
         </ModalFooter>
       </form>

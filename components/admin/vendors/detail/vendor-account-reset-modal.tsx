@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Loader2,
   KeyRound,
   Check,
   Copy,
@@ -305,20 +304,12 @@ export function VendorAccountResetModal({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingText="Resetting…"
               className="normal-case font-bold h-11 min-h-[44px] px-5"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  <span>Resetting…</span>
-                </>
-              ) : (
-                <>
-                  <KeyRound className="size-4 mr-1.5" />
-                  <span>Reset password</span>
-                </>
-              )}
+              <KeyRound className="size-4 mr-1.5" />
+              <span>Reset password</span>
             </Button>
           </ModalFooter>
         </form>

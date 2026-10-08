@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { QrSvgPreview } from "../qr-svg-preview";
 import { createStyle } from "../api";
 import { toast } from "sonner";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { cn } from "cn";
 
 export interface NewStyleModalProps {
@@ -149,17 +149,12 @@ export const NewStyleModal: React.FC<NewStyleModalProps> = ({
           <Button
             type="submit"
             variant="primary"
-            disabled={isSubmitting || !name.trim()}
+            loading={isSubmitting}
+            loadingText="Creating…"
+            disabled={!name.trim()}
             className="normal-case font-bold"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-                Creating…
-              </>
-            ) : (
-              "Create & Open Editor"
-            )}
+            Create & Open Editor
           </Button>
         </ModalFooter>
       </form>

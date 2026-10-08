@@ -12,8 +12,7 @@ import {
   AlertTriangle,
   XCircle,
   CheckCircle2,
-  Loader2,
-} from "lucide-react";
+  } from "lucide-react";
 
 export interface PublishModalProps {
   isOpen: boolean;
@@ -150,17 +149,12 @@ export const PublishModal: React.FC<PublishModalProps> = ({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSubmitting || (hasWarnings && reason.trim().length < 5)}
+              loading={isSubmitting}
+              loadingText="Publishing…"
+              disabled={(hasWarnings && reason.trim().length < 5)}
               className="normal-case font-bold"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-                  Publishing…
-                </>
-              ) : (
-                "Publish Immutable Version"
-              )}
+              Publish Immutable Version
             </Button>
           )}
         </ModalFooter>

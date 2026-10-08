@@ -16,6 +16,8 @@ import { QrSvgPreview } from "./qr-svg-preview";
 import { NewStyleModal } from "./modals/new-style-modal";
 import { ImportStyleModal } from "./modals/import-style-modal";
 import { Button, ButtonLink } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
@@ -33,8 +35,7 @@ import {
   Search,
   RotateCcw,
   Palette,
-  Loader2,
-} from "lucide-react";
+  } from "lucide-react";
 import { cn } from "cn";
 import { formatCairoDate } from "@/components/admin/cards/utils";
 
@@ -182,36 +183,31 @@ export function StylesLibraryView() {
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl sm:text-4xl text-foreground tracking-wide uppercase">
-            QR STYLE STUDIO
-          </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Visual QR designer for Nile University cards &bull; Verified scan-safety &bull; Versioned print batches
-          </p>
-        </div>
+      <PageHeader
+        title="QR STYLE STUDIO"
+        description="Visual QR designer for Nile University cards • Verified scan-safety • Versioned print batches"
+        actions={
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="surface"
+              onClick={() => setIsImportModalOpen(true)}
+              className="h-11 px-4 text-xs font-bold normal-case rounded-xl shadow-xs"
+            >
+              <Upload className="size-4 mr-1.5 text-brand" />
+              <span>Import JSON</span>
+            </Button>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="surface"
-            onClick={() => setIsImportModalOpen(true)}
-            className="h-11 px-4 text-xs font-bold normal-case rounded-xl shadow-xs"
-          >
-            <Upload className="size-4 mr-1.5 text-brand" />
-            <span>Import JSON</span>
-          </Button>
-
-          <Button
-            variant="primary"
-            onClick={() => setIsNewModalOpen(true)}
-            className="h-11 px-5 text-xs font-bold normal-case rounded-xl shadow-xs"
-          >
-            <Plus className="size-4 mr-1.5 stroke-[2.5]" />
-            <span>New Style</span>
-          </Button>
-        </div>
-      </div>
+            <Button
+              variant="primary"
+              onClick={() => setIsNewModalOpen(true)}
+              className="h-11 px-5 text-xs font-bold normal-case rounded-xl shadow-xs"
+            >
+              <Plus className="size-4 mr-1.5 stroke-[2.5]" />
+              <span>New Style</span>
+            </Button>
+          </div>
+        }
+      />
 
       {/* Filter and Search Bar */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs">
@@ -276,21 +272,15 @@ export function StylesLibraryView() {
           }
         />
       ) : filteredStyles.length === 0 ? (
-        <div className="p-12 rounded-3xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 text-center space-y-4">
-          <div className="size-16 rounded-2xl bg-brand/10 text-brand flex items-center justify-center mx-auto border border-brand/20">
-            <Palette className="size-8" />
-          </div>
-          <div className="max-w-md mx-auto space-y-1">
-            <h3 className="text-xl font-heading uppercase text-foreground">
-              No QR Styles Found
-            </h3>
-            <p className="text-xs text-muted-foreground">
-              {searchQuery || statusFilter !== "all"
-                ? "No styles match your current filter criteria."
-                : "Create your first branded QR style from one of the built-in presets or import an existing configuration."}
-            </p>
-          </div>
-          <div className="pt-2">
+        <EmptyState
+          icon={<Palette className="size-6 text-brand" />}
+          title="NO QR STYLES FOUND"
+          hint={
+            searchQuery || statusFilter !== "all"
+              ? "No styles match your current filter criteria."
+              : "Create your first branded QR style from one of the built-in presets or import an existing configuration."
+          }
+          action={
             <Button
               variant="primary"
               onClick={() => setIsNewModalOpen(true)}
@@ -299,8 +289,9 @@ export function StylesLibraryView() {
               <Plus className="size-4 mr-1.5" />
               Create First Style
             </Button>
-          </div>
-        </div>
+          }
+          bordered
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredStyles.map((style) => {
@@ -518,17 +509,12 @@ export function StylesLibraryView() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isDuplicating || !duplicateName.trim()}
+              loading={isDuplicating}
+              loadingText="Duplicating…"
+              disabled={!duplicateName.trim()}
               className="normal-case font-bold"
             >
-              {isDuplicating ? (
-                <>
-                  <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-                  Duplicating…
-                </>
-              ) : (
-                "Duplicate & Open"
-              )}
+              Duplicate & Open
             </Button>
           </ModalFooter>
         </form>
@@ -574,20 +560,14 @@ export function StylesLibraryView() {
             variant={
               archivingStyle?.status === "archived" ? "primary" : "destructive"
             }
-            disabled={isArchiving}
+            loading={isArchiving}
+            loadingText="Updating…"
             onClick={handleToggleArchive}
             className="normal-case font-bold"
           >
-            {isArchiving ? (
-              <>
-                <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-                Updating…
-              </>
-            ) : archivingStyle?.status === "archived" ? (
-              "Unarchive Style"
-            ) : (
-              "Archive Style"
-            )}
+            {archivingStyle?.status === "archived"
+              ? "Unarchive Style"
+              : "Archive Style"}
           </Button>
         </ModalFooter>
       </Modal>

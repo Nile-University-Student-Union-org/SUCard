@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState } from "react";
-import { Loader2 } from "lucide-react";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -613,17 +612,11 @@ function VendorOfferForm({
         <Button
           type="submit"
           variant="primary"
-          disabled={isSubmitting}
+          loading={isSubmitting}
+          loadingText="Saving offer…"
           className="normal-case font-bold h-11 min-h-[44px] px-5"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="size-4 mr-2 animate-spin" />
-              <span>Saving offer…</span>
-            </>
-          ) : (
-            <span>{editingOffer ? "Save changes" : "Create offer"}</span>
-          )}
+          <span>{editingOffer ? "Save changes" : "Create offer"}</span>
         </Button>
       </ModalFooter>
     </form>

@@ -15,8 +15,7 @@ import {
   Moon,
   Shuffle,
   SplitSquareVertical,
-  Loader2,
-} from "lucide-react";
+  } from "lucide-react";
 import { cn } from "cn";
 import { Button } from "@/components/ui/button";
 
@@ -162,16 +161,12 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             variant="surface"
             size="sm"
             onClick={handleRandomizeSample}
-            disabled={isRandomizing}
+            loading={isRandomizing}
             className="min-h-11 px-2.5 text-xs font-bold normal-case rounded-lg"
             aria-label="Randomize sample token"
             title="Randomize payload to test density across different codes"
           >
-            {isRandomizing ? (
-              <Loader2 className="size-3.5 animate-spin motion-reduce:animate-none mr-1" />
-            ) : (
-              <Shuffle className="size-3.5 mr-1 text-sky-500" />
-            )}
+            <Shuffle className="size-3.5 mr-1 text-sky-500" />
             <span className="hidden sm:inline">Randomize</span>
           </Button>
 

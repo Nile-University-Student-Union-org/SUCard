@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, CreditCard, User, Layers, AlertCircle, Loader2, X, ExternalLink } from "lucide-react";
+import { Search, CreditCard, User, Layers, AlertCircle, X, ExternalLink } from "lucide-react";
 import { lookupCard } from "./api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,17 +105,12 @@ export function CardLookupPanel() {
           <Button
             type="submit"
             variant="primary"
-            disabled={isLoading || !query.trim()}
+            loading={isLoading}
+            loadingText="Searching…"
+            disabled={!query.trim()}
             className="font-bold normal-case shrink-0 min-h-[44px] px-6"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Searching…
-              </>
-            ) : (
-              "Look up"
-            )}
+            Look up
           </Button>
         </form>
 

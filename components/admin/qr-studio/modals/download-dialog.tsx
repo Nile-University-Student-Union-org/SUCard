@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { downloadPreviewFile } from "../api";
 import { toast } from "sonner";
-import { Download, FileCode, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Download, FileCode, Image as ImageIcon } from "lucide-react";
 
 export interface DownloadDialogProps {
   isOpen: boolean;
@@ -145,18 +145,12 @@ export const DownloadDialog: React.FC<DownloadDialogProps> = ({
         <Button
           type="button"
           variant="primary"
-          disabled={isDownloading}
+          loading={isDownloading}
+          loadingText="Exporting…"
           onClick={handleDownload}
           className="normal-case font-bold"
         >
-          {isDownloading ? (
-            <>
-              <Loader2 className="size-4 mr-1.5 animate-spin motion-reduce:animate-none" />
-              Exporting…
-            </>
-          ) : (
-            `Download ${format.toUpperCase()}`
-          )}
+          {`Download ${format.toUpperCase()}`}
         </Button>
       </ModalFooter>
     </Modal>

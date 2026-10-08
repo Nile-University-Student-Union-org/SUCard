@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { Check, CheckCircle2, Loader2, X } from "lucide-react";
+import { Check, CheckCircle2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "cn";
@@ -347,20 +347,13 @@ export function ScanValidPanel({
               variant="primary"
               size="lg"
               onClick={handleConfirm}
-              disabled={!selectedOfferId || isConfirming}
+              loading={isConfirming}
+              loadingText="Recording discount…"
+              disabled={!selectedOfferId}
               className="w-full min-h-[52px] h-13 sm:h-14 text-base sm:text-lg font-heading uppercase tracking-wider font-bold cursor-pointer flex items-center justify-center transition-all disabled:opacity-50"
             >
-              {isConfirming ? (
-                <>
-                  <Loader2 className="size-5 mr-2 animate-spin text-current" />
-                  <span>Recording discount…</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="size-5 mr-2 stroke-[2.5]" />
-                  <span>Confirm discount</span>
-                </>
-              )}
+              <CheckCircle2 className="size-5 mr-2 stroke-[2.5]" />
+              <span>Confirm discount</span>
             </Button>
 
             <Button

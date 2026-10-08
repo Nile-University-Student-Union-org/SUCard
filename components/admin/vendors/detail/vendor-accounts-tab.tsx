@@ -8,7 +8,6 @@ import {
   Edit2,
   AlertCircle,
   LogOut,
-  Loader2,
   UserX,
   UserCheck,
 } from "lucide-react";
@@ -393,19 +392,13 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
             type="button"
             variant={statusAccount?.status === "active" ? "destructive" : "primary"}
             onClick={handleConfirmStatusChange}
-            disabled={isUpdatingStatus}
+            loading={isUpdatingStatus}
+            loadingText="Updating…"
             className="normal-case font-bold h-11 min-h-[44px] px-5"
           >
-            {isUpdatingStatus ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                <span>Updating…</span>
-              </>
-            ) : (
-              <span>
-                {statusAccount?.status === "active" ? "Disable account" : "Enable account"}
-              </span>
-            )}
+            <span>
+              {statusAccount?.status === "active" ? "Disable account" : "Enable account"}
+            </span>
           </Button>
         </ModalFooter>
       </Modal>
@@ -447,17 +440,11 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
             type="button"
             variant="primary"
             onClick={handleRevokeSessions}
-            disabled={isRevoking}
+            loading={isRevoking}
+            loadingText="Signing out…"
             className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white h-11 min-h-[44px] px-5"
           >
-            {isRevoking ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                <span>Signing out…</span>
-              </>
-            ) : (
-              <span>Sign out all devices</span>
-            )}
+            <span>Sign out all devices</span>
           </Button>
         </ModalFooter>
       </Modal>

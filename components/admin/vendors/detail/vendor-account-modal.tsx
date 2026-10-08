@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import {
-  Loader2,
   Check,
   Copy,
   UserCheck,
@@ -558,17 +557,11 @@ function VendorAccountForm({
         <Button
           type="submit"
           variant="primary"
-          disabled={isSubmitting}
+          loading={isSubmitting}
+          loadingText="Saving account…"
           className="normal-case font-bold h-11 min-h-[44px] px-6"
         >
-          {isSubmitting ? (
-            <>
-              <Loader2 className="size-4 mr-2 animate-spin" />
-              <span>Saving account…</span>
-            </>
-          ) : (
-            <span>{editingAccount ? "Save changes" : "Create account"}</span>
-          )}
+          <span>{editingAccount ? "Save changes" : "Create account"}</span>
         </Button>
       </ModalFooter>
     </form>

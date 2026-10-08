@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface AuditTimelineProps {
   entries: AuditEntry[];
@@ -95,11 +96,10 @@ export function AuditTimeline({
   if (entries.length === 0) {
     return (
       <div className="p-8">
-        <StatusState
-          layout="panel"
-          icon={<History className="size-7 text-muted-foreground" />}
-          title="No audit events found"
-          description="No administrative activities matched your filter criteria."
+        <EmptyState
+          icon={<History className="size-6 text-muted-foreground" />}
+          title="NO AUDIT EVENTS FOUND"
+          hint="No administrative activities matched your filter criteria."
         />
       </div>
     );

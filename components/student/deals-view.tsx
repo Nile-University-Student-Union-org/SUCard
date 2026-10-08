@@ -26,6 +26,7 @@ import type { StudentDeal, StudentDealsResponse } from "@/lib/analytics/types";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
 import { ToggleChip } from "@/components/ui/toggle-chip";
@@ -212,22 +213,16 @@ export function DealsView() {
           }
         />
       ) : deals.length === 0 ? (
-        <Card className="p-8 text-center space-y-4 border border-border bg-card">
-          <div className="size-14 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto border border-brand/20">
-            <Tag className="size-7" />
-          </div>
-          <div className="max-w-md mx-auto space-y-1">
-            <h2 className="font-heading text-xl uppercase tracking-wider text-foreground">
-              No Deals Found
-            </h2>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              {search || category !== "all"
-                ? "No student deals matched your current search or filter. Try clearing filters."
-                : "There are currently no active offers available. Check back soon for new partner perks!"}
-            </p>
-          </div>
-          {(search || category !== "all") && (
-            <div className="pt-2">
+        <EmptyState
+          icon={<Tag />}
+          title="No Deals Found"
+          hint={
+            search || category !== "all"
+              ? "No student deals matched your current search or filter. Try clearing filters."
+              : "There are currently no active offers available. Check back soon for new partner perks!"
+          }
+          action={
+            search || category !== "all" ? (
               <Button
                 variant="outline"
                 onClick={clearFilters}
@@ -235,9 +230,9 @@ export function DealsView() {
               >
                 Clear Filters
               </Button>
-            </div>
-          )}
-        </Card>
+            ) : undefined
+          }
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {deals.map((deal) => {

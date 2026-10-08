@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Ban, AlertTriangle, Loader2 } from "lucide-react";
+import { Ban, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
@@ -144,20 +144,12 @@ export function VoidRedemptionDialog({
           <Button
             type="submit"
             variant="destructive"
-            disabled={isSubmitting}
+            loading={isSubmitting}
+            loadingText="Voiding…"
             className="normal-case font-bold min-h-[44px] h-11 px-5"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                <span>Voiding…</span>
-              </>
-            ) : (
-              <>
-                <Ban className="size-4 mr-1.5" />
-                <span>Confirm Void</span>
-              </>
-            )}
+            <Ban className="size-4 mr-1.5" />
+            <span>Confirm Void</span>
           </Button>
         </ModalFooter>
       </form>

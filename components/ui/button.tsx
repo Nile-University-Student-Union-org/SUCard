@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const buttonVariants = cva(
-  "relative inline-flex min-h-[44px] items-center justify-center gap-2 font-bold rounded-tactile select-none cursor-pointer transition-all duration-150 motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:active:translate-y-0 disabled:active:scale-100",
+  "relative inline-flex min-h-[44px] items-center justify-center gap-2 font-bold rounded-tactile select-none cursor-pointer transition-all duration-150 motion-reduce:transition-none motion-reduce:transform-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:opacity-50 disabled:pointer-events-none disabled:active:translate-y-0 disabled:active:scale-100",
   {
     variants: {
       variant: {
@@ -69,11 +69,21 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
   const classes = cn(buttonVariants({ variant, size }), className);
 
   if (render && React.isValidElement(render)) {
+    const isButtonElement =
+      render.type === "button" ||
+      (typeof render.type === "function" &&
+        (render.type as { displayName?: string }).displayName?.toLowerCase().includes("button"));
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const renderProps = render.props as any;
+
     return React.cloneElement(render, {
-      className: cn(classes, (render.props as { className?: string }).className),
-      children: (render.props as { children?: React.ReactNode }).children ?? children,
+      className: cn(classes, renderProps.className),
+      children: renderProps.children ?? children,
       "aria-busy": loading ? true : undefined,
-      disabled: isDisabled,
+      ...(isButtonElement
+        ? { disabled: isDisabled }
+        : { "aria-disabled": isDisabled ? true : undefined }),
       ...props,
     } as React.Attributes & Record<string, unknown>);
   }

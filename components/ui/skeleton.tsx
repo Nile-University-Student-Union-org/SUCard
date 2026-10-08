@@ -121,3 +121,90 @@ export const SkeletonTableRow: React.FC<{
     ))}
   </tr>
 );
+
+export const SkeletonPageHeader: React.FC<{
+  className?: string;
+  hasActions?: boolean;
+}> = ({ className = "", hasActions = true }) => (
+  <div
+    className={cn(
+      "flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-2 border-b border-slate-200/60 dark:border-zinc-800/60",
+      className
+    )}
+    role="status"
+    aria-label="Loading header"
+  >
+    <div className="space-y-2">
+      <Skeleton className="h-8 sm:h-9 w-48 sm:w-64 rounded-xl" />
+      <Skeleton className="h-4 w-60 sm:w-80 rounded-md" />
+    </div>
+    {hasActions && (
+      <div className="flex items-center gap-2">
+        <Skeleton variant="button" className="w-28 h-10" />
+        <Skeleton variant="button" className="w-32 h-10" />
+      </div>
+    )}
+  </div>
+);
+
+export const SkeletonStatGrid: React.FC<{
+  count?: number;
+  className?: string;
+}> = ({ count = 4, className = "" }) => (
+  <div
+    className={cn("grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4", className)}
+    role="status"
+    aria-label="Loading statistics"
+  >
+    {Array.from({ length: count }).map((_, i) => (
+      <div
+        key={i}
+        className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs space-y-3"
+      >
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-3.5 w-24 rounded-md" />
+          <Skeleton variant="circular" className="size-8" />
+        </div>
+        <Skeleton className="h-8 sm:h-9 w-28 rounded-lg" />
+        <Skeleton className="h-3 w-32 rounded-md" />
+      </div>
+    ))}
+  </div>
+);
+
+export const SkeletonTable: React.FC<{
+  rows?: number;
+  columns?: number;
+  className?: string;
+}> = ({ rows = 5, columns = 5, className = "" }) => (
+  <div
+    className={cn(
+      "rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-xs",
+      className
+    )}
+    role="status"
+    aria-label="Loading table"
+  >
+    <div className="p-4 border-b border-slate-100 dark:border-zinc-800 flex items-center justify-between gap-4 bg-slate-50/50 dark:bg-zinc-900/50">
+      <Skeleton className="h-5 w-40 rounded-md" />
+      <Skeleton className="h-8 w-24 rounded-lg" />
+    </div>
+    <table className="w-full">
+      <thead>
+        <tr className="border-b border-slate-200 dark:border-zinc-800 bg-slate-50/80 dark:bg-zinc-900/80">
+          {Array.from({ length: columns }).map((_, i) => (
+            <th key={i} className="p-4 text-left">
+              <Skeleton className="h-3.5 w-20 rounded" />
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {Array.from({ length: rows }).map((_, i) => (
+          <SkeletonTableRow key={i} columns={columns} />
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
+

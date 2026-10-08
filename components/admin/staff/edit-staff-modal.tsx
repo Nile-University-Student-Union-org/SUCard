@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { UserCog, ShieldCheck, Shield, Loader2, AlertCircle } from "lucide-react";
+import { UserCog, ShieldCheck, Shield, AlertCircle } from "lucide-react";
 import {
   STAFF_NAME_MAX,
   type StaffMember,
@@ -166,17 +166,11 @@ export function EditStaffModal({
           <Button
             type="submit"
             variant="primary"
-            disabled={isSubmitting}
+            loading={isSubmitting}
+            loadingText="Saving changes…"
             className="normal-case font-bold h-11 min-h-[44px]"
           >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Saving changes…
-              </>
-            ) : (
-              "Save changes"
-            )}
+            Save changes
           </Button>
         </ModalFooter>
       </form>

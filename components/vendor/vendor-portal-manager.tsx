@@ -19,9 +19,10 @@ import {
   Info,
   Lock,
   LogOut,
-  Loader2,
-} from "lucide-react";
+  } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatTile } from "@/components/ui/stat-tile";
@@ -387,30 +388,26 @@ export function VendorPortalManager() {
   return (
     <div className="min-w-0 space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white [overflow-wrap:anywhere]">
-            {overview?.vendor.name ? `${overview.vendor.name.toUpperCase()} PORTAL` : "VENDOR PORTAL"}
-          </h1>
-          <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium mt-1">
-            Track student redemptions, view promotion limits, and manage your cashier scanning team.
-          </p>
-        </div>
-
-        <div className="self-start sm:self-center">
-          <Button
-            variant="surface"
-            size="sm"
-            onClick={handleExportCsv}
-            disabled={isExporting}
-            className="normal-case font-bold min-h-11 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
-          >
-            <Download className="size-4" />
-            {isExporting ? "Preparing CSV…" : "Export Stats CSV"}
-          </Button>
-          {exportStatus && <p role="status" className="mt-1 text-xs text-muted-foreground">{exportStatus}</p>}
-        </div>
-      </div>
+      <PageHeader
+        title={overview?.vendor.name ? `${overview.vendor.name.toUpperCase()} PORTAL` : "VENDOR PORTAL"}
+        description="Track student redemptions, view promotion limits, and manage your cashier scanning team."
+        actions={
+          <div>
+            <Button
+              variant="surface"
+              size="sm"
+              onClick={handleExportCsv}
+              loading={isExporting}
+              loadingText="Preparing CSV…"
+              className="normal-case font-bold min-h-11 px-3.5 text-xs text-brand dark:text-brand-soft border-slate-300 dark:border-zinc-700"
+            >
+              <Download className="size-4 mr-1.5" />
+              <span>Export Stats CSV</span>
+            </Button>
+            {exportStatus && <p role="status" className="mt-1 text-xs text-muted-foreground">{exportStatus}</p>}
+          </div>
+        }
+      />
 
       {/* Navigation Tab Bar */}
       <OverflowScroller className="max-w-full">
@@ -665,11 +662,10 @@ export function VendorPortalManager() {
               }
             />
           ) : offers.length === 0 ? (
-            <StatusState
-              layout="panel"
-              icon={<Tag className="size-8 text-muted-foreground" />}
-              title="No active offers"
-              description="Your store does not have any active discount offers configured."
+            <EmptyState
+              icon={<Tag className="size-6 text-muted-foreground" />}
+              title="NO ACTIVE OFFERS"
+              hint="Your store does not have any active discount offers configured."
             />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -788,21 +784,21 @@ export function VendorPortalManager() {
               }
             />
           ) : cashiers.length === 0 ? (
-            <StatusState
-              layout="panel"
-              icon={<Users className="size-8 text-muted-foreground" />}
-              title="No cashiers yet"
-              description="Add cashier accounts so your staff can log in to the scanner web app."
-              actions={
+            <EmptyState
+              icon={<Users className="size-6 text-muted-foreground" />}
+              title="NO CASHIERS YET"
+              hint="Add cashier accounts so your staff can log in to the scanner web app."
+              action={
                 <Button
                   variant="primary"
                   onClick={() => setIsAddCashierOpen(true)}
-                  className="normal-case font-bold mt-2"
+                  className="normal-case font-bold"
                 >
                   <UserPlus className="size-4 mr-1.5" />
                   Add First Cashier
                 </Button>
               }
+              bordered
             />
           ) : (
             <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
@@ -811,7 +807,7 @@ export function VendorPortalManager() {
                 <div className="hidden md:block w-full overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
+                      <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
                         <th className="px-4 py-3">Cashier</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3 text-right">Actions</th>
@@ -1043,10 +1039,11 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isAddingCashier}
+              loading={isAddingCashier}
+              loadingText="Creating…"
               className="normal-case font-bold"
             >
-              {isAddingCashier ? "Creating…" : "Create Cashier"}
+              Create Cashier
             </Button>
           </ModalFooter>
         </form>
@@ -1097,10 +1094,11 @@ export function VendorPortalManager() {
             <Button
               type="submit"
               variant="primary"
-              disabled={isResetting}
+              loading={isResetting}
+              loadingText="Updating…"
               className="normal-case font-bold"
             >
-              {isResetting ? "Updating…" : "Update Password"}
+              Update Password
             </Button>
           </ModalFooter>
         </form>
@@ -1142,17 +1140,11 @@ export function VendorPortalManager() {
             type="button"
             variant="primary"
             onClick={handleRevokeCashierSessions}
-            disabled={isRevoking}
+            loading={isRevoking}
+            loadingText="Signing out…"
             className="normal-case font-bold bg-amber-600 hover:bg-amber-700 text-white"
           >
-            {isRevoking ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin motion-reduce:animate-none" />
-                <span>Signing out…</span>
-              </>
-            ) : (
-              <span>Sign out all devices</span>
-            )}
+            <span>Sign out all devices</span>
           </Button>
         </ModalFooter>
       </Modal>
@@ -1173,8 +1165,13 @@ export function VendorPortalManager() {
         </ModalBody>
         <ModalFooter>
           <Button variant="secondary" disabled={isUpdatingStatus} onClick={() => setStatusCashier(null)}>Cancel</Button>
-          <Button variant={statusCashier?.status === "active" ? "destructive" : "primary"} disabled={isUpdatingStatus} onClick={handleToggleCashierStatus}>
-            {isUpdatingStatus ? "Updating…" : statusCashier?.status === "active" ? "Disable cashier" : "Enable cashier"}
+          <Button
+            variant={statusCashier?.status === "active" ? "destructive" : "primary"}
+            loading={isUpdatingStatus}
+            loadingText="Updating…"
+            onClick={handleToggleCashierStatus}
+          >
+            {statusCashier?.status === "active" ? "Disable cashier" : "Enable cashier"}
           </Button>
         </ModalFooter>
       </Modal>

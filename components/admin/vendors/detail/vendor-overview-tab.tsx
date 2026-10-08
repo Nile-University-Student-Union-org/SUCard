@@ -6,7 +6,6 @@ import {
   Upload,
   Save,
   AlertTriangle,
-  Loader2,
   Building2,
   Phone,
   Calendar,
@@ -219,21 +218,13 @@ export function VendorOverviewTab({
               type="button"
               variant="outline"
               size="sm"
-              disabled={isUploadingLogo}
+              loading={isUploadingLogo}
+              loadingText="Uploading…"
               onClick={() => fileInputRef.current?.click()}
               className="normal-case font-bold h-11 min-h-[44px] px-4 rounded-xl border-border"
             >
-              {isUploadingLogo ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  <span>Uploading…</span>
-                </>
-              ) : (
-                <>
-                  <Upload className="size-4 mr-1.5" />
-                  <span>{logoPreview ? "Change logo" : "Upload logo"}</span>
-                </>
-              )}
+              <Upload className="size-4 mr-1.5" />
+              <span>{logoPreview ? "Change logo" : "Upload logo"}</span>
             </Button>
           </div>
 
@@ -501,20 +492,12 @@ export function VendorOverviewTab({
             <Button
               type="submit"
               variant="primary"
-              disabled={isSaving}
+              loading={isSaving}
+              loadingText="Saving changes…"
               className="normal-case font-bold h-11 min-h-[44px] px-6 shadow-xs"
             >
-              {isSaving ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  <span>Saving changes…</span>
-                </>
-              ) : (
-                <>
-                  <Save className="size-4 mr-1.5" />
-                  <span>Save changes</span>
-                </>
-              )}
+              <Save className="size-4 mr-1.5" />
+              <span>Save changes</span>
             </Button>
           </div>
         </form>

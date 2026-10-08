@@ -141,7 +141,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
           variant={buttonVariant}
           size="md"
           onClick={handleConfirm}
-          disabled={isLoading}
+          loading={isLoading}
           className="w-full sm:w-auto min-h-[44px] px-6 text-xs font-bold rounded-[12px]"
         >
           {confirmText}

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Loader2, ArrowDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 import type { AuditEntry, StaffMember } from "@/lib/staff/types";
 import { AUDIT_PAGE_SIZE_DEFAULT } from "@/lib/staff/types";
 import { type StaffUser } from "@/lib/auth/guards";
@@ -12,6 +12,7 @@ import { AuditFilterBar } from "./audit-filter-bar";
 import { AuditTimeline } from "./audit-timeline";
 import { AuditDetailModal } from "./audit-detail-modal";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/ui/page-header";
 
 interface AuditManagerProps {
   currentUser?: StaffUser;
@@ -147,14 +148,10 @@ export function AuditManager({}: AuditManagerProps = {}) {
   return (
     <div className="space-y-6">
       {/* Page Header Bar */}
-      <div className="space-y-1">
-        <h1 className="font-heading text-3xl sm:text-4xl font-normal uppercase tracking-wide text-foreground">
-          AUDIT LOG
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Track sensitive administrative operations and security events.
-        </p>
-      </div>
+      <PageHeader
+        title="AUDIT LOG"
+        description="Track sensitive administrative operations and security events."
+      />
 
       {/* Filter Bar */}
       <AuditFilterBar
@@ -182,20 +179,12 @@ export function AuditManager({}: AuditManagerProps = {}) {
             variant="outline"
             size="md"
             onClick={handleLoadMore}
-            disabled={isLoadingMore}
+            loading={isLoadingMore}
+            loadingText="Loading more events…"
             className="normal-case font-bold min-h-[44px] px-6"
           >
-            {isLoadingMore ? (
-              <>
-                <Loader2 className="size-4 mr-2 animate-spin" />
-                Loading more events…
-              </>
-            ) : (
-              <>
-                <ArrowDown className="size-4 mr-2" />
-                Load older events
-              </>
-            )}
+            <ArrowDown className="size-4 mr-2" />
+            Load older events
           </Button>
         </div>
       )}

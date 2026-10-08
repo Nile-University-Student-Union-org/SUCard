@@ -59,14 +59,9 @@ export function DisableStaffDialog({
           : `Enabling this account will restore administrator access for ${staff.name} (${staff.email}) to sign in to the SU Card admin console.`
       }
       confirmText={
-        isSubmitting
-          ? isDisabling
-            ? "Disabling…"
-            : "Enabling…"
-          : isDisabling
-          ? "Disable staff member"
-          : "Enable staff member"
+        isDisabling ? "Disable staff member" : "Enable staff member"
       }
+      isLoading={isSubmitting}
       cancelText="Cancel"
     />
   );

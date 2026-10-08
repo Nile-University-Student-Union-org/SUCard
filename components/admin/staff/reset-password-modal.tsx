@@ -10,7 +10,6 @@ import {
   Key,
   Copy,
   Check,
-  Loader2,
   AlertCircle,
 } from "lucide-react";
 import {
@@ -247,17 +246,11 @@ export function ResetPasswordModal({
             <Button
               type="submit"
               variant="destructive"
-              disabled={isSubmitting}
+              loading={isSubmitting}
+              loadingText="Resetting password…"
               className="normal-case font-bold h-11 min-h-[44px]"
             >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="size-4 mr-2 animate-spin" />
-                  Resetting password…
-                </>
-              ) : (
-                "Reset password"
-              )}
+              Reset password
             </Button>
           </ModalFooter>
         </form>
