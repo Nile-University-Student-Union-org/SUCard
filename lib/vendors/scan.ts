@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, eq, gte, sql } from "drizzle-orm";
+import { and, count, eq, gte, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cards, offers, scanEvents, studentProfiles, user, vendors } from "@/lib/db/schema";
 import { parseClaimQr } from "@/lib/student/rules";
@@ -27,13 +27,23 @@ const limits = async (tx: Pick<typeof db, "select">, { studentId, offer, now, se
 async function activeOffers(tx: Pick<typeof db, "select" | "insert">, actor: Actor, studentId: string, now: Date): Promise<ScanOffer[]> {
   const rows = await tx.select().from(offers).where(eq(offers.vendorId, actor.vendor.id));
   const active = rows.filter(o => isOfferActiveAt(o, now));
-  const semesters = (await getSettings()).semesters;
-  return Promise.all(active.map(async offer => ({
+  if (!active.length) return [];
+  const semesters = (await getSettings(tx as typeof db)).semesters;
+  const limited = active.filter(o => o.limitPeriod !== "unlimited");
+  const windows = limited.map(offer => ({ offer, ...periodWindow(offer.limitPeriod, now, semesters) }));
+  const usage = windows.length ? await tx.select({ offerId: scanEvents.offerId, n: count() }).from(scanEvents)
+    .where(and(eq(scanEvents.studentId, studentId), eq(scanEvents.confirmed, true), eq(scanEvents.voided, false),
+      or(...windows.map(({ offer, start }) => and(eq(scanEvents.offerId, offer.id), start ? gte(scanEvents.confirmedAt, start) : undefined)))))
+    .groupBy(scanEvents.offerId) : [];
+  const usedByOffer = new Map(usage.map(row => [row.offerId, row.n]));
+  const windowsByOffer = new Map(windows.map(({ offer, resetsAt }) => [offer.id, resetsAt]));
+  return active.map(offer => ({
     id: offer.id,
     title: offer.title,
     discountLabel: formatDiscount(offer),
-    ...(await limits(tx, { studentId, offer, now, semesters }))
-  })));
+    remainingUses: offer.limitPeriod === "unlimited" ? null : remainingUses(offer.limitCount, usedByOffer.get(offer.id) ?? 0),
+    resetsAt: windowsByOffer.get(offer.id)?.toISOString() ?? null
+  }));
 }
 export async function validateScan(actor: Actor, qr: string, userAgent: string | null, tx: Pick<typeof db, "select" | "insert"> = db): Promise<ValidateResponse> {
   const now = new Date();

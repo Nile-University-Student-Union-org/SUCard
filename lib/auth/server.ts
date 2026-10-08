@@ -18,7 +18,7 @@ const microsoftEnv = z.object({ MICROSOFT_TENANT_ID: z.uuid(), MICROSOFT_CLIENT_
 
 export const auth = betterAuth({
   appName: "SU Card",
-  plugins: [twoFactor({ issuer: "SU Card", trustDeviceMaxAge: 30 * 24 * 60 * 60 })],
+  plugins: [twoFactor({ issuer: "SU Card", allowPasswordless: true, trustDeviceMaxAge: 30 * 24 * 60 * 60 })],
   secret: z.string().min(32).parse(process.env.BETTER_AUTH_SECRET),
   baseURL: z.url().parse(process.env.BETTER_AUTH_URL),
   // Extra origins allowed to call the auth API (e.g. a dev tunnel), comma-separated.
@@ -52,6 +52,15 @@ export const auth = betterAuth({
       return { context: { body: { ...(ctx.body as unknown as Record<string, unknown>), callbackURL: "/go", errorCallbackURL: "/login" } } };
     }
   }), after: createAuthMiddleware(async (ctx) => {
+    if (ctx.path === "/two-factor/verify-totp" || ctx.path === "/two-factor/verify-backup-code") {
+      if (ctx.context.returned instanceof APIError) return;
+      const current = await auth.api.getSession({ headers: ctx.headers ?? new Headers() });
+      if (current?.session.loginMethod === "microsoft") {
+        await db.insert(schema.verification).values({ id: crypto.randomUUID(),
+          identifier: `admin-2fa:${current.session.id}`, value: current.user.id, expiresAt: current.session.expiresAt });
+      }
+      return;
+    }
     if (ctx.path !== "/sign-in/email") return;
     const email = z.string().max(320).safeParse((ctx.body as { email?: unknown } | undefined)?.email);
     if (email.success) {

@@ -9,11 +9,13 @@ describe("admin 2FA policy", () => {
     expect(resolveAdminRole("cashier", "microsoft", true)).toBeNull();
     expect(resolveAdminRole("super_admin", "password", false)).toBe("super_admin");
   });
-  it("requires password admins to enroll and lets enrolled admins through", () => {
+  it("requires admins to enroll in 2FA and verifies second factor", () => {
     for (const role of ["admin", "super_admin"]) {
       expect(adminDecision(role, "password", false)).toBe("setup");
       expect(adminDecision(role, "password", true)).toBe("allow");
-      expect(adminDecision(role, "microsoft", false)).toBe("allow");
+      expect(adminDecision(role, "microsoft", false)).toBe("setup");
+      expect(adminDecision(role, "microsoft", true, false)).toBe("verify");
+      expect(adminDecision(role, "microsoft", true, true)).toBe("allow");
     }
     expect(adminDecision("cashier", "password", true)).toBe("deny");
     expect(adminDecision("student", "microsoft", false)).toBe("deny");

@@ -38,7 +38,7 @@ export const account = pgTable("account", {
   accessTokenExpiresAt: timestamp("access_token_expires_at", { withTimezone: true }),
   refreshTokenExpiresAt: timestamp("refresh_token_expires_at", { withTimezone: true }),
   scope: text("scope"), password: text("password"), createdAt: time("created_at"), updatedAt: time("updated_at"),
-}, (t) => [index("account_user_id_idx").on(t.userId)]);
+}, (t) => [index("account_user_id_idx").on(t.userId), uniqueIndex("account_provider_identity_idx").on(t.providerId, t.accountId)]);
 export const verification = pgTable("verification", {
   id: text("id").primaryKey(), identifier: text("identifier").notNull(), value: text("value").notNull(),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(), createdAt: time("created_at"), updatedAt: time("updated_at"),
@@ -96,10 +96,12 @@ export const settings = pgTable("settings", {
   updatedBy: text("updated_by").references(() => user.id, { onDelete: "set null" }), updatedAt: time("updated_at"),
 });
 export const walletPasses = pgTable("wallet_passes", {
-  studentId: text("student_id").notNull().references(() => user.id, { onDelete: "cascade" }),
+  // Keep the Google object address after account deletion so reconciliation can inactivate it.
+  studentId: text("student_id").notNull(),
   platform: text("platform", { enum: ["google", "apple"] }).notNull(),
   objectId: text("object_id").notNull(),
   firstIssuedAt: time("first_issued_at"), lastSyncedAt: time("last_synced_at"),
+  lastAttemptedAt: timestamp("last_attempted_at", { withTimezone: true }),
 }, (t) => [primaryKey({ columns: [t.studentId, t.platform] })]);
 export const cardClaimAttempts = pgTable("card_claim_attempts", {
   id: uuid("id").primaryKey().defaultRandom(), userId: text("user_id").notNull().references(() => user.id, { onDelete: "cascade" }),
@@ -113,8 +115,9 @@ export const auditLog = pgTable("audit_log", {
 export const emailOutbox = pgTable("email_outbox", {
   id: uuid("id").primaryKey().defaultRandom(), to: text("to").notNull(), subject: text("subject").notNull(),
   html: text("html").notNull(), text: text("text").notNull(), kind: text("kind").notNull(),
-  status: text("status", { enum: ["queued", "sent", "failed"] }).notNull().default("queued"),
+  status: text("status", { enum: ["queued", "leased", "sent", "failed"] }).notNull().default("queued"),
   createdAt: time("created_at"), sentAt: timestamp("sent_at", { withTimezone: true }), attempts: integer("attempts").notNull().default(0),
+  leaseId: uuid("lease_id"), leaseUntil: timestamp("lease_until", { withTimezone: true }), lastError: text("last_error"),
 }, (t) => [index("email_outbox_status_created_idx").on(t.status, t.createdAt)]);
 
 export const vendorLogos = pgTable("vendor_logos", {
@@ -144,4 +147,4 @@ export const scanEvents = pgTable("scan_events", {
   offerId: uuid("offer_id").references(() => offers.id), result: text("result").notNull(), reason: text("reason"), confirmed: boolean("confirmed").notNull().default(false), confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
   billAmount: numeric("bill_amount", { precision: 10, scale: 2 }), voided: boolean("voided").notNull().default(false), voidedAt: timestamp("voided_at", { withTimezone: true }), voidedBy: text("voided_by").references(() => user.id), voidReason: text("void_reason"),
   deviceInfo: text("device_info"), createdAt: time("created_at"),
-}, (t) => [index("scan_events_limit_idx").on(t.studentId, t.offerId, t.confirmed, t.voided, t.createdAt), index("scan_events_cashier_idx").on(t.cashierId, t.createdAt), index("scan_events_vendor_idx").on(t.vendorId, t.createdAt), index("scan_events_confirmed_at_idx").on(t.confirmedAt).where(sql`${t.confirmed} = true and ${t.voided} = false`)]);
+}, (t) => [index("scan_events_limit_idx").on(t.studentId, t.offerId, t.confirmed, t.voided, t.createdAt), index("scan_events_confirmed_limit_idx").on(t.studentId, t.offerId, t.confirmedAt).where(sql`${t.confirmed} = true and ${t.voided} = false`), index("scan_events_cashier_idx").on(t.cashierId, t.createdAt), index("scan_events_vendor_idx").on(t.vendorId, t.createdAt), index("scan_events_confirmed_at_idx").on(t.confirmedAt).where(sql`${t.confirmed} = true and ${t.voided} = false`)]);

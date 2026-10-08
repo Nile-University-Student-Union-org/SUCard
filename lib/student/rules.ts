@@ -3,8 +3,15 @@ import { UNIVERSITY_ID_REGEX, type Area, type CardFlow, type ClaimErrorCode, typ
 
 export { UNIVERSITY_ID_REGEX };
 export const DEFAULT_STUDENT_EMAIL_PATTERN = "^[a-z]\\.[a-z]+\\d{4}@nu\\.edu\\.eg$";
+export function isSafeStudentEmailPattern(pattern: string): boolean {
+  if (pattern.length > 160 || !pattern.startsWith("^") || !pattern.endsWith("$")) return false;
+  const withoutCounts = pattern.replace(/\{[1-9][0-9]?\}/g, "");
+  if (/[{}]/.test(withoutCounts) || (withoutCounts.match(/\+/g) ?? []).length > 1) return false;
+  if (!/^[\^$a-zA-Z0-9@.\\\[\]_+\-]+$/.test(withoutCounts)) return false;
+  try { new RegExp(pattern); return true; } catch { return false; }
+}
 export function matchesStudentEmail(email: string, pattern = DEFAULT_STUDENT_EMAIL_PATTERN): boolean {
-  try { return new RegExp(pattern, "i").test(email.toLowerCase()); } catch { return false; }
+  return email.length <= 320 && isSafeStudentEmailPattern(pattern) && new RegExp(pattern, "i").test(email.toLowerCase());
 }
 export function parseClaimQr(raw: string): string | null {
   const input = raw.trim();

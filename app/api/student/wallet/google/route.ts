@@ -26,8 +26,11 @@ export async function GET(request: Request) {
     await ensureClass(config);
     await upsertObject(config, home, home.card);
     const id = objectId(config.issuerId, student.user.id);
-    await db.insert(walletPasses).values({ studentId: student.user.id, platform: "google", objectId: id })
-      .onConflictDoUpdate({ target: [walletPasses.studentId, walletPasses.platform], set: { objectId: id, lastSyncedAt: new Date() } });
+    const syncedAt = new Date();
+    await db.insert(walletPasses).values({ studentId: student.user.id, platform: "google", objectId: id,
+      lastSyncedAt: syncedAt, lastAttemptedAt: syncedAt })
+      .onConflictDoUpdate({ target: [walletPasses.studentId, walletPasses.platform],
+        set: { objectId: id, lastSyncedAt: syncedAt, lastAttemptedAt: syncedAt } });
     return json({ saveUrl: buildSaveUrl(config, id) });
   } catch (error) {
     if (error instanceof GoogleWalletError) {

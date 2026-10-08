@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX "account_provider_identity_idx" ON "account" USING btree ("provider_id","account_id");--> statement-breakpoint
+CREATE INDEX "scan_events_confirmed_limit_idx" ON "scan_events" USING btree ("student_id","offer_id","confirmed_at") WHERE "scan_events"."confirmed" = true and "scan_events"."voided" = false;

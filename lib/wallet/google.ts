@@ -6,6 +6,7 @@ import type { CardSummary, StudentHomeResponse } from "@/lib/student/types";
 
 const apiBase = "https://walletobjects.googleapis.com/walletobjects/v1";
 const scope = "https://www.googleapis.com/auth/wallet_object.issuer";
+const googleTimeoutMs = 8_000;
 const configSchema = z.object({
   issuerId: z.string().regex(/^\d+$/),
   email: z.email(),
@@ -81,7 +82,7 @@ export function buildGenericObject(config: Pick<Config, "issuerId" | "baseUrl">,
       { id: "university_id", header: "University ID", body: student.profile.universityId },
       { id: "how_to_use", header: "How to use", body: "Show this QR code at participating vendors. A suspended or void card cannot be redeemed." },
     ],
-    ...(card ? { barcode: { type: "QR_CODE", value: card.qr, alternateText: `ID ${student.profile.universityId}` } } : {}),
+    barcode: card ? { type: "QR_CODE", value: card.qr, alternateText: `ID ${student.profile.universityId}` } : null,
     state: student.profile.status === "suspended" || !card ? "INACTIVE" : "ACTIVE",
   };
 }
@@ -110,6 +111,7 @@ async function getAccessToken(config: Config) {
         method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
         body: new URLSearchParams({ grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer", assertion: assertion(config) }),
         cache: "no-store",
+        signal: AbortSignal.timeout(googleTimeoutMs),
       });
     } catch { throw new GoogleWalletError(0, "OAuth network request failed"); }
     let body: unknown;
@@ -135,9 +137,10 @@ async function request(config: Config, method: string, resource: string, data?: 
     response = await fetch(`${apiBase}/${resource}`, {
       method, headers: { Authorization: `Bearer ${token}`, ...(data ? { "Content-Type": "application/json" } : {}) },
       ...(data ? { body: JSON.stringify(data) } : {}), cache: "no-store",
+      signal: AbortSignal.timeout(googleTimeoutMs),
     });
   } catch { throw new GoogleWalletError(0, "Google Wallet network request failed"); }
-  if (!response.ok && response.status !== 404) {
+  if (!response.ok && !(response.status === 404 && (method === "GET" || method === "PATCH"))) {
     let body: unknown;
     try { body = await response.json(); } catch { body = null; }
     throw new GoogleWalletError(response.status, googleMessage(body));
@@ -149,15 +152,8 @@ export async function ensureClass(config: Config) {
   const value = buildGenericClass(config.issuerId);
   const status = await request(config, "GET", `genericClass/${encodeURIComponent(value.id)}`);
   if (status === 404) return { get: status, insert: await request(config, "POST", "genericClass", value) };
-  // Push class layout changes to an existing class once per server instance.
-  if (!classSynced) {
-    const patch = await request(config, "PATCH", `genericClass/${encodeURIComponent(value.id)}`, value);
-    classSynced = true;
-    return { get: status, patch };
-  }
-  return { get: status };
+  return { get: status, patch: await request(config, "PATCH", `genericClass/${encodeURIComponent(value.id)}`, value) };
 }
-let classSynced = false;
 
 export async function upsertObject(config: Config, student: Pick<StudentHomeResponse, "profile" | "name">, card: Pick<CardSummary, "qr">) {
   const value = buildGenericObject(config, student, card);
@@ -224,28 +220,40 @@ export async function notifyRedemption({ userId, ...redemption }: RedemptionNoti
   }
 }
 
-export async function syncGoogleWalletForStudent(userId: string): Promise<void> {
+export async function syncGoogleWalletForStudent(userId: string): Promise<boolean> {
   try {
     const config = await getGoogleWalletConfig();
-    if (!config) return;
-    const id = objectId(config.issuerId, userId);
-    const status = await request(config, "GET", `genericObject/${encodeURIComponent(id)}`);
-    if (status === 404) return;
+    if (!config) return false;
     const { db } = await import("@/lib/db");
-    const { user } = await import("@/lib/db/schema");
+    const { user, walletPasses } = await import("@/lib/db/schema");
     const { and, eq } = await import("drizzle-orm");
+    const passFilter = and(eq(walletPasses.studentId, userId), eq(walletPasses.platform, "google"));
+    const [pass] = await db.select({ objectId: walletPasses.objectId }).from(walletPasses)
+      .where(passFilter);
+    if (!pass) return true;
+    await db.update(walletPasses).set({ lastAttemptedAt: new Date() })
+      .where(passFilter);
+    const resource = `genericObject/${encodeURIComponent(pass.objectId)}`;
     if (!(await db.select({ id: user.id }).from(user).where(eq(user.id, userId))).length) {
-      await request(config, "PATCH", `genericObject/${encodeURIComponent(id)}`, { state: "INACTIVE" });
-      return;
+      const status = await request(config, "PATCH", resource, { state: "INACTIVE" });
+      // An already removed object has no active pass to reconcile.
+      if (status === 404) console.info("Issued Google Wallet object no longer exists");
+      await db.delete(walletPasses).where(passFilter);
+      return true;
+    } else {
+      const { getStudentHome } = await import("@/lib/student/service");
+      const student = await getStudentHome(userId);
+      const value = buildGenericObject(config, student, student.card);
+      const status = await request(config, "PATCH", resource, value);
+      if (status === 404) {
+        await ensureClass(config);
+        await request(config, "POST", "genericObject", value);
+      }
     }
-    const { getStudentHome } = await import("@/lib/student/service");
-    const student = await getStudentHome(userId);
-    const value = buildGenericObject(config, student, student.card);
-    await request(config, "PATCH", `genericObject/${encodeURIComponent(id)}`, value);
-    const { walletPasses } = await import("@/lib/db/schema");
-    await db.update(walletPasses).set({ lastSyncedAt: new Date() }).where(and(eq(walletPasses.studentId, userId),eq(walletPasses.platform,"google")));
+    await db.update(walletPasses).set({ lastSyncedAt: new Date() }).where(passFilter);
+    return true;
   } catch (error) {
-    if (error instanceof GoogleWalletError) console.error("Google Wallet sync failed", { status: error.status, message: error.message });
-    else console.error("Google Wallet sync failed", error instanceof Error ? error.message : "Unknown error");
+    console.error("Google Wallet sync failed", { status: error instanceof GoogleWalletError ? error.status : undefined });
+    return false;
   }
 }

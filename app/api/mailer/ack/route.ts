@@ -1,11 +1,18 @@
-import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
-import { db } from "@/lib/db";
-import { emailOutbox } from "@/lib/db/schema";
-import { validFeedKey } from "@/lib/email/feed";
+import { acknowledgeEmail } from "@/lib/email/delivery";
+import { authorizedMailer } from "@/lib/email/feed";
+
+const body = z.strictObject({
+  items: z.array(z.strictObject({ id: z.uuid(), leaseId: z.uuid(), outcome: z.enum(["sent", "failed"]) })).min(1).max(100),
+});
+
 export async function POST(request: Request) {
-  const parsed = z.strictObject({ key: z.string().min(32).max(256), ids: z.array(z.uuid()).min(1).max(100) }).safeParse(await request.json().catch(() => null));
-  if (!parsed.success || !validFeedKey(parsed.data.key, process.env.MAILER_FEED_KEY)) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
-  const rows = await db.update(emailOutbox).set({ status: "sent", sentAt: new Date(), attempts: 1 }).where(and(inArray(emailOutbox.id, parsed.data.ids), eq(emailOutbox.status, "queued"))).returning({ id: emailOutbox.id });
-  return Response.json({ ids: rows.map(row => row.id) }, { headers: { "Cache-Control": "no-store" } });
+  if (!authorizedMailer(request)) return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
+  const parsed = body.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return Response.json({ error: "Invalid acknowledgement" }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  const acknowledgements = [];
+  for (const item of parsed.data.items) {
+    acknowledgements.push({ id: item.id, acknowledged: await acknowledgeEmail(item.id, item.leaseId, item.outcome) });
+  }
+  return Response.json({ results: acknowledgements }, { headers: { "Cache-Control": "no-store" } });
 }

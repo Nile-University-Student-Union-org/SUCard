@@ -11,8 +11,9 @@ describe("email delivery", () => {
     expect(result.html).toContain("&quot;&amp;b=&lt;");
   });
   it("renders valid RSS escaping and CDATA boundaries", () => {
-    const feed = renderFeed([{ id: "id-1", to: "a@example.com", subject: "A & B", html: "Hi ]]> bye", createdAt: new Date("2026-10-07T00:00:00Z") }]);
+    const feed = renderFeed([{ id: "id-1", leaseId: "lease-1", to: "a@example.com", subject: "A & B", html: "Hi ]]> bye", createdAt: new Date("2026-10-07T00:00:00Z") }]);
     expect(feed).toContain("<title>A &amp; B</title>");
+    expect(feed).toContain("<su:lease>lease-1</su:lease>");
     expect(feed).toContain("<author>a@example.com</author>");
     expect(feed).toContain("]]]]><![CDATA[>");
   });
@@ -21,6 +22,19 @@ describe("email delivery", () => {
     expect(validFeedKey(key, key)).toBe(true);
     expect(validFeedKey(key.slice(0, -1) + "x", key)).toBe(false);
     expect(validFeedKey("short", key)).toBe(false);
+  });
+  it("requires bearer authorization in the header", async () => {
+    const { authorizedMailer } = await import("./feed");
+    const prior = process.env.MAILER_FEED_KEY;
+    process.env.MAILER_FEED_KEY = "12345678901234567890123456789012";
+    try {
+      expect(authorizedMailer(new Request("https://example.com/api/mailer/feed?key=12345678901234567890123456789012"))).toBe(false);
+      expect(authorizedMailer(new Request("https://example.com/api/mailer/feed", { headers: { authorization: `Bearer ${process.env.MAILER_FEED_KEY}` } }))).toBe(true);
+      expect(authorizedMailer(new Request("https://example.com/api/mailer/feed", { headers: { authorization: `Basic ${process.env.MAILER_FEED_KEY}` } }))).toBe(false);
+    } finally {
+      if (prior === undefined) delete process.env.MAILER_FEED_KEY;
+      else process.env.MAILER_FEED_KEY = prior;
+    }
   });
 });
 it("requires privacy acceptance", () => {

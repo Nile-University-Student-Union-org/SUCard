@@ -48,7 +48,7 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await headers();
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
   return (
     <html
       lang="en"
@@ -58,6 +58,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-background text-foreground selection:bg-brand selection:text-white">
         <ThemeProvider
+          nonce={nonce}
           attribute="class"
           defaultTheme="system"
           enableSystem

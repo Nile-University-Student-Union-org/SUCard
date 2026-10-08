@@ -1,5 +1,5 @@
 import "server-only";
-import { and, count, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { account, auditLog, cardClaimAttempts, cards, studentProfiles, user, settings } from "@/lib/db/schema";
 import { buildQrPayload, formatSerial, generateToken } from "@/lib/cards/token";
@@ -84,18 +84,16 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     };
     const [profile] = await tx.select().from(studentProfiles).where(eq(studentProfiles.userId, userId)).for("update");
     if (!profile) throw new StudentError(403, "Student profile required");
+    if (!actorId) {
+      const [attempts] = await tx.select({ value: count() }).from(cardClaimAttempts).where(and(eq(cardClaimAttempts.userId, userId),
+        gt(cardClaimAttempts.createdAt, new Date(Date.now() - 3600_000))));
+      if (attempts.value >= 10) {
+        return { error: "rate_limited" as ClaimErrorCode };
+      }
+    }
     if (profile.status !== "active") {
       await logAttempt("suspended");
       return { error: "suspended" as const };
-    }
-    if (!actorId) {
-      const [attempts] = await tx.select({ value: count() }).from(cardClaimAttempts).where(and(eq(cardClaimAttempts.userId, userId),
-        gt(cardClaimAttempts.createdAt, new Date(Date.now() - 3600_000)), inArray(cardClaimAttempts.result,
-          ["linked", "invalid_qr", "not_su_card", "already_linked", "cancelled", "already_has_card", "suspended"])));
-      if (attempts.value >= 10) {
-        await logAttempt("rate_limited");
-        return { error: "rate_limited" as ClaimErrorCode };
-      }
     }
     const token = serial === undefined ? parseClaimQr(rawQr) : null;
     if (serial === undefined && !token) {
@@ -108,7 +106,7 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     // Re-scanning the card you already own is not an error: just return it.
     if (card?.status === "active" && card.studentId === userId) {
       await logAttempt("already_yours", card.id);
-      return { card: cardSummary(card) };
+      return { card: cardSummary(card), changed: false };
     }
     const decision = claimDecision(card ?? null, active?.type ?? null, (await getSettings(tx as unknown as typeof db)).allowDigitalUpgrade);
     if (decision !== "link" && decision !== "upgrade") {
@@ -128,7 +126,7 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     await logAttempt("linked", card.id);
     await tx.insert(auditLog).values({ actorId: actorId ?? userId, action: actorId ? "cards.linked_by_admin" : "cards.linked", entity: "card", entityId: card.id,
       data: { studentUserId: userId, replacedCardId: decision === "upgrade" ? active?.id : null } });
-    return { card: cardSummary(linked) };
+    return { card: cardSummary(linked), changed: true };
   });
   if ("error" in result) {
     if (result.error === "suspended") throw new StudentError(403, "Student is suspended");
@@ -138,6 +136,6 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
     const code = result.error as ClaimErrorCode;
     throw new StudentError(code === "rate_limited" ? 429 : code === "invalid_qr" ? 400 : 409, messages[code], code);
   }
-  await syncGoogleWalletForStudent(userId);
-  return result;
+  if (result.changed) await syncGoogleWalletForStudent(userId);
+  return { card: result.card };
 }

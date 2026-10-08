@@ -48,3 +48,4 @@ next-env.d.ts
 # local secrets (Google Wallet key etc.)
 secrets/
 !deploy/.env.production.example
+graphify-out/

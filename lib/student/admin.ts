@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, count, eq, gt, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { auditLog, cardBatches, cards, scanEvents, session, studentProfiles, user } from "@/lib/db/schema";
+import { auditLog, cardBatches, cards, session, studentProfiles, user } from "@/lib/db/schema";
 import { formatSerial } from "@/lib/cards/token";
 import { claimCard, getStudentHome, StudentError } from "./service";
 import { parseClaimQr } from "./rules";
@@ -69,8 +69,10 @@ export async function searchStudents(q: string, cursor?: string, filters: {statu
     } catch { throw new StudentError(400, "Invalid cursor"); }
   }
   const needle = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
-  const rows = await db.select({ profile: studentProfiles, name: user.name, email: user.email }).from(studentProfiles)
-    .innerJoin(user, eq(studentProfiles.userId, user.id)).where(and(
+  const rows = await db.select({ profile: studentProfiles, name: user.name, email: user.email, card: cards,
+    lastRedemptionAt: sql<Date | null>`(select max(se.confirmed_at) from scan_events se where se.student_id = ${studentProfiles.userId} and se.confirmed and not se.voided)` }).from(studentProfiles)
+    .innerJoin(user, eq(studentProfiles.userId, user.id))
+    .leftJoin(cards, and(eq(cards.studentId, studentProfiles.userId), eq(cards.status, "active"))).where(and(
       q ? or(ilike(user.name, needle), ilike(user.email, needle), ilike(studentProfiles.universityId, needle)) : undefined,
       filters.status ? eq(studentProfiles.status,filters.status) : undefined,
       filters.signedUpFrom ? sql`${studentProfiles.registeredAt} >= (${filters.signedUpFrom}::date::timestamp at time zone 'Africa/Cairo')` : undefined,
@@ -78,10 +80,14 @@ export async function searchStudents(q: string, cursor?: string, filters: {statu
       after ? or(gt(user.name, after.name), and(eq(user.name, after.name), gt(user.id, after.id))) : undefined))
     .orderBy(asc(user.name), asc(user.id)).limit(26);
   const page = rows.slice(0, 25);
-  const students = await Promise.all(page.map(async (row) => {
-    const home = await getStudentHome(row.profile.userId);
-    const [last] = await db.select({ at: sql<Date | null>`max(${scanEvents.confirmedAt})` }).from(scanEvents).where(and(eq(scanEvents.studentId,row.profile.userId),eq(scanEvents.confirmed,true),eq(scanEvents.voided,false)));
-    return { profile: home.profile, name: row.name, email: row.email, card: home.card, registeredAt: row.profile.registeredAt instanceof Date ? row.profile.registeredAt.toISOString() : new Date(row.profile.registeredAt).toISOString(), lastRedemptionAt: last?.at ? new Date(last.at).toISOString() : null };
+  const students = page.map((row) => ({
+    profile: { userId: row.profile.userId, universityId: row.profile.universityId, cardFlow: row.profile.cardFlow,
+      status: row.profile.status, suspendReason: row.profile.suspendReason, registeredAt: row.profile.registeredAt.toISOString() },
+    name: row.name, email: row.email,
+    card: row.card ? { id: row.card.id, type: row.card.type, serial: formatSerial(row.card.serialNumber),
+      status: row.card.status, qr: `NUSU1:${row.card.token}`, linkedAt: row.card.linkedAt?.toISOString() ?? null } : null,
+    registeredAt: row.profile.registeredAt.toISOString(),
+    lastRedemptionAt: row.lastRedemptionAt ? new Date(row.lastRedemptionAt).toISOString() : null,
   }));
   const last = page.at(-1);
   return { students, nextCursor: rows.length > 25 && last ? Buffer.from(JSON.stringify({ name: last.name, id: last.profile.userId })).toString("base64url") : null };

@@ -1,5 +1,5 @@
 import "server-only";
-import { count, desc, eq, sql } from "drizzle-orm";
+import { and, count, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { auditLog, cardBatches, cards, qrStyles, qrStyleVersions, user } from "@/lib/db/schema";
 import { getDefaultVersion, getPublishedVersion, StudioError } from "@/lib/qr-studio/service";
@@ -49,9 +49,18 @@ export async function listBatches(): Promise<Batch[]> {
 export async function getBatchWithCards(id: string) {
   const [batch] = await db.select().from(cardBatches).where(eq(cardBatches.id, id));
   if (!batch) return null;
-  const batchCards = await db.select({ serialNumber: cards.serialNumber, token: cards.token }).from(cards)
-    .where(eq(cards.batchId, id)).orderBy(cards.serialNumber);
-  return { batch, cards: batchCards };
+  return { batch, cards: batchCards(id) };
+}
+export async function* batchCards(id: string) {
+  let lastSerial = 0;
+  for (;;) {
+    const page = await db.select({ serialNumber: cards.serialNumber, token: cards.token }).from(cards)
+      .where(and(eq(cards.batchId, id), gt(cards.serialNumber, lastSerial)))
+      .orderBy(cards.serialNumber).limit(250);
+    if (!page.length) return;
+    yield* page;
+    lastSerial = page[page.length - 1].serialNumber;
+  }
 }
 export async function auditBatchExport(id: string, actorId: string, options: unknown) {
   await db.insert(auditLog).values({ actorId, action: "cards.batch_exported", entity: "card_batch", entityId: id, data: { options } });

@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "./server";
 import { db } from "@/lib/db";
-import { account, studentProfiles, user, vendors } from "@/lib/db/schema";
+import { account, studentProfiles, user, vendors, verification } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { getSettings } from "@/lib/settings/service";
 import { matchesStudentEmail } from "@/lib/student/rules";
@@ -30,12 +30,18 @@ export interface StaffUser {
 export async function requireAdminPage(): Promise<StaffUser> {
   const result = await readAdminDecision(await headers());
   if (result.decision === "setup") redirect("/admin-2fa/setup");
+  if (result.decision === "verify") redirect("/admin-2fa/verify");
   if (!result.admin) notFound();
   return result.admin;
 }
 export async function requireTwoFactorSetupPage(): Promise<StaffUser> {
   const result = await readAdminDecision(await headers());
   if (result.decision !== "setup" || !result.admin) redirect("/go");
+  return result.admin;
+}
+export async function requireTwoFactorVerifyPage(): Promise<StaffUser> {
+  const result = await readAdminDecision(await headers());
+  if (result.decision !== "verify" || !result.admin) redirect("/go");
   return result.admin;
 }
 
@@ -71,7 +77,11 @@ async function readAdminDecision(requestHeaders: Headers) {
   const role = resolveAdminRole(current.role, session.session.loginMethod,
     current.role === "student" && session.session.loginMethod === "microsoft" && await hasStudentAdminGrant(session.user.id));
   if (!role) return { decision: "deny" as const, admin: null };
-  return { decision: adminDecision(role, session.session.loginMethod, current.twoFactorEnabled),
+  const [verified] = session.session.loginMethod === "microsoft" && current.twoFactorEnabled
+    ? await db.select({ id: verification.id }).from(verification).where(and(
+      eq(verification.identifier, `admin-2fa:${session.session.id}`), eq(verification.value, session.user.id)))
+    : [];
+  return { decision: adminDecision(role, session.session.loginMethod, current.twoFactorEnabled, !!verified),
     admin: { id: session.user.id, email: current.email, name: current.name, role } };
 }
 

@@ -2,7 +2,7 @@ import "server-only";
 import { ZipArchive } from "archiver";
 import { Readable } from "node:stream";
 import type { ExportOptions } from "./types";
-import type { getBatchWithCards } from "./batches";
+import { batchCards, type getBatchWithCards } from "./batches";
 import { buildQrPayload, formatSerial } from "./token";
 import { renderQrSvg } from "@/lib/qr-style/render";
 import { nusuLogoDataUri } from "@/lib/qr-style/render";
@@ -14,7 +14,7 @@ type FoundBatch = NonNullable<Awaited<ReturnType<typeof getBatchWithCards>>>;
 function csv(value: string): string { return `"${value.replaceAll('"', '""')}"`; }
 export function streamBatchZip(batch: FoundBatch, options: ExportOptions, config?: QrStyleConfig): Readable {
   const zip = new ZipArchive({ zlib: { level: 6 } });
-  const append = async (data: string | Buffer, name: string, store = false) => {
+  const append = async (data: string | Buffer | Readable, name: string, store = false) => {
     const done = new Promise<void>((resolve, reject) => {
       const onEntry = () => { zip.off("error", onError); resolve(); };
       const onError = (error: Error) => { zip.off("entry", onEntry); reject(error); };
@@ -27,15 +27,17 @@ export function streamBatchZip(batch: FoundBatch, options: ExportOptions, config
   void (async () => {
     try {
       await append(`Batch ${batch.batch.number}: ${batch.batch.label} (${batch.batch.count} cards)\nQR content format NUSU1:<code>\nGenerated at: ${new Date().toISOString()}\n`, "README.txt");
-      const manifest = ["serial,qr_content,svg_file,png_file"];
-      for (const card of batch.cards) {
-        const serial = formatSerial(card.serialNumber), payload = buildQrPayload(card.token);
-        const svgFile = options.svg ? `qr/svg/${serial}.svg` : "";
-        const pngFile = options.png ? `qr/png/${serial}.png` : "";
-        manifest.push([serial, payload, svgFile, pngFile].map(csv).join(","));
-      }
-      await append(manifest.join("\n") + "\n", "manifest.csv");
-      for (const card of batch.cards) {
+      const manifest = Readable.from((async function* () {
+        yield "serial,qr_content,svg_file,png_file\n";
+        for await (const card of batchCards(batch.batch.id)) {
+          const serial = formatSerial(card.serialNumber), payload = buildQrPayload(card.token);
+          const svgFile = options.svg ? `qr/svg/${serial}.svg` : "";
+          const pngFile = options.png ? `qr/png/${serial}.png` : "";
+          yield [serial, payload, svgFile, pngFile].map(csv).join(",") + "\n";
+        }
+      })());
+      await append(manifest, "manifest.csv");
+      for await (const card of batch.cards) {
         const serial = formatSerial(card.serialNumber);
         const svg = config ? renderQrSvgFromConfig(buildQrPayload(card.token), config, { logoDataUri: config.logo.type === "nusu" ? nusuLogoDataUri() : undefined }) : renderQrSvg(buildQrPayload(card.token));
         if (options.svg) await append(svg, `qr/svg/${serial}.svg`);
