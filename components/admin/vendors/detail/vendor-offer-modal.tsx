@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -238,8 +239,8 @@ function VendorOfferForm({
   });
 
   return (
-    <form onSubmit={handleSubmit} noValidate>
-      <ModalBody className="space-y-6 max-h-[72vh] overflow-y-auto pr-1">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <ModalBody className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
         {fieldErrors.general && (
           <Alert variant="destructive" title="Error">
             {fieldErrors.general}
@@ -256,7 +257,7 @@ function VendorOfferForm({
               {title || "Offer title"}
             </p>
           </div>
-          <div className="px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shrink-0 shadow-xs">
+          <div className="px-3 py-1 rounded-xl bg-brand text-white dark:text-zinc-950 font-heading text-sm uppercase tracking-wide shrink-0 shadow-xs">
             {previewDiscountLabel}
           </div>
         </div>
@@ -453,7 +454,7 @@ function VendorOfferForm({
               <button
                 type="button"
                 onClick={handleSelectAllDays}
-                className="text-xs font-bold text-brand dark:text-brand-soft hover:underline cursor-pointer min-h-[32px] px-1"
+                className="text-xs font-bold text-brand dark:text-brand-soft hover:underline cursor-pointer min-h-[44px] inline-flex items-center px-1"
               >
                 {activeDays.length === 7 ? "Clear all" : "Select all"}
               </button>
@@ -518,31 +519,27 @@ function VendorOfferForm({
 
           {/* Date Range */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Input
-                id="starts-at"
-                label="Valid From (Date)"
-                type="date"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className="h-11 rounded-xl"
-              />
-            </div>
+            <DatePicker
+              id="starts-at"
+              label="Valid From (Date)"
+              value={startsAt}
+              maxDate={endsAt || undefined}
+              onChange={(date) => setStartsAt(date)}
+              clearable
+            />
 
-            <div className="space-y-1.5">
-              <Input
-                id="ends-at"
-                label="Valid Until (Date)"
-                type="date"
-                value={endsAt}
-                onChange={(e) => {
-                  setEndsAt(e.target.value);
-                  if (fieldErrors.endsAt) setFieldErrors((prev) => ({ ...prev, endsAt: undefined }));
-                }}
-                error={fieldErrors.endsAt}
-                className="h-11 rounded-xl"
-              />
-            </div>
+            <DatePicker
+              id="ends-at"
+              label="Valid Until (Date)"
+              value={endsAt}
+              minDate={startsAt || undefined}
+              onChange={(date) => {
+                setEndsAt(date);
+                if (fieldErrors.endsAt) setFieldErrors((prev) => ({ ...prev, endsAt: undefined }));
+              }}
+              error={fieldErrors.endsAt}
+              clearable
+            />
           </div>
         </div>
 

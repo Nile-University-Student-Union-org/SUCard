@@ -48,18 +48,43 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const [coords, setCoords] = useState<{ top: number; right: number }>({ top: 0, right: 0 });
+  const [coords, setCoords] = useState<{
+    top?: number;
+    bottom?: number;
+    right: number;
+    width: number;
+    maxHeight: number;
+    above: boolean;
+  }>({ top: 0, right: 16, width: 320, maxHeight: 0, above: false });
   const buttonRef = useRef<HTMLButtonElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const updateCoords = useCallback(() => {
     if (buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
-      const viewportWidth = window.innerWidth;
-      const calculatedRight = viewportWidth - rect.right;
+      const viewport = window.visualViewport;
+      const viewportLeft = viewport?.offsetLeft ?? 0;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const viewportWidth = viewport?.width ?? window.innerWidth;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      const edge = 16;
+      const gap = 8;
+      const width = Math.min(320, Math.max(0, viewportWidth - edge * 2));
+      const calculatedRight = window.innerWidth - rect.right;
+      const right = Math.round(Math.max(
+        window.innerWidth - viewportLeft - viewportWidth + edge,
+        Math.min(window.innerWidth - viewportLeft - width - edge, calculatedRight),
+      ));
+      const spaceBelow = viewportTop + viewportHeight - rect.bottom - gap - edge;
+      const spaceAbove = rect.top - viewportTop - gap - edge;
+      const openAbove = spaceBelow < 240 && spaceAbove > spaceBelow;
       setCoords({
-        top: Math.round(rect.bottom + 8),
-        right: Math.round(Math.max(16, Math.min(viewportWidth - 280, calculatedRight))),
+        top: openAbove ? undefined : Math.round(Math.max(viewportTop + edge, rect.bottom + gap)),
+        bottom: openAbove ? Math.round(window.innerHeight - rect.top + gap) : undefined,
+        right,
+        width,
+        maxHeight: Math.max(0, Math.floor(openAbove ? spaceAbove : spaceBelow)),
+        above: openAbove,
       });
     }
   }, []);
@@ -95,9 +120,13 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
       const handleScrollOrResize = () => updateCoords();
       window.addEventListener("scroll", handleScrollOrResize, true);
       window.addEventListener("resize", handleScrollOrResize);
+      window.visualViewport?.addEventListener("resize", handleScrollOrResize);
+      window.visualViewport?.addEventListener("scroll", handleScrollOrResize);
       return () => {
         window.removeEventListener("scroll", handleScrollOrResize, true);
         window.removeEventListener("resize", handleScrollOrResize);
+        window.visualViewport?.removeEventListener("resize", handleScrollOrResize);
+        window.visualViewport?.removeEventListener("scroll", handleScrollOrResize);
       };
     }
   }, [isOpen, updateCoords]);
@@ -243,10 +272,13 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                 : (currentIndex + 1) % items.length;
             items[nextIndex]?.focus();
           }}
-          className="fixed z-[65] w-[calc(100vw-32px)] sm:w-80 max-w-sm rounded-2xl border border-slate-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-2 animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none origin-top-right text-foreground max-h-[calc(100vh-80px)] overflow-y-auto overscroll-contain no-scrollbar"
+          className="fixed z-[65] rounded-2xl border border-slate-200/90 dark:border-zinc-800/90 bg-white/95 dark:bg-zinc-900/95 backdrop-blur-2xl shadow-2xl p-2.5 space-y-2 animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none origin-top-right text-foreground overflow-y-auto overscroll-contain no-scrollbar"
           style={{
-            top: `${coords.top}px`,
+            top: coords.top,
+            bottom: coords.bottom,
             right: `${coords.right}px`,
+            width: coords.width,
+            maxHeight: `max(0px, calc(${coords.maxHeight}px - env(safe-area-inset-${coords.above ? "top" : "bottom"})))`,
           }}
         >
           {/* 1. Account Header Card */}

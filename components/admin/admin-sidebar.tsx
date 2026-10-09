@@ -123,7 +123,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
 
   return (
     <aside className={cn(
-      "flex flex-col w-64 bg-[#0F3056] text-white border-r border-[#0A2240] select-none shadow-xl",
+      "flex flex-col w-64 bg-[#0F3056] text-white border-r border-white/10 select-none shadow-md",
       isMobile ? "h-full" : "sticky top-0 h-screen"
     )}>
       {/* Sidebar Header & Brand */}
@@ -147,7 +147,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
           <button
             type="button"
             onClick={onCloseMobile}
-            className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-95 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
+            className="w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.97] transition-[transform,background-color,color] duration-140 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
             aria-label="Close menu"
           >
             <X className="size-5" />
@@ -165,7 +165,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
           return (
             <div key={group.label || "default"} className="space-y-1">
               {group.label && (
-                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-sky-200/60">
+                <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
                   {group.label}
                 </div>
               )}
@@ -177,16 +177,16 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
                   return (
                     <div
                       key={item.title}
-                      className="flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold text-white/40 cursor-not-allowed transition-colors min-h-[44px]"
+                      className="flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium text-white/35 cursor-not-allowed transition-colors min-h-[40px]"
                       aria-disabled="true"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2.5">
                         <Icon className="size-4 text-white/30 shrink-0" />
                         <span className="truncate">{item.title}</span>
                       </div>
                       <Badge
                         variant="secondary"
-                        className="h-5 px-1.5 text-[9px] bg-white/10 text-white/50 border-none font-bold uppercase"
+                        className="h-4.5 px-1.5 text-[9px] bg-white/10 text-white/50 border-none font-medium uppercase"
                       >
                         Soon
                       </Badge>
@@ -200,24 +200,21 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
                     href={item.href}
                     onClick={onCloseMobile}
                     className={cn(
-                      "flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all group min-h-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
+                      "flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-[background-color,color] duration-140 group min-h-[40px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400",
                       isItemActive
-                        ? "bg-[#018BCE] text-white shadow-sm font-extrabold"
-                        : "text-white/80 hover:text-white hover:bg-white/10 active:scale-[0.98]"
+                        ? "bg-white/12 text-white font-semibold border-l-2 border-[#018BCE] rounded-l-none pl-2.5"
+                        : "text-white/70 hover:text-white hover:bg-white/6 font-medium active:scale-[0.99]"
                     )}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex items-center gap-2.5 min-w-0">
                       <Icon
                         className={cn(
-                          "size-4 shrink-0 transition-colors",
-                          isItemActive ? "text-white" : "text-white/70 group-hover:text-white"
+                          "size-4 shrink-0 transition-colors duration-140",
+                          isItemActive ? "text-sky-300" : "text-white/60 group-hover:text-white"
                         )}
                       />
                       <span className="truncate">{item.title}</span>
                     </div>
-                    {isItemActive && (
-                      <span className="size-1.5 rounded-full bg-white shrink-0" aria-hidden="true" />
-                    )}
                   </Link>
                 );
               })}

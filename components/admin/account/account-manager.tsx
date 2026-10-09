@@ -449,7 +449,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                     >
                       {areCodesCopied ? (
                         <>
-                          <Check className="size-3.5 mr-1 text-emerald-600" />
+                          <Check className="size-3.5 mr-1 text-emerald-600 animate-icon-morph" />
                           <span>Copied!</span>
                         </>
                       ) : (
@@ -468,7 +468,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                     >
                       {areCodesDownloaded ? (
                         <>
-                          <Check className="size-3.5 mr-1 text-emerald-600" />
+                          <Check className="size-3.5 mr-1 text-emerald-600 animate-icon-morph" />
                           <span>Saved!</span>
                         </>
                       ) : (

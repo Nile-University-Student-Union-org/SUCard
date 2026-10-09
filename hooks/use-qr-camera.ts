@@ -3,6 +3,10 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import jsQR from "jsqr";
 
+interface QrDetector {
+  detect(video: HTMLVideoElement): Promise<Array<{ rawValue: string }>>;
+}
+
 export interface UseQrCameraOptions {
   onScan: (qrCode: string) => void;
   enabled?: boolean;
@@ -16,6 +20,8 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
   const onScanRef = useRef(onScan);
   const enabledRef = useRef(enabled);
   const isScanningRef = useRef(false);
+  const cameraGenerationRef = useRef(0);
+  const detectorRef = useRef<QrDetector | null>(null);
 
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [torchAvailable, setTorchAvailable] = useState(false);
@@ -28,6 +34,7 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
   }, [onScan, enabled]);
 
   const stopCamera = useCallback(() => {
+    cameraGenerationRef.current++;
     if (scanLoopRef.current) {
       cancelAnimationFrame(scanLoopRef.current);
       scanLoopRef.current = null;
@@ -36,6 +43,7 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setTorchOn(false);
     setTorchAvailable(false);
     setIsCameraReady(false);
@@ -45,6 +53,7 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
   const processFrameRef = useRef<() => void>(() => {});
 
   const processFrame = useCallback(() => {
+    const generation = cameraGenerationRef.current;
     if (!videoRef.current || !enabledRef.current) {
       if (scanLoopRef.current !== null) {
         scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
@@ -58,12 +67,12 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
       if (typeof window !== "undefined" && "BarcodeDetector" in window) {
         try {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const detector = new (window as any).BarcodeDetector({
-            formats: ["qr_code"],
-          });
+          const detector: QrDetector = detectorRef.current ?? new (window as any).BarcodeDetector({ formats: ["qr_code"] });
+          detectorRef.current = detector;
           detector
             .detect(video)
             .then((barcodes: Array<{ rawValue: string }>) => {
+              if (generation !== cameraGenerationRef.current) return;
               if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
                 if (enabledRef.current) {
                   onScanRef.current(barcodes[0].rawValue);
@@ -74,7 +83,7 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
               }
             })
             .catch(() => {
-              runJsQR();
+              if (generation === cameraGenerationRef.current) runJsQR();
             });
           return;
         } catch {
@@ -135,6 +144,8 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
   }, [processFrame]);
 
   const startCamera = useCallback(async () => {
+    stopCamera();
+    const generation = cameraGenerationRef.current;
     setPermissionError(null);
 
     if (
@@ -158,11 +169,17 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
         audio: false,
       });
 
+      if (generation !== cameraGenerationRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", "true");
         await videoRef.current.play();
+        if (generation !== cameraGenerationRef.current) return;
         setIsCameraReady(true);
       }
 
@@ -179,6 +196,8 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
       isScanningRef.current = true;
       scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
     } catch (err: unknown) {
+      if (generation !== cameraGenerationRef.current) return;
+      stopCamera();
       const error = err as Error;
       if (
         error.name === "NotAllowedError" ||
@@ -198,7 +217,7 @@ export function useQrCamera({ onScan, enabled = true }: UseQrCameraOptions) {
         );
       }
     }
-  }, []);
+  }, [stopCamera]);
 
   const toggleTorch = useCallback(async () => {
     if (!streamRef.current) return;

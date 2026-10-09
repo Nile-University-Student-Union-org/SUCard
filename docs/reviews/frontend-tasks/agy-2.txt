@@ -1,0 +1,12 @@
+<goal>Make the remaining student and scanner screens clearer and usable at 360px.</goal>
+<context>
+Read AGENTS.md, docs/reviews/frontend-audit-2026-10-09.md, and docs/reviews/ui-review-2026-10-08.md. Own only: components/student/deals-view.tsx; components/scanner/scanner-viewfinder.tsx. These files are disjoint from every CX and AGY-1 task. Preserve NUSU brand and current feature behavior. Before UI work read C:\Users\Ahmed\.claude\plugins\cache\taste-skill\taste-skill\1.0.0\skills\taste-skill\SKILL.md, C:\Users\Ahmed\.claude\skills\impeccable\SKILL.md plus reference/audit.md, critique.md, craft-floor.md and anti-patterns reference, and the installed frontend-design SKILL.md under C:\Users\Ahmed\.claude\plugins\cache\claude-plugins-official\frontend-design\. Follow ~/.agents/skills/web-design-guidelines/SKILL.md and fresh linked rules, ~/.agents/skills/vercel-react-best-practices/SKILL.md, ~/.agents/skills/vercel-composition-patterns/SKILL.md, and ~/.agents/skills/vercel-react-view-transitions/SKILL.md only if changing transitions. Read relevant Next 16 docs before route-related edits.
+</context>
+<task>
+- At deals-view.tsx:305, show enough of the vendor name on a 360px card to identify the partner; let long names wrap without crowding the discount, terms, or schedule. Keep the recently enlarged terms target.
+- At scanner-viewfinder.tsx:202, describe the currently supported physical, Google Wallet, and web-card QR sources accurately; check contrast and safe placement over a live camera at 360px and with iOS safe areas.
+- Verify visible focus, 44px controls, dark-mode contrast, empty/loading/error views, and overflow at 360px, 430px, tablet, and desktop. The scan valid/invalid/success panels and admin forms are being changed elsewhere; relay issues rather than editing them.
+</task>
+<do_not>No new dependencies unless essential and named in the report. No business-logic, API, or DB changes. No sparkles icon or similar glyph. Do not commit. Do not run next dev. Do not touch files owned by other tasks or active admin redesign/QR Studio/Canvas date-picker/scan-panel work.</do_not>
+<gates>pnpm typecheck && pnpm lint && pnpm test && pnpm build</gates>
+<report>List changed files, viewport/theme checks, gate results, any dependency added, and unresolved issues briefly.</report>

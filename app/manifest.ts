@@ -2,10 +2,10 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "SU Card Scanner",
-    short_name: "SU Scanner",
-    description: "Nile University Student Union card scanner for partner vendors",
-    start_url: "/scan",
+    name: "SU Card",
+    short_name: "SU Card",
+    description: "Nile University Student Union membership card",
+    start_url: "/",
     display: "standalone",
     background_color: "#0F3056",
     theme_color: "#0F3056",
@@ -21,6 +21,14 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: "512x512",
         type: "image/png",
         purpose: "any",
+      },
+    ],
+    shortcuts: [
+      {
+        name: "Scanner",
+        short_name: "Scan",
+        description: "Open the SU Card scanner",
+        url: "/scan",
       },
     ],
   };

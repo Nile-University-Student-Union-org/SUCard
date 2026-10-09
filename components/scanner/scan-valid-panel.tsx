@@ -157,7 +157,7 @@ export function ScanValidPanel({
             onClick={onCancel}
             disabled={isConfirming}
             aria-label="Cancel scan"
-            className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+            className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-[transform,background-color,color] duration-140 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.97] disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
           >
             <X className="size-5" />
           </button>
@@ -228,11 +228,11 @@ export function ScanValidPanel({
                       }
                     }}
                     className={cn(
-                      "min-h-[56px] p-3.5 sm:p-4 rounded-2xl border-2 transition-all flex items-center justify-between gap-3 text-left select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                      "min-h-[56px] p-3.5 sm:p-4 rounded-2xl border-2 transition-[transform,background-color,border-color,box-shadow] duration-140 flex items-center justify-between gap-3 text-left select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
                       isUsable
                         ? isSelected
                           ? "bg-sky-500/10 dark:bg-sky-500/15 border-brand dark:border-brand-soft shadow-xs ring-2 ring-brand/20 dark:ring-brand-soft/20 cursor-pointer"
-                          : "bg-card border-border hover:border-border/80 hover:bg-muted/40 cursor-pointer active:scale-[0.99]"
+                          : "bg-card border-border hover:border-border/80 hover:bg-muted/40 cursor-pointer active:scale-[0.97]"
                         : "bg-muted/30 border-border/50 opacity-50 cursor-not-allowed"
                     )}
                   >

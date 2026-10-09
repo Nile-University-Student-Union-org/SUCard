@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useTransition } from "react";
+import React, { useState, useEffect, useCallback, useRef, useTransition } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { ArrowDown } from "lucide-react";
 import type { AuditEntry, StaffMember } from "@/lib/staff/types";
@@ -32,6 +32,9 @@ export function AuditManager({}: AuditManagerProps = {}) {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
+  const requestGeneration = useRef(0);
+  const loadingMoreRef = useRef(false);
 
   const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [selectedEntry, setSelectedEntry] = useState<AuditEntry | null>(null);
@@ -39,6 +42,8 @@ export function AuditManager({}: AuditManagerProps = {}) {
   // Sync state with URL params
   const updateUrlParams = useCallback(
     (newAction: string, newActorId: string) => {
+      // Invalidate pagination immediately, before the URL transition commits.
+      requestGeneration.current += 1;
       const params = new URLSearchParams(searchParams.toString());
       if (newAction) {
         params.set("action", newAction);
@@ -76,57 +81,51 @@ export function AuditManager({}: AuditManagerProps = {}) {
 
   // Fetch initial audit entries on filter change
   const fetchEntries = useCallback(async () => {
+    const generation = ++requestGeneration.current;
+    loadingMoreRef.current = false;
     setIsLoading(true);
+    setIsLoadingMore(false);
     setError(null);
+    setLoadMoreError(null);
+    setEntries([]);
+    setNextCursor(null);
     try {
       const data = await listAudit({
         action: actionParam || undefined,
         actorId: actorIdParam || undefined,
         limit: AUDIT_PAGE_SIZE_DEFAULT,
       });
+      if (generation !== requestGeneration.current) return;
       setEntries(data.entries || []);
       setNextCursor(data.nextCursor);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load audit logs. Please try again.";
-      setError(message);
+      if (generation === requestGeneration.current) setError(message);
     } finally {
-      setIsLoading(false);
+      if (generation === requestGeneration.current) setIsLoading(false);
     }
   }, [actionParam, actorIdParam]);
 
   useEffect(() => {
     let active = true;
-    listAudit({
-      action: actionParam || undefined,
-      actorId: actorIdParam || undefined,
-      limit: AUDIT_PAGE_SIZE_DEFAULT,
-    })
-      .then((data) => {
-        if (active) {
-          setEntries(data.entries || []);
-          setNextCursor(data.nextCursor);
-          setIsLoading(false);
-        }
-      })
-      .catch((err) => {
-        if (active) {
-          const message =
-            err instanceof Error ? err.message : "Failed to load audit logs. Please try again.";
-          setError(message);
-          setIsLoading(false);
-        }
-      });
-
+    void Promise.resolve().then(() => {
+      if (active) void fetchEntries();
+    });
     return () => {
       active = false;
+      requestGeneration.current += 1;
+      loadingMoreRef.current = false;
     };
-  }, [actionParam, actorIdParam]);
+  }, [fetchEntries]);
 
   // Load more entries (cursor pagination)
   const handleLoadMore = async () => {
-    if (!nextCursor || isLoadingMore) return;
+    if (!nextCursor || loadingMoreRef.current) return;
+    const generation = requestGeneration.current;
+    loadingMoreRef.current = true;
     setIsLoadingMore(true);
+    setLoadMoreError(null);
     try {
       const data = await listAudit({
         action: actionParam || undefined,
@@ -134,14 +133,18 @@ export function AuditManager({}: AuditManagerProps = {}) {
         cursor: nextCursor,
         limit: AUDIT_PAGE_SIZE_DEFAULT,
       });
+      if (generation !== requestGeneration.current) return;
       setEntries((prev) => [...prev, ...(data.entries || [])]);
       setNextCursor(data.nextCursor);
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Failed to load more entries.";
-      setError(message);
+      if (generation === requestGeneration.current) setLoadMoreError(message);
     } finally {
-      setIsLoadingMore(false);
+      if (generation === requestGeneration.current) {
+        loadingMoreRef.current = false;
+        setIsLoadingMore(false);
+      }
     }
   };
 
@@ -172,8 +175,17 @@ export function AuditManager({}: AuditManagerProps = {}) {
         onSelectEntry={(entry) => setSelectedEntry(entry)}
       />
 
+      {loadMoreError && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+          <p className="min-w-0 break-words">Older events could not load. {loadMoreError}</p>
+          <Button variant="outline" size="sm" onClick={handleLoadMore} className="min-h-11 normal-case">
+            Try loading older events again
+          </Button>
+        </div>
+      )}
+
       {/* Pagination Load More */}
-      {nextCursor && !isLoading && (
+      {nextCursor && !isLoading && !loadMoreError && (
         <div className="flex justify-center pt-4">
           <Button
             variant="outline"

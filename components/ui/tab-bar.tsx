@@ -238,7 +238,7 @@ export function TabBar<Id extends string>({
               onClick={() => onChange(tab.id)}
               onKeyDown={(event) => navigateTabs(event, tab.id)}
               className={cn(
-                "relative z-[1] inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-colors duration-300 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand dark:focus-visible:ring-brand-soft disabled:cursor-not-allowed disabled:opacity-50",
+                "relative z-[1] inline-flex min-h-[44px] min-w-[44px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-xl font-semibold transition-[transform,color] duration-140 motion-reduce:transition-none motion-reduce:transform-none active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-brand dark:focus-visible:ring-brand-soft disabled:cursor-not-allowed disabled:opacity-50",
                 size === "sm" ? "px-3 text-xs" : "px-3.5 text-sm",
                 fullWidth && "grow",
                 selected

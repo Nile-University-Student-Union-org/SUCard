@@ -8,7 +8,7 @@ import { Button } from "./button";
 import { ValidationBubble, type ValidationBubbleProps } from "./validation-bubble";
 
 const inputVariants = cva(
-  "w-full min-w-0 rounded-[12px] text-sm font-medium text-charcoal dark:text-white placeholder:text-ash dark:placeholder:text-zinc-400 transition-[border-color,box-shadow,background-color] duration-150 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-text",
+  "w-full min-w-0 rounded-[12px] text-sm font-medium text-charcoal dark:text-white placeholder:text-ash dark:placeholder:text-zinc-400 transition-[border-color,box-shadow,background-color,ring-color] duration-140 ease-out motion-reduce:transition-none focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed select-text",
   {
     variants: {
       variant: {

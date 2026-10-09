@@ -431,16 +431,24 @@ export function VendorPortalManager() {
                 Time Range
               </span>
               <DateRangePicker
-                from={overview?.range.from}
-                to={overview?.range.to}
-                onChange={({ from, to }) => setDateRange({ from, to })}
+                from={dateRange.from ?? overview?.range.from}
+                to={dateRange.to ?? overview?.range.to}
+                onChange={({ from, to }) => {
+                  overviewRequestId.current += 1;
+                  setDateRange({ from, to });
+                }}
               />
+              {isOverviewLoading && overview && (
+                <p role="status" className="mt-2 text-xs text-muted-foreground">
+                  Updating analytics. Showing the last loaded figures until the new range is ready.
+                </p>
+              )}
             </div>
 
             {overview?.range && (
               <div className="text-left md:text-right text-xs text-muted-foreground font-mono">
                 <span className="font-bold text-foreground">
-                  {formatCairoDateOnly(overview.range.from)} &rarr; {formatCairoDateOnly(overview.range.to)}
+                  Showing: {formatCairoDateOnly(overview.range.from)} &rarr; {formatCairoDateOnly(overview.range.to)}
                 </span>
                 <span className="block text-[11px] text-ash dark:text-zinc-400 font-sans">
                   vs prev {overview.range.days} days ({formatCairoDateOnly(overview.range.previousFrom)} – {formatCairoDateOnly(overview.range.previousTo)})
@@ -449,8 +457,18 @@ export function VendorPortalManager() {
             )}
           </div>
 
+          {overviewError && overview && (
+            <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+              <p className="min-w-0 break-words">Could not refresh analytics for the selected range. Showing the last loaded figures. {overviewError}</p>
+              <Button variant="outline" size="sm" onClick={fetchOverview} className="min-h-11 normal-case">
+                <RotateCcw className="mr-1.5 size-4" aria-hidden="true" />
+                Retry refresh
+              </Button>
+            </div>
+          )}
+
           {/* Overview Loading / Error / Content */}
-          {overviewError ? (
+          {overviewError && !overview ? (
             <div className="p-8">
               <StatusState
                 layout="panel"

@@ -628,7 +628,7 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                 />
 
                 <nav className="flex flex-col gap-1.5" aria-label="Mobile Navigation">
-                  {NAV_ITEMS.map((link) => {
+                  {NAV_ITEMS.map((link, idx) => {
                     const active = isActiveRoute(link.href);
                     const Icon = link.icon;
                     return (
@@ -638,7 +638,11 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                         aria-current={active ? "page" : undefined}
                         onClick={() => setMobileOpen(false)}
                         className={cn(
-                          "min-h-[44px] px-4 flex items-center justify-between rounded-xl text-[14px] font-medium transition-[transform,background-color,color] duration-150 ease-out active:scale-[0.98] motion-reduce:transition-none",
+                          "min-h-[44px] px-4 flex items-center justify-between rounded-xl text-[14px] font-medium transition-[transform,background-color,color] duration-140 ease-out active:scale-[0.97] motion-reduce:transition-none",
+                          mobileOpen && "animate-fade-up",
+                          mobileOpen && idx === 0 && "stagger-1",
+                          mobileOpen && idx === 1 && "stagger-2",
+                          mobileOpen && idx === 2 && "stagger-3",
                           active
                             ? isDark
                               ? "bg-white/20 text-white font-bold shadow-xs ring-1 ring-white/20"

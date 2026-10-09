@@ -106,7 +106,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             {/* Custom Visual Checkbox Box */}
             <div
               className={cn(
-                "flex items-center justify-center border-2 transition-all duration-150 motion-reduce:transition-none motion-reduce:transform-none active:scale-90 group-hover:border-brand/70",
+                "flex items-center justify-center border-2 transition-[background-color,border-color,box-shadow,transform] duration-140 motion-reduce:transition-none motion-reduce:transform-none active:scale-90 group-hover:border-brand/70",
                 currentSize.box,
                 isChecked || indeterminate
                   ? "bg-brand border-brand dark:bg-brand dark:border-brand text-white dark:text-midnight shadow-xs"
@@ -117,9 +117,9 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
               )}
             >
               {indeterminate ? (
-                <Minus className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100 motion-reduce:animate-none")} />
+                <Minus className={cn(currentSize.icon, "animate-check-draw motion-reduce:animate-none")} />
               ) : isChecked ? (
-                <Check className={cn(currentSize.icon, "animate-in zoom-in-75 duration-100 motion-reduce:animate-none")} />
+                <Check className={cn(currentSize.icon, "animate-check-draw motion-reduce:animate-none")} />
               ) : null}
             </div>
           </div>

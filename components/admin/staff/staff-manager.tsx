@@ -83,7 +83,7 @@ export function StaffManager({ currentUser }: StaffManagerProps) {
     <div className="space-y-6">
       {/* Page Header Bar */}
       <PageHeader
-        title="STAFF"
+        title="Staff"
         description="Manage who can sign in to the SU Card admin panel."
         actions={
           <Button

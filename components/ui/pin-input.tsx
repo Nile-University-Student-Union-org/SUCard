@@ -147,14 +147,14 @@ export const PinInput: React.FC<PinInputProps> = ({
                 length > 4
                   ? "w-11 sm:w-13 h-13 sm:h-16 text-center text-xl sm:text-2xl font-heading uppercase rounded-xl"
                   : "w-12 sm:w-16 h-14 sm:h-20 text-center text-2xl sm:text-3xl font-heading uppercase rounded-2xl",
-                "border-2 transition-all duration-200 select-none cursor-text shadow-xs font-mono motion-reduce:transition-none motion-reduce:transform-none",
+                "border-2 outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 select-none cursor-text shadow-xs font-mono motion-reduce:transition-none motion-reduce:transform-none",
                 "bg-white dark:bg-zinc-900 text-charcoal dark:text-white",
                 // Empty & Unfocused
                 !isFilled && !isFocused && "border-slate-200 dark:border-zinc-800 hover:border-slate-300 dark:hover:border-zinc-700",
                 // Filled & Unfocused
                 isFilled && !isFocused && "border-brand dark:border-brand-soft bg-brand/5 dark:bg-brand/10 text-brand dark:text-brand-soft",
                 // Focused
-                isFocused && "border-brand dark:border-brand-soft bg-white dark:bg-zinc-900 ring-4 ring-brand/20 dark:ring-brand-soft/25 -translate-y-0.5 motion-reduce:translate-none shadow-md",
+                isFocused && "border-brand dark:border-brand-soft bg-white dark:bg-zinc-900 ring-4 ring-ring/25 -translate-y-0.5 motion-reduce:translate-none shadow-md",
                 // Error state
                 isError && "border-destructive text-destructive bg-rose-50/50 dark:bg-rose-950/20",
                 disabled && "opacity-50 pointer-events-none"

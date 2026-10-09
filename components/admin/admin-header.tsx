@@ -105,14 +105,14 @@ export function AdminHeader({ user, areas }: AdminHeaderProps) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b-2 border-slate-200/90 dark:border-zinc-800 bg-white/95 dark:bg-zinc-900/95 px-4 sm:px-6 backdrop-blur-md transition-colors">
+      <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-slate-200/80 dark:border-zinc-800/80 bg-white/95 dark:bg-zinc-900/95 px-4 sm:px-6 backdrop-blur-md transition-colors">
         {/* Left: Mobile hamburger & breadcrumb/title */}
         <div className="flex items-center gap-3 min-w-0">
           <button
             ref={triggerRef}
             type="button"
             onClick={() => setIsMobileOpen(true)}
-            className="lg:hidden w-11 h-11 min-h-[44px] min-w-[44px] rounded-xl flex items-center justify-center text-foreground hover:bg-muted border border-border transition-all active:scale-95 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand shrink-0"
+            className="lg:hidden w-10 h-10 min-h-[40px] min-w-[40px] rounded-lg flex items-center justify-center text-foreground hover:bg-muted border border-border transition-[background-color,border-color,color] duration-140 active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand shrink-0"
             aria-label="Open sidebar menu"
             aria-expanded={isMobileOpen}
             aria-controls="admin-mobile-drawer"
@@ -121,7 +121,7 @@ export function AdminHeader({ user, areas }: AdminHeaderProps) {
           </button>
 
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-xs sm:text-sm font-black text-charcoal dark:text-white truncate">
+            <span className="text-xs sm:text-sm font-semibold text-charcoal dark:text-white truncate tracking-tight">
               SU Card Manager
             </span>
           </div>

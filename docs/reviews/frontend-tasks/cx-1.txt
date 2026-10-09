@@ -1,0 +1,14 @@
+<goal>Fix shared frontend semantics, 2FA recovery, and install metadata.</goal>
+<context>
+Read AGENTS.md, docs/reviews/frontend-audit-2026-10-09.md, and docs/reviews/ui-review-2026-10-08.md. Own only: app/manifest.ts; app/admin-2fa/verify/verify-admin-factor.tsx; components/ui/textarea.tsx; components/ui/overflow-scroller.tsx; components/ui/user-nav-dropdown.tsx; components/ui/toast.tsx; components/ui/index.ts. No AGY or other CX task owns these files. Follow ~/.agents/skills/web-design-guidelines/SKILL.md and its fresh linked rules, ~/.agents/skills/vercel-react-best-practices/SKILL.md, ~/.agents/skills/vercel-composition-patterns/SKILL.md, ~/.agents/skills/vercel-react-view-transitions/SKILL.md where applicable, and C:\Users\Ahmed\.claude\skills\impeccable\SKILL.md plus reference/audit.md and craft-floor.md. Read node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/01-metadata/manifest.md and relevant Next 16 docs before route edits. Preserve shared component public signatures and app auth contracts.
+</context>
+<task>
+- Make the root install manifest represent SU Card for all users with a safe general start URL; keep scanner-specific metadata where supported without changing role/access logic.
+- In verify-admin-factor.tsx, handle rejected/network requests with a recoverable inline error and guaranteed busy reset; preserve 2FA API behavior and make the /login back action label truthful.
+- In textarea.tsx, generate stable instance-unique IDs and preserve explicit IDs; ensure labels and helper/error descriptions reference the correct field.
+- In overflow-scroller.tsx, honor reduced motion for arrow and native scrolling. In user-nav-dropdown.tsx, constrain the portaled menu to the visible dynamic viewport and safe area so its final item stays reachable on iOS Safari.
+- After the concurrent Canvas date-picker port finishes editing ui/index.ts, confirm toast.tsx has no consumers, delete its obsolete implementation, and remove only its export from ui/index.ts; preserve the date-picker exports and all other concurrent changes.
+</task>
+<do_not>No new dependencies unless essential and named in the report. No business-logic, API, or DB changes. No sparkles icon or similar glyph. Do not commit. Do not run next dev. Do not touch files owned by other tasks or active admin redesign/QR Studio/Canvas date-picker/scan-panel work; coordinate around concurrent ui/index.ts changes by preserving them.</do_not>
+<gates>pnpm typecheck && pnpm lint && pnpm test && pnpm build</gates>
+<report>List changed files, keyboard/reduced-motion/iOS checks, gate results, any dependency added, and residual risk briefly.</report>

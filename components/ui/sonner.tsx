@@ -43,11 +43,11 @@ export const Toaster = ({ ...props }: ToasterProps) => {
           description:
             "text-xs text-muted-foreground font-medium mt-0.5 [overflow-wrap:anywhere]",
           actionButton:
-            "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold text-white dark:text-midnight bg-brand hover:brightness-110 active:scale-95 transition-all cursor-pointer",
+            "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold text-white dark:text-midnight bg-brand hover:brightness-110 active:scale-[0.97] transition-[transform,background-color,color] duration-140 cursor-pointer",
           cancelButton:
-            "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold bg-muted text-foreground hover:bg-muted/80 active:scale-95 transition-all cursor-pointer",
+            "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold bg-muted text-foreground hover:bg-muted/80 active:scale-[0.97] transition-[transform,background-color,color] duration-140 cursor-pointer",
           closeButton:
-            "!min-h-[44px] !min-w-[44px] !w-11 !h-11 !rounded-xl !bg-card !border-2 !border-border !text-foreground hover:!bg-muted hover:!border-border active:!scale-95 transition-all !cursor-pointer",
+            "!min-h-[44px] !min-w-[44px] !w-11 !h-11 !rounded-xl !bg-card !border-2 !border-border !text-foreground hover:!bg-muted hover:!border-border active:!scale-[0.97] transition-[transform,background-color,color] duration-140 !cursor-pointer",
         },
       }}
       {...props}

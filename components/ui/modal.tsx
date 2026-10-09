@@ -81,7 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
     if (isOpen || !present) return;
     const timeout = window.setTimeout(
       () => setPresent(false),
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 180
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 130
     );
     return () => window.clearTimeout(timeout);
   }, [isOpen, present]);
@@ -209,8 +209,8 @@ export const Modal: React.FC<ModalProps> = ({
         <div
           onClick={isOpen && closeOnBackdropClick ? onClose : undefined}
           className={cn(
-            "fixed inset-0 bg-black/65 backdrop-blur-sm duration-150 motion-reduce:animate-none",
-            isOpen ? "animate-in fade-in" : "animate-out fade-out"
+            "fixed inset-0 bg-black/65 backdrop-blur-sm motion-reduce:animate-none",
+            isOpen ? "animate-in fade-in duration-180 ease-out" : "animate-out fade-out duration-130 ease-in"
           )}
           aria-hidden="true"
         />
@@ -220,10 +220,10 @@ export const Modal: React.FC<ModalProps> = ({
           ref={panelRef}
           tabIndex={-1}
           className={cn(
-            "relative w-full min-w-0 max-w-full max-h-[92dvh] sm:max-h-[90dvh] flex flex-col bg-white dark:bg-zinc-900 rounded-t-[28px] sm:rounded-[24px] border-t-2 sm:border-2 border-slate-200 dark:border-zinc-800 shadow-2xl text-foreground overflow-hidden z-10 duration-200 motion-reduce:animate-none pb-safe sm:pb-0",
+            "relative w-full min-w-0 max-w-full max-h-[92dvh] sm:max-h-[90dvh] flex flex-col bg-white dark:bg-zinc-900 rounded-t-[28px] sm:rounded-[24px] border-t-2 sm:border-2 border-slate-200 dark:border-zinc-800 shadow-2xl text-foreground overflow-hidden z-10 motion-reduce:animate-none pb-safe sm:pb-0",
             isOpen
-              ? "animate-in fade-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-96"
-              : "animate-out fade-out slide-out-to-bottom-4 sm:slide-out-to-bottom-0 sm:zoom-out-96 duration-150",
+              ? "animate-in fade-in slide-in-from-bottom-6 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-180 ease-out"
+              : "animate-out fade-out slide-out-to-bottom-4 sm:slide-out-to-bottom-0 sm:zoom-out-95 duration-130 ease-in",
             maxWidthMap[maxWidth],
             className
           )}

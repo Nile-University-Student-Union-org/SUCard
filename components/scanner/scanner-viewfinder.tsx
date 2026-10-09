@@ -84,14 +84,14 @@ export function ScannerViewfinder({
             <h2 className="font-heading text-2xl sm:text-3xl uppercase tracking-wider text-white">
               Camera Access Required
             </h2>
-            <p className="text-sm text-slate-300 leading-relaxed font-medium">
+            <p className="text-sm text-slate-300 leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
               {permissionError}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 text-left space-y-1">
+          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 text-left space-y-1.5">
             <p className="font-bold text-white">To fix this on Android / Chrome / iOS:</p>
-            <ol className="list-decimal pl-4 space-y-0.5 opacity-90">
+            <ol className="list-decimal pl-4 space-y-1 opacity-90 leading-relaxed">
               <li>Tap the lock / tune icon in the address bar.</li>
               <li>Toggle Camera permission to <strong>Allow</strong>.</li>
               <li>Tap <strong>Try again</strong> below.</li>
@@ -129,8 +129,8 @@ export function ScannerViewfinder({
       <div className="absolute inset-0 bg-black/40 pointer-events-none" />
 
       {/* Viewfinder Aim Target Frame — responsive for 360px viewports */}
-      <div className="relative size-60 xs:size-68 sm:size-76 max-w-[calc(100vw-2.5rem)] max-h-[calc(100vw-2.5rem)] rounded-3xl border-2 border-white/25 flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all">
-        {/* 4 Brand Corner Brackets */}
+      <div className="relative size-56 xs:size-64 sm:size-72 max-w-[calc(100vw-3rem)] max-h-[calc(100vw-3rem)] rounded-3xl border-2 border-white/25 flex items-center justify-center shadow-[0_0_0_9999px_rgba(0,0,0,0.55)] transition-all">
+        {/* 4 Brand Corner Brackets in Nile University Accent Sky Blue (#018BCE) */}
         <div className="absolute top-0 left-0 size-8 border-t-4 border-l-4 border-[#018BCE] rounded-tl-2xl -mt-1 -ml-1 shadow-[0_0_10px_#018BCE]" />
         <div className="absolute top-0 right-0 size-8 border-t-4 border-r-4 border-[#018BCE] rounded-tr-2xl -mt-1 -mr-1 shadow-[0_0_10px_#018BCE]" />
         <div className="absolute bottom-0 left-0 size-8 border-b-4 border-l-4 border-[#018BCE] rounded-bl-2xl -mb-1 -ml-1 shadow-[0_0_10px_#018BCE]" />
@@ -152,8 +152,8 @@ export function ScannerViewfinder({
         )}
       </div>
 
-      {/* Top Floating Controls: Torch Toggle */}
-      <div className="absolute top-4 inset-x-4 flex items-center justify-between z-20 pointer-events-auto">
+      {/* Top Floating Controls: Torch Toggle & Scanner Status */}
+      <div className="absolute top-4 inset-x-3 sm:inset-x-4 flex items-center justify-between z-20 pointer-events-auto pt-safe">
         {torchAvailable ? (
           <button
             type="button"
@@ -161,10 +161,10 @@ export function ScannerViewfinder({
             aria-label={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
             aria-pressed={torchOn}
             className={cn(
-              "p-3 rounded-2xl backdrop-blur-xl transition-all cursor-pointer min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-95 shadow-lg",
+              "p-3 rounded-2xl backdrop-blur-xl transition-all cursor-pointer min-h-[48px] min-w-[48px] flex items-center justify-center active:scale-95 shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-black",
               torchOn
                 ? "bg-amber-400 text-black border border-amber-300"
-                : "bg-black/70 text-white border border-white/20 hover:bg-black/90"
+                : "bg-black/75 text-white border border-white/20 hover:bg-black/90"
             )}
           >
             {torchOn ? (
@@ -177,8 +177,8 @@ export function ScannerViewfinder({
           <div />
         )}
 
-        {/* Live Scan Pill */}
-        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 text-xs font-bold text-white shadow-lg">
+        {/* Live Scan Status Pill */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/75 backdrop-blur-xl border border-white/20 text-xs font-bold text-white shadow-lg">
           <span className="size-2 rounded-full bg-emerald-400 motion-safe:animate-ping motion-reduce:hidden" />
           <span className="size-2 rounded-full bg-emerald-400 motion-safe:hidden motion-reduce:inline-block" />
           <span>Point at QR</span>
@@ -186,11 +186,11 @@ export function ScannerViewfinder({
       </div>
 
       {/* Bottom Floating Guidelines & Offline Banner */}
-      <div className="absolute bottom-6 inset-x-4 z-20 text-center space-y-2 pointer-events-none">
+      <div className="absolute bottom-4 sm:bottom-6 inset-x-3 sm:inset-x-4 z-20 text-center space-y-2 pointer-events-none pb-safe">
         {!isOnline && (
           <div
             role="status"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-600 text-white font-bold text-xs sm:text-sm shadow-xl border border-rose-400 pointer-events-auto"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-700 text-white font-bold text-xs sm:text-sm shadow-xl border border-rose-400 pointer-events-auto max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto break-words [overflow-wrap:anywhere]"
           >
             <WifiOff className="size-4 shrink-0" />
             <span>Device is offline — scans require internet connection</span>
@@ -198,8 +198,8 @@ export function ScannerViewfinder({
         )}
 
         {isOnline && (
-          <div className="inline-block px-4 py-2 rounded-2xl bg-black/80 backdrop-blur-md text-xs sm:text-sm font-semibold text-white/95 border border-white/15 shadow-xl max-w-xs sm:max-w-md mx-auto">
-            Align student&apos;s physical card or Apple/Google Wallet QR code
+          <div className="inline-block px-4 py-2.5 rounded-2xl bg-black/85 backdrop-blur-md text-xs sm:text-sm font-semibold text-white border border-white/20 shadow-2xl max-w-[calc(100vw-2rem)] sm:max-w-md mx-auto leading-snug break-words [overflow-wrap:anywhere]">
+            Align student&apos;s physical card, Google Wallet, or web card QR
           </div>
         )}
       </div>

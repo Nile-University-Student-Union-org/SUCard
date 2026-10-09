@@ -6,6 +6,7 @@ import { Plus, Check, Tag, Users, ArrowRight, Store, AlertCircle } from "lucide-
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -372,31 +373,27 @@ export function AddVendorModal({
               </h4>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <Input
-                    id="contract-start"
-                    label="Contract Start Date"
-                    type="date"
-                    value={contractStart}
-                    onChange={(e) => setContractStart(e.target.value)}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
+                <DatePicker
+                  id="contract-start"
+                  label="Contract Start Date"
+                  value={contractStart}
+                  maxDate={contractEnd || undefined}
+                  onChange={(date) => setContractStart(date)}
+                  clearable
+                />
 
-                <div className="space-y-1.5">
-                  <Input
-                    id="contract-end"
-                    label="Contract End Date"
-                    type="date"
-                    value={contractEnd}
-                    onChange={(e) => {
-                      setContractEnd(e.target.value);
-                      if (formErrors.contractEnd) setFormErrors((prev) => ({ ...prev, contractEnd: undefined }));
-                    }}
-                    error={formErrors.contractEnd}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
+                <DatePicker
+                  id="contract-end"
+                  label="Contract End Date"
+                  value={contractEnd}
+                  minDate={contractStart || undefined}
+                  onChange={(date) => {
+                    setContractEnd(date);
+                    if (formErrors.contractEnd) setFormErrors((prev) => ({ ...prev, contractEnd: undefined }));
+                  }}
+                  error={formErrors.contractEnd}
+                  clearable
+                />
 
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label htmlFor="vendor-notes" className="text-xs font-semibold">

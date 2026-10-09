@@ -388,7 +388,7 @@ export function TwoFactorSetupWizard({ admin, passwordRequired }: TwoFactorSetup
                           aria-label="Copy secret key"
                         >
                           {isSecretCopied ? (
-                            <Check className="size-5 text-emerald-600 dark:text-emerald-400" />
+                            <Check className="size-5 text-emerald-600 dark:text-emerald-400 animate-icon-morph" />
                           ) : (
                             <Copy className="size-5" />
                           )}
@@ -476,7 +476,7 @@ export function TwoFactorSetupWizard({ admin, passwordRequired }: TwoFactorSetup
                   >
                     {areCodesCopied ? (
                       <>
-                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400" />
+                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400 animate-icon-morph" />
                         <span>Copied!</span>
                       </>
                     ) : (
@@ -495,7 +495,7 @@ export function TwoFactorSetupWizard({ admin, passwordRequired }: TwoFactorSetup
                   >
                     {isDownloaded ? (
                       <>
-                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400" />
+                        <Check className="size-4 mr-1 text-emerald-600 dark:text-emerald-400 animate-icon-morph" />
                         <span>Downloaded!</span>
                       </>
                     ) : (

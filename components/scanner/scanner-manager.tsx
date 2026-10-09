@@ -55,12 +55,16 @@ export function ScannerManager({
   areas,
 }: ScannerManagerProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("scan");
+  const activeTabRef = useRef<TabKey>("scan");
   // Server render assumes online, so hydration matches; the browser then reports the real state.
   const isOnline = useSyncExternalStore(subscribeOnline, () => navigator.onLine, () => true);
 
   // Scan state
   const [isValidating, setIsValidating] = useState(false);
   const [isConfirming, setIsConfirming] = useState(false);
+  const requestInFlightRef = useRef(false);
+  const resultOpenRef = useRef(false);
+  const scanGenerationRef = useRef(0);
 
   // Results
   const [validResult, setValidResult] = useState<{
@@ -95,17 +99,21 @@ export function ScannerManager({
         lastScannedQrRef.current === qrString &&
         now - lastScannedTimeRef.current < 3000;
 
-      if (isSameAsRecent || isValidating || validResult || invalidResult || successResult) {
+      if (activeTabRef.current !== "scan" || isSameAsRecent || requestInFlightRef.current || resultOpenRef.current) {
         return;
       }
 
+      requestInFlightRef.current = true;
+      const generation = scanGenerationRef.current;
       lastScannedQrRef.current = qrString;
       lastScannedTimeRef.current = now;
       setIsValidating(true);
 
       try {
         const res = await validateQr(qrString);
+        if (generation !== scanGenerationRef.current) return;
 
+        resultOpenRef.current = true;
         if (res.result === "valid" && res.student && res.offers.length > 0) {
           notifySuccess();
           setValidResult({
@@ -122,27 +130,33 @@ export function ScannerManager({
           });
         }
       } catch {
+        if (generation !== scanGenerationRef.current) return;
+        resultOpenRef.current = true;
         notifyError();
         setInvalidResult({
           code: "network_error",
           resetsAt: null,
         });
       } finally {
+        requestInFlightRef.current = false;
         setIsValidating(false);
       }
     },
-    [isValidating, validResult, invalidResult, successResult]
+    []
   );
 
   const handleConfirmDiscount = async (
     offerId: string,
     billAmount?: number
   ) => {
-    if (!validResult) return;
+    if (!validResult || requestInFlightRef.current) return;
+    requestInFlightRef.current = true;
+    const generation = scanGenerationRef.current;
     setIsConfirming(true);
 
     try {
       const res = await confirmDiscount(validResult.scanId, offerId, billAmount);
+      if (generation !== scanGenerationRef.current) return;
       notifySuccess();
 
       const appliedOffer = validResult.offers.find((o) => o.id === offerId);
@@ -156,24 +170,30 @@ export function ScannerManager({
       });
       setValidResult(null);
     } catch (err: unknown) {
+      if (generation !== scanGenerationRef.current) return;
       notifyError();
       const msg =
         err instanceof Error ? err.message : "Failed to record discount";
       toast.error(msg);
     } finally {
+      requestInFlightRef.current = false;
       setIsConfirming(false);
     }
   };
 
   const handleCancelValid = () => {
+    if (requestInFlightRef.current) return;
+    resultOpenRef.current = false;
     setValidResult(null);
   };
 
   const handleDismissInvalid = () => {
+    resultOpenRef.current = false;
     setInvalidResult(null);
   };
 
   const handleDismissSuccess = () => {
+    resultOpenRef.current = false;
     setSuccessResult(null);
   };
 
@@ -250,6 +270,9 @@ export function ScannerManager({
             items={TABS}
             value={activeTab}
             onChange={(tab) => {
+              activeTabRef.current = tab;
+              scanGenerationRef.current++;
+              resultOpenRef.current = false;
               setActiveTab(tab);
               // Clear any modals when switching tabs
               setValidResult(null);

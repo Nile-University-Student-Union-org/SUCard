@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, CreditCard, User, Layers, AlertCircle, X, ExternalLink } from "lucide-react";
+import { CreditCard, User, Layers, AlertCircle, X, ExternalLink } from "lucide-react";
 import { lookupCard } from "./api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,19 +67,18 @@ export function CardLookupPanel() {
   };
 
   return (
-    <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs rounded-2xl overflow-hidden">
-      <CardHeader className="p-5 sm:p-6 border-b border-slate-100 dark:border-zinc-800">
-        <CardTitle className="text-xl sm:text-2xl text-foreground flex items-center gap-2.5">
-          <Search className="size-5 text-brand dark:text-brand-soft shrink-0" />
-          <span>LOOK UP A CARD</span>
+    <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs rounded-xl overflow-hidden">
+      <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800/80">
+        <CardTitle className="text-base sm:text-lg font-semibold text-foreground">
+          Look up a card
         </CardTitle>
         <CardDescription className="text-xs text-muted-foreground">
           Enter a serial number (e.g. SU-000123 or 123) or paste a QR code payload to inspect card status and ownership.
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="p-5 sm:p-6 space-y-5">
-        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-3">
+      <CardContent className="p-4 sm:p-5 space-y-4">
+        <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2.5">
           <div className="relative flex-1">
             <Input
               id="cardLookupInput"
@@ -108,7 +107,7 @@ export function CardLookupPanel() {
             loading={isLoading}
             loadingText="Searching…"
             disabled={!query.trim()}
-            className="font-bold normal-case shrink-0 min-h-[44px] px-6"
+            className="font-semibold text-xs sm:text-sm normal-case shrink-0 min-h-[44px] px-6"
           >
             Look up
           </Button>
@@ -124,18 +123,18 @@ export function CardLookupPanel() {
         )}
 
         {result && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 space-y-4 animate-in fade-in duration-200">
+          <div className="p-4 sm:p-5 rounded-xl bg-slate-50/70 dark:bg-zinc-800/40 border border-slate-200/80 dark:border-zinc-700/80 space-y-3.5 animate-in fade-in duration-150">
             {/* Card Main Info */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-200/80 dark:border-zinc-700/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center font-mono font-bold text-sm">
+                <div className="size-9 rounded-lg bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center font-mono font-bold text-xs">
                   {result.serial}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-foreground font-mono">
+                  <h4 className="text-sm font-semibold text-foreground font-mono">
                     {result.serial}
                   </h4>
-                  <p className="text-[11px] text-muted-foreground uppercase font-semibold">
+                  <p className="text-[11px] text-muted-foreground capitalize font-medium">
                     {result.type} card
                   </p>
                 </div>

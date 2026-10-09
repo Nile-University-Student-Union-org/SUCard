@@ -26,6 +26,16 @@ function checkWebGLSupport(): boolean {
   }
 }
 
+let webGLSnapshot: boolean | undefined;
+function getWebGLSnapshot() {
+  webGLSnapshot ??= checkWebGLSupport();
+  return webGLSnapshot;
+}
+
+function subscribeWebGL() {
+  return () => {};
+}
+
 function usePrefersReducedMotion() {
   return useSyncExternalStore(
     (callback) => {
@@ -58,7 +68,7 @@ export function LanyardHero() {
 
   const prefersReducedMotion = usePrefersReducedMotion();
   const isTabActive = useIsTabVisible();
-  const isWebGLSupported = checkWebGLSupport() && !webGlError;
+  const webGlSupported = useSyncExternalStore(subscribeWebGL, getWebGLSnapshot, () => false);
 
   useEffect(() => {
     const currentContainer = containerRef.current;
@@ -77,7 +87,7 @@ export function LanyardHero() {
     }
   }, []);
 
-  const shouldRenderFallback = prefersReducedMotion || !isWebGLSupported;
+  const shouldRenderFallback = prefersReducedMotion || !webGlSupported || webGlError;
   const isFrameloopActive = inView && isTabActive;
 
   return (

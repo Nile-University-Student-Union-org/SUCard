@@ -98,7 +98,8 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
       const step = scrollStep || Math.max(180, Math.floor(containerWidth * 0.7));
       const offset = direction === "left" ? -step : step;
 
-      el.scrollBy({ left: offset, behavior: "smooth" });
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      el.scrollBy({ left: offset, behavior: reducedMotion ? "instant" : "smooth" });
       setTimeout(checkScrollBounds, 350);
     };
 
@@ -140,7 +141,7 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
             role={role}
             aria-label={ariaLabel}
             className={cn(
-              "flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-2.5 px-1 scroll-smooth touch-pan-x",
+              "flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-2.5 px-1 scroll-smooth motion-reduce:scroll-auto touch-pan-x",
               scrollerClassName,
             )}
           >

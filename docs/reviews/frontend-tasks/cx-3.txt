@@ -1,0 +1,14 @@
+<goal>Make vendor/admin refreshes truthful and keep quota and audit-list state correct.</goal>
+<context>
+Read AGENTS.md, docs/reviews/frontend-audit-2026-10-09.md, and docs/reviews/ui-review-2026-10-08.md. Own only: components/vendor/vendor-portal-manager.tsx; components/admin/audit/audit-manager.tsx; components/admin/vendors/detail/vendor-insights-tab.tsx; components/admin/settings/settings-manager.tsx. These files are disjoint from every AGY and CX-1/CX-2 task; admin shell/dashboard/redemptions and QR Studio are concurrent work elsewhere. Follow ~/.agents/skills/web-design-guidelines/SKILL.md and its fresh linked rules, ~/.agents/skills/vercel-react-best-practices/SKILL.md, ~/.agents/skills/vercel-composition-patterns/SKILL.md, ~/.agents/skills/vercel-react-view-transitions/SKILL.md only if changing transitions, and C:\Users\Ahmed\.claude\skills\impeccable\SKILL.md plus reference/audit.md and craft-floor.md. Read relevant local Next 16 docs before route/client-boundary changes. Preserve existing API contracts and server authorization.
+</context>
+<task>
+- In audit-manager.tsx, invalidate/abort older pagination and filter requests so previous-filter rows cannot append after a URL change; keep loaded rows during recoverable “load older” errors where possible.
+- In settings-manager.tsx, accept only a whole, nonnegative quota that matches the entered value; keep the invalid value and show a field-specific, focusable error before saving. Preserve server validation, confirmation, and existing issuance behavior.
+- In vendor-portal-manager.tsx, make the date-range picker reflect the requested range while loading; preserve last successful figures on refresh failure with a visible stale/error state and retry. Keep the already-fixed initial tab loading, export status, and cashier confirmations.
+- In vendor-insights-tab.tsx, show an inline refetch error/stale indicator when data already exists, keep the prior data and timestamp, and make retry clear. Avoid a full skeleton for a filter update.
+- Check first load, rapid filter changes, pagination, failed refresh, retry, and 360px status visibility; use existing data fetching patterns and no new server endpoints.
+</task>
+<do_not>No new dependencies unless essential and named in the report. No business-logic, API, or DB changes. No sparkles icon or similar glyph. Do not commit. Do not run next dev. Do not touch files owned by other tasks or active admin redesign/QR Studio/Canvas date-picker/scan-panel work.</do_not>
+<gates>pnpm typecheck && pnpm lint && pnpm test && pnpm build</gates>
+<report>List changed files, stale/race cases verified, gate results, any dependency added, and remaining limitations briefly.</report>

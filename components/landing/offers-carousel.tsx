@@ -153,7 +153,7 @@ export function OffersCarousel({ offers, isUnavailable = false }: OffersCarousel
             className="mt-3 font-heading uppercase tracking-wide leading-[0.95] text-charcoal dark:text-white text-[clamp(1.75rem,4.6vw,3.5rem)]"
           >
             Save at{" "}
-            <span className="bg-gradient-to-r from-brand to-macaw-blue bg-clip-text text-transparent dark:from-brand-soft dark:to-macaw-blue">
+            <span className="text-brand dark:text-brand-soft">
               partner spots
             </span>
           </h2>
@@ -297,23 +297,19 @@ function OfferTile({ offer, index, total }: { offer: PublicOffer; index: number;
         "transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] motion-safe:hover:-translate-y-1.5 motion-reduce:transition-none",
       )}
     >
-      {/* Category glow, dot texture and a clearcoat highlight */}
+      {/* Subtle category tint and quiet depth */}
       <span
         aria-hidden="true"
-        className="absolute -right-10 -top-14 -z-10 size-48 rounded-full bg-[var(--glow)] opacity-30 blur-3xl transition-opacity duration-500 group-hover:opacity-45 pointer-events-none"
+        className="absolute -right-10 -top-14 -z-10 size-48 rounded-full bg-[var(--glow)] opacity-20 blur-3xl transition-opacity duration-500 group-hover:opacity-30 pointer-events-none"
       />
       <span
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-60 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(to_bottom_left,#000,transparent_70%)] pointer-events-none"
+        className="absolute inset-0 -z-10 opacity-35 [background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:14px_14px] [mask-image:linear-gradient(to_bottom_left,#000,transparent_70%)] pointer-events-none"
       />
       <span
         aria-hidden="true"
-        className="absolute inset-x-0 top-0 -z-10 h-1/2 bg-gradient-to-b from-white/[0.08] to-transparent pointer-events-none"
+        className="absolute inset-x-0 top-0 -z-10 h-1/2 bg-gradient-to-b from-white/[0.04] to-transparent pointer-events-none"
       />
-      {/* Sheen that sweeps across on hover */}
-      <span aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
-        <span className="absolute inset-y-0 -left-1/3 w-1/3 -translate-x-[160%] bg-gradient-to-r from-transparent via-white/15 to-transparent opacity-0 group-hover:opacity-100 motion-safe:group-hover:animate-[card-sheen_1.6s_ease-out]" />
-      </span>
 
       <div className="flex items-center gap-3">
         <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-xl bg-white text-brand shadow-md ring-1 ring-black/5">

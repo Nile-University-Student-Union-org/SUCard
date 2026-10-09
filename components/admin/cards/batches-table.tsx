@@ -197,18 +197,18 @@ export function BatchesTable({
   };
 
   return (
-    <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
-      <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-zinc-800">
+    <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs rounded-xl overflow-hidden">
+      <CardHeader className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-zinc-800/80">
         <div>
-          <CardTitle className="text-xl sm:text-2xl text-foreground">
-            CARD BATCHES
+          <CardTitle className="text-base sm:text-lg font-semibold text-foreground">
+            Card batches
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Historical list of generated physical batches, print lifecycle progression, and export downloads.
           </CardDescription>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="brand" className="text-xs font-bold">
+          <Badge variant="brand" className="text-xs font-semibold">
             {batches.length} {batches.length === 1 ? "Batch" : "Batches"} total
           </Badge>
         </div>
@@ -465,7 +465,7 @@ export function BatchesTable({
                   <div
                     key={batch.id}
                     className={cn(
-                      "p-4 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-3 transition-all",
+                      "p-4 rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 space-y-3 transition-all",
                       isHighlighted && "ring-2 ring-brand"
                     )}
                   >

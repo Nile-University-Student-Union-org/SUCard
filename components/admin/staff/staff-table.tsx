@@ -64,11 +64,11 @@ export function StaffTable({
   onResetTwoFactor,
 }: StaffTableProps) {
   return (
-    <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
+    <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
       <CardHeader className="pb-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-zinc-800">
         <div>
-          <CardTitle className="text-xl sm:text-2xl text-foreground">
-            ADMIN ACCOUNTS
+          <CardTitle className="text-lg sm:text-xl text-foreground">
+            Admin accounts
           </CardTitle>
           <CardDescription className="text-xs text-muted-foreground">
             Personnel authorized to access and operate the SU Card admin console.

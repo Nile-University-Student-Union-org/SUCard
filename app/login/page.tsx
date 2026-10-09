@@ -303,17 +303,14 @@ function LoginContent() {
             </div>
           </div>
 
-          {/* Hero Copy: Eyebrow + Gradient Headline + Subtitle */}
+          {/* Hero Copy: Eyebrow + Headline + Subtitle */}
           <div className="w-full space-y-2 text-left">
             <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.22em] uppercase text-macaw-blue">
               <span aria-hidden="true" className="h-px w-5 bg-current" />
               <span>Nile University Student Union</span>
             </p>
             <h1 className="font-heading text-2xl xl:text-3xl uppercase tracking-wider text-white font-normal leading-tight">
-              Your student card &amp;{" "}
-              <span className="bg-gradient-to-r from-brand-soft to-macaw-blue bg-clip-text text-transparent">
-                member discounts
-              </span>
+              Your student card &amp; member discounts
             </h1>
             <p className="text-xs xl:text-sm text-sky-100/85 leading-relaxed font-normal">
               Digital &amp; physical membership for campus discounts and student union benefits.
@@ -336,7 +333,7 @@ function LoginContent() {
         <div className="w-full max-w-md mx-auto flex items-center justify-between mb-6">
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-xs font-bold text-ash dark:text-zinc-400 hover:text-foreground transition-colors group min-h-[44px]"
+            className="inline-flex items-center gap-2 text-xs font-bold text-ash dark:text-zinc-400 hover:text-foreground transition-colors group min-h-[44px] px-2 -ml-2 rounded-lg focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
           >
             <ArrowLeft className="size-4 group-hover:-translate-x-1 transition-transform" />
             <span>Home</span>
@@ -469,7 +466,7 @@ function LoginContent() {
                     <div className="flex justify-end">
                       <Link
                         href="/forgot-password"
-                        className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] inline-flex items-center px-1"
+                        className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] inline-flex items-center px-1 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
                       >
                         Forgot password?
                       </Link>
@@ -595,7 +592,7 @@ function LoginContent() {
                         setAuthError(null);
                         setTwoFactorPinError(false);
                       }}
-                      className="text-brand dark:text-brand-soft hover:underline font-semibold min-h-[44px] px-2 flex items-center cursor-pointer"
+                      className="text-brand dark:text-brand-soft hover:underline font-semibold min-h-[44px] px-2 flex items-center cursor-pointer rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
                     >
                       {twoFactorMethod === "totp"
                         ? "Use a backup code instead"
@@ -605,7 +602,7 @@ function LoginContent() {
                     <button
                       type="button"
                       onClick={handleStartOver}
-                      className="inline-flex items-center gap-1.5 text-ash dark:text-zinc-400 hover:text-foreground font-medium min-h-[44px] px-2 transition-colors cursor-pointer"
+                      className="inline-flex items-center gap-1.5 text-ash dark:text-zinc-400 hover:text-foreground font-medium min-h-[44px] px-2 transition-colors cursor-pointer rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
                     >
                       <ArrowLeft className="size-3.5" />
                       <span>Back to sign in</span>

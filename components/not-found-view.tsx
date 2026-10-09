@@ -59,19 +59,19 @@ export function NotFoundView() {
         <div className="relative mb-6 select-none flex items-center justify-center gap-1 sm:gap-2">
           {/* Subtle back-glow */}
           <div
-            className="absolute inset-0 -z-10 bg-gradient-to-tr from-[#0F3056]/20 via-[#018BCE]/25 to-transparent blur-2xl rounded-full scale-125"
+            className="absolute inset-0 -z-10 bg-gradient-to-tr from-brand/20 via-macaw-blue/20 to-transparent blur-2xl rounded-full scale-125 pointer-events-none"
             aria-hidden="true"
           />
 
           {/* Digit 4 */}
-          <span className="font-heading text-7xl sm:text-9xl md:text-[10rem] text-[#0F3056] dark:text-[#52A5E8] leading-none drop-shadow-sm">
+          <span className="font-heading text-7xl sm:text-9xl md:text-[10rem] text-brand dark:text-brand-soft leading-none drop-shadow-sm">
             4
           </span>
 
-          {/* Stylized '0' ring echoing NUSU logo curves */}
+          {/* Stylized '0' ring echoing NUSU brand curves */}
           <div className="relative size-16 sm:size-24 md:size-28 mx-1 flex items-center justify-center">
             <svg
-              className="size-full animate-spin-slow motion-reduce:animate-none"
+              className="size-full"
               viewBox="0 0 100 100"
               fill="none"
               aria-hidden="true"
@@ -84,7 +84,7 @@ export function NotFoundView() {
                 stroke="currentColor"
                 strokeWidth="12"
                 strokeDasharray="180 70"
-                className="text-[#0F3056] dark:text-[#52A5E8]"
+                className="text-brand dark:text-brand-soft"
               />
               {/* Inner Sky accent arc */}
               <circle
@@ -94,14 +94,14 @@ export function NotFoundView() {
                 stroke="#018BCE"
                 strokeWidth="8"
                 strokeDasharray="90 50"
-                className="text-[#018BCE]"
+                className="text-macaw-blue"
               />
             </svg>
-            <div className="absolute size-3 sm:size-4 rounded-full bg-[#018BCE] shadow-xs" />
+            <div className="absolute size-3 sm:size-4 rounded-full bg-macaw-blue shadow-xs" />
           </div>
 
           {/* Digit 4 */}
-          <span className="font-heading text-7xl sm:text-9xl md:text-[10rem] text-[#0F3056] dark:text-[#52A5E8] leading-none drop-shadow-sm">
+          <span className="font-heading text-7xl sm:text-9xl md:text-[10rem] text-brand dark:text-brand-soft leading-none drop-shadow-sm">
             4
           </span>
         </div>

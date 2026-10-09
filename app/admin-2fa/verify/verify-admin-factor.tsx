@@ -19,18 +19,24 @@ export function VerifyAdminFactor() {
     event.preventDefault();
     setBusy(true);
     setError("");
-    const result = backup
-      ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
-      : await authClient.twoFactor.verifyTotp({ code: code.trim() });
-    if (result.error) {
-      setError(result.error.status === 429 ? "Too many attempts. Try again later." : "Invalid code. Try again.");
-      setBusy(false);
+    try {
+      const verification = backup
+        ? await authClient.twoFactor.verifyBackupCode({ code: code.trim() })
+        : await authClient.twoFactor.verifyTotp({ code: code.trim() });
+      if (verification.error) {
+        setError(verification.error.status === 429 ? "Too many attempts. Try again later." : "Invalid code. Try again.");
+        return;
+      }
+    } catch {
+      setError("Could not verify your code. Check your connection and try again.");
       return;
+    } finally {
+      setBusy(false);
     }
     router.push("/go");
   }
 
-  return <AuthLayout backHref="/login" backLabel="Sign out">
+  return <AuthLayout backHref="/login" backLabel="Back to login">
     <Card className="mx-auto max-w-md space-y-5 p-6">
       <h1 className="font-heading text-3xl">VERIFY YOUR IDENTITY</h1>
       <p>Enter a code from your authenticator app to access the admin panel.</p>

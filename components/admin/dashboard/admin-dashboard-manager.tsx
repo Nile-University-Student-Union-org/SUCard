@@ -197,7 +197,7 @@ export function AdminDashboardManager() {
     <div className="space-y-6">
       {/* Top Header */}
       <PageHeader
-        title="DASHBOARD"
+        title="Dashboard"
         description="Real-time analytics, student adoption, vendor performance, and card usage."
         badge={
           isUpdating ? (
@@ -243,7 +243,7 @@ export function AdminDashboardManager() {
       />
 
       {/* Date Range & Filter Chips Bar */}
-      <div className="space-y-3 p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+      <div className="space-y-3 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
             <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 mb-1.5">
@@ -491,11 +491,11 @@ export function AdminDashboardManager() {
           </div>
 
           {/* M8-4: REDEMPTIONS OVER TIME CHART */}
-          <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
+          <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs">
             <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <CardTitle className="text-lg sm:text-xl text-foreground">
-                  REDEMPTIONS OVER TIME
+                  Redemptions over time
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Confirmed scans aggregated by {data.granularity}
@@ -539,11 +539,11 @@ export function AdminDashboardManager() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* M8-2: VENDOR LEADERBOARD TABLE (2 Cols on lg) */}
             <div className="lg:col-span-2">
-              <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
+              <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
                 <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
                   <div>
                     <CardTitle className="text-lg sm:text-xl text-foreground">
-                      VENDOR LEADERBOARD
+                      Vendor leaderboard
                     </CardTitle>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       Top performing vendors ranked by redemption volume
@@ -559,7 +559,7 @@ export function AdminDashboardManager() {
                     <div className="p-8">
                       <EmptyState
                         icon={<Store className="size-6 text-muted-foreground" />}
-                        title="NO VENDOR ACTIVITY"
+                        title="No vendor activity"
                         hint="No redemptions logged for vendors in this period."
                       />
                     </div>
@@ -770,13 +770,13 @@ export function AdminDashboardManager() {
 
             {/* M8-3: AT RISK VENDORS PANEL (1 Col on lg) */}
             <div>
-              <Card className="border-2 border-amber-300/80 dark:border-amber-800/80 bg-amber-50/30 dark:bg-amber-950/10 shadow-xs h-full flex flex-col">
+              <Card className="border border-amber-200/80 dark:border-amber-900/60 bg-amber-50/30 dark:bg-amber-950/10 shadow-xs h-full flex flex-col">
                 <CardHeader className="p-4 sm:p-5 border-b border-amber-200/60 dark:border-amber-900/40 flex flex-row items-center justify-between">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="size-5 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div>
                       <CardTitle className="text-base sm:text-lg text-amber-900 dark:text-amber-200">
-                        AT-RISK VENDORS
+                        At-risk vendors
                       </CardTitle>
                       <p className="text-[11px] text-amber-700/80 dark:text-amber-400/80 mt-0.5">
                         Below activity threshold
@@ -825,10 +825,6 @@ export function AdminDashboardManager() {
                       ))}
                     </div>
                   )}
-
-                  <div className="pt-4 mt-4 border-t border-amber-200/50 dark:border-amber-900/30 text-[11px] text-muted-foreground">
-                    Tip: Reach out to at-risk partners to adjust discounts or verify their cashier scanner setup.
-                  </div>
                 </CardContent>
               </Card>
             </div>

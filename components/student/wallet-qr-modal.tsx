@@ -11,13 +11,16 @@ import { createPortal } from "react-dom";
 import QRCode from "qrcode";
 import {
   Camera,
+  Check,
   ChevronRight,
+  Copy,
   ExternalLink,
   Link2,
   Wallet,
   X,
 } from "lucide-react";
 import { cn } from "cn";
+import { copyToClipboard } from "@/lib/clipboard";
 
 const emptySubscribe = () => () => {};
 
@@ -34,6 +37,16 @@ export function WalletQrModal({ saveUrl, onClose }: WalletQrModalProps) {
   const isOpen = Boolean(saveUrl);
   const [present, setPresent] = useState(isOpen);
   const [qrSrc, setQrSrc] = useState<string | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyLink = async () => {
+    if (!saveUrl) return;
+    const ok = await copyToClipboard(saveUrl);
+    if (ok) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
 
   const titleId = useId();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -287,17 +300,37 @@ export function WalletQrModal({ saveUrl, onClose }: WalletQrModalProps) {
             </div>
           </div>
 
-          {/* Quiet Browser Link (Footer) */}
+          {/* Quiet Browser & Copy Actions (Footer) */}
           {saveUrl && (
-            <a
-              href={saveUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors focus-visible:outline-hidden focus-visible:underline"
-            >
-              <span>On this computer? Open in browser</span>
-              <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
-            </a>
+            <div className="mt-5 flex items-center justify-center gap-2.5 flex-wrap text-xs">
+              <button
+                type="button"
+                onClick={handleCopyLink}
+                className="inline-flex items-center gap-1.5 font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors focus-visible:outline-hidden focus-visible:underline cursor-pointer"
+              >
+                {isCopied ? (
+                  <>
+                    <Check className="size-3.5 text-emerald-600 dark:text-emerald-400 animate-icon-morph shrink-0" aria-hidden="true" />
+                    <span className="text-emerald-600 dark:text-emerald-400 font-semibold">Link copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="size-3.5 shrink-0" aria-hidden="true" />
+                    <span>Copy pass link</span>
+                  </>
+                )}
+              </button>
+              <span className="text-slate-300 dark:text-zinc-600 select-none" aria-hidden="true">&bull;</span>
+              <a
+                href={saveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors focus-visible:outline-hidden focus-visible:underline"
+              >
+                <span>Open in browser</span>
+                <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
+              </a>
+            </div>
           )}
         </div>
       </div>

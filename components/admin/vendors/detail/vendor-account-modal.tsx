@@ -249,7 +249,7 @@ function VendorAccountForm({
             >
               {isCopied ? (
                 <>
-                  <Check className="size-4 mr-1.5 text-emerald-600 dark:text-emerald-400" />
+                  <Check className="size-4 mr-1.5 text-emerald-600 dark:text-emerald-400 animate-icon-morph" />
                   <span className="text-emerald-700 dark:text-emerald-300">
                     Credentials copied to clipboard!
                   </span>

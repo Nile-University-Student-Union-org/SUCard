@@ -1,6 +1,6 @@
 "use client";
 
-import React, { forwardRef } from "react";
+import React, { forwardRef, useId } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -58,13 +58,19 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
       onDismissValidationBubble,
       disabled,
       id,
+      "aria-describedby": describedBy,
       ...props
     },
     ref
   ) => {
-    const textareaId =
-      id || (label ? `textarea-${label.toLowerCase().replace(/\s+/g, "-")}` : undefined);
+    const generatedId = useId();
+    const textareaId = id ?? generatedId;
     const hasError = !!error || !!validationBubble;
+    const messageId = error
+      ? `${textareaId}-error`
+      : helperText
+      ? `${textareaId}-helper`
+      : undefined;
 
     return (
       <div className="w-full min-w-0 space-y-1.5 text-left relative">
@@ -83,13 +89,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
             ref={ref}
             disabled={disabled}
             aria-invalid={hasError}
-            aria-describedby={
-              error
-                ? `${textareaId}-error`
-                : helperText
-                ? `${textareaId}-helper`
-                : undefined
-            }
+            aria-describedby={[describedBy, messageId].filter(Boolean).join(" ") || undefined}
             className={cn(
               textareaVariants({ variant, textareaSize }),
               hasError &&

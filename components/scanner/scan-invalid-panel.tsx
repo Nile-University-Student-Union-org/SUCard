@@ -201,7 +201,7 @@ export function ScanInvalidPanel({
           type="button"
           onClick={onDismiss}
           aria-label="Close error"
-          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-[transform,background-color,color] duration-140 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           <X className="size-5" />
         </button>
@@ -210,7 +210,7 @@ export function ScanInvalidPanel({
       {/* Main Error Body */}
       <main className="flex-1 px-6 py-8 sm:px-10 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
         {/* Giant Badge */}
-        <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-reduce:transform-none">
+        <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center animate-shake-once">
           {details.icon === "wifi" ? (
             <WifiOff className="size-12 sm:size-14" />
           ) : (

@@ -267,7 +267,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   return (
     <div className="w-full my-auto py-4 space-y-6 max-w-[360px] sm:max-w-[400px] mx-auto">
       {/* 1. THE PREMIUM WEB CARD PANEL */}
-      <div className="relative w-full rounded-[28px] p-5 sm:p-6 bg-[#0F3056] text-white shadow-2xl shadow-[#0F3056]/30 dark:shadow-black/60 border-2 border-[#0F548D]/60 ring-1 ring-inset ring-white/15 overflow-hidden flex flex-col justify-between select-none motion-reduce:transition-none transition-all duration-300">
+      <div className="relative w-full rounded-[28px] p-5 sm:p-6 bg-[#0F3056] text-white shadow-2xl shadow-[#0F3056]/30 dark:shadow-black/60 border-2 border-[#0F548D]/60 ring-1 ring-inset ring-white/15 overflow-hidden flex flex-col justify-between select-none animate-card-settle transition-[transform,box-shadow] duration-200">
         {/* Subtle Sky and Brand Arc Background Vectors Echoing NUSU Curves */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
           {/* Ambient Glows */}
@@ -308,7 +308,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
 
         {/* Centered High-Contrast QR Code Box (Scan-Safe Quiet Zone) */}
         <div className="relative z-10 flex flex-col items-center justify-center my-auto py-1">
-          <div className="w-full max-w-[250px] sm:max-w-[270px] aspect-square bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xl ring-4 ring-black/10 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:object-contain">
+          <div className="w-full max-w-[250px] sm:max-w-[270px] aspect-square bg-white rounded-2xl p-3.5 sm:p-4 shadow-2xl ring-4 ring-black/10 flex items-center justify-center [&>svg]:w-full [&>svg]:h-full [&>svg]:object-contain animate-qr-reveal">
             {qrSvg ? (
               <div
                 className="w-full h-full flex items-center justify-center"
@@ -379,7 +379,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             onClick={handleAddToGoogleWallet}
             disabled={walletLoading}
             aria-label="Add to Google Wallet"
-            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-all active:scale-[0.99] motion-reduce:active:scale-100 motion-reduce:transition-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-[transform,background-color,box-shadow] duration-140 active:scale-[0.97] hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
           >
             {walletLoading ? (
               <>

@@ -68,9 +68,9 @@ export function StudentAdmins() {
     finally { setBusy(false); }
   }
 
-  return <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
+  return <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
     <CardHeader className="border-b border-slate-100 dark:border-zinc-800">
-      <CardTitle className="text-xl sm:text-2xl">STUDENT ADMINS</CardTitle>
+      <CardTitle className="text-lg sm:text-xl">Student admins</CardTitle>
       <CardDescription>Grant admin access to NU students by university ID. Students retain their student area.</CardDescription>
     </CardHeader>
     <CardContent className="space-y-5 p-5">

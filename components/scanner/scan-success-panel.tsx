@@ -144,7 +144,7 @@ export function ScanSuccessPanel({
           type="button"
           onClick={onDismiss}
           aria-label="Close and return to scanner"
-          className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
+          className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-[transform,background-color,color] duration-140 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
         >
           <X className="size-5" />
         </button>
@@ -157,13 +157,13 @@ export function ScanSuccessPanel({
           {/* Subtle Ambient Pulse Ring */}
           <div
             aria-hidden="true"
-            className="absolute -inset-2 rounded-[32px] bg-emerald-500/20 blur-md motion-safe:animate-pulse motion-reduce:opacity-0"
+            className="absolute -inset-2 rounded-[32px] bg-emerald-500/20 blur-md animate-ring-pulse motion-reduce:opacity-0"
           />
 
           <div
             className={cn(
               "relative size-20 sm:size-24 rounded-3xl bg-emerald-600 text-white shadow-2xl shadow-emerald-600/30 flex items-center justify-center",
-              "motion-safe:animate-in motion-safe:zoom-in-75 motion-safe:duration-300 motion-reduce:transform-none"
+              "animate-check-pop"
             )}
           >
             <Check className="size-12 sm:size-14 stroke-[3.5]" />

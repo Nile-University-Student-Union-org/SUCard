@@ -4,17 +4,13 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   RotateCcw,
   Filter,
-  CheckCircle2,
-  DollarSign,
-  Ban,
-  ScrollText,
   Loader2,
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/ui/page-header";
 import { ToggleChip } from "@/components/ui/toggle-chip";
-import { StatTile } from "@/components/ui/stat-tile";
+import { StatStrip } from "@/components/ui/stat-strip";
 import { listRedemptions, listVendorsForFilter } from "./api";
 import { RedemptionsTable } from "./redemptions-table";
 import { VoidRedemptionDialog } from "./void-redemption-dialog";
@@ -154,7 +150,7 @@ export function RedemptionsManager() {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
-        title="REDEMPTIONS LEDGER"
+        title="Redemptions ledger"
         description="Comprehensive audit log of cashier scans, verified discounts, and voided transactions."
         badge={
           isLoading && redemptions.length > 0 ? (
@@ -177,45 +173,32 @@ export function RedemptionsManager() {
         }
       />
 
-      {/* Summary KPI Tiles - Explicitly scoped to loaded records */}
+      {/* Summary Stat Strip - Explicitly scoped to loaded records */}
       <div className="space-y-2">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <StatTile
-            label="LOADED SCANS"
-            value={stats.totalCount}
-            icon={<ScrollText className="size-4" />}
-            accent="brand"
-            className="p-4"
-            subText={nextCursor ? `${stats.totalCount} in view (more below)` : `All ${stats.totalCount} records in view`}
-          />
-
-          <StatTile
-            label="CONFIRMED (LOADED)"
-            value={stats.confirmedCount}
-            icon={<CheckCircle2 className="size-4" />}
-            accent="blue"
-            className="p-4"
-            subText={`${stats.confirmedCount} of ${stats.totalCount} loaded entries`}
-          />
-
-          <StatTile
-            label="RECORDED BILL (LOADED)"
-            value={`EGP ${stats.totalBill.toFixed(2)}`}
-            icon={<DollarSign className="size-4" />}
-            accent="neutral"
-            className="p-4"
-            subText={`Sum of confirmed scans in view`}
-          />
-
-          <StatTile
-            label="VOIDED (LOADED)"
-            value={stats.voidedCount}
-            icon={<Ban className="size-4" />}
-            accent="neutral"
-            className="p-4"
-            subText={`${stats.voidedCount} voided in loaded view`}
-          />
-        </div>
+        <StatStrip
+          items={[
+            {
+              label: "Loaded scans",
+              value: stats.totalCount,
+              subText: nextCursor ? `${stats.totalCount} in view (more below)` : `All ${stats.totalCount} records in view`,
+            },
+            {
+              label: "Confirmed scans",
+              value: stats.confirmedCount,
+              subText: `${stats.confirmedCount} of ${stats.totalCount} loaded entries`,
+            },
+            {
+              label: "Recorded bill",
+              value: `EGP ${stats.totalBill.toFixed(2)}`,
+              subText: "Sum of confirmed scans in view",
+            },
+            {
+              label: "Voided scans",
+              value: stats.voidedCount,
+              subText: `${stats.voidedCount} voided in loaded view`,
+            },
+          ]}
+        />
 
         <div className="flex items-center justify-between text-[11px] text-ash dark:text-zinc-400 px-1 font-medium">
           <span>

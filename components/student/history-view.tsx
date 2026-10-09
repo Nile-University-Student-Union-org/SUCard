@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Store,
   Tag,
@@ -75,46 +75,64 @@ export function HistoryView() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [pageError, setPageError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
+  const inFlightCursorRef = useRef<string | null>(null);
+  const loadedCursorsRef = useRef(new Set<string>());
+  const requestGenerationRef = useRef(0);
 
-  const fetchHistory = useCallback(async (cursor?: string | null) => {
-    if (cursor) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-    setError(null);
+  const fetchHistory = useCallback(async (cursor: string) => {
+    if (inFlightCursorRef.current || loadedCursorsRef.current.has(cursor)) return;
+    inFlightCursorRef.current = cursor;
+    const generation = requestGenerationRef.current;
+    setLoadingMore(true);
+    setPageError(null);
 
     try {
-      const url = cursor
-        ? `/api/student/history?cursor=${encodeURIComponent(cursor)}`
-        : "/api/student/history";
-
-      const res = await fetch(url);
+      const res = await fetch(`/api/student/history?cursor=${encodeURIComponent(cursor)}`);
       if (!res.ok) {
         throw new Error("Failed to load redemption history");
       }
       const data: StudentHistoryResponse = await res.json();
-
-      if (cursor) {
-        setRedemptions((prev) => [...prev, ...(data.redemptions || [])]);
-      } else {
-        setRedemptions(data.redemptions || []);
-      }
-      setNextCursor(data.nextCursor || null);
+      if (generation !== requestGenerationRef.current) return;
+      loadedCursorsRef.current.add(cursor);
+      setRedemptions((previous) => {
+        if (generation !== requestGenerationRef.current) return previous;
+        const seen = new Set(previous.map((redemption) => redemption.id));
+        const unseen = data.redemptions.filter((redemption) => {
+          if (seen.has(redemption.id)) return false;
+          seen.add(redemption.id);
+          return true;
+        });
+        return [...previous, ...unseen];
+      });
+      setNextCursor((previous) => {
+        if (generation !== requestGenerationRef.current) return previous;
+        return data.nextCursor && !loadedCursorsRef.current.has(data.nextCursor)
+          ? data.nextCursor
+          : null;
+      });
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An unexpected error occurred");
+      if (generation === requestGenerationRef.current) {
+        setPageError(err instanceof Error ? err.message : "An unexpected error occurred");
+      }
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (generation === requestGenerationRef.current) {
+        inFlightCursorRef.current = null;
+        setLoadingMore(false);
+      }
     }
   }, []);
 
   useEffect(() => {
     let ignore = false;
+    const generation = ++requestGenerationRef.current;
+    inFlightCursorRef.current = null;
+    loadedCursorsRef.current.clear();
     void (async () => {
       setLoading(true);
       setError(null);
+      setPageError(null);
       try {
         const res = await fetch("/api/student/history");
         if (!res.ok) {
@@ -137,6 +155,7 @@ export function HistoryView() {
     })();
     return () => {
       ignore = true;
+      requestGenerationRef.current = generation + 1;
     };
   }, [refreshKey]);
 
@@ -315,6 +334,11 @@ export function HistoryView() {
           {/* Load More Pagination */}
           {nextCursor && (
             <div className="pt-2 text-center">
+              {pageError && (
+                <p role="alert" className="mb-3 text-sm text-destructive">
+                  Could not load older redemptions. Your loaded history is still available. {pageError}
+                </p>
+              )}
               <Button
                 variant="outline"
                 onClick={() => fetchHistory(nextCursor)}
@@ -322,8 +346,11 @@ export function HistoryView() {
                 loadingText="Loading more…"
                 className="w-full sm:w-auto min-w-[160px] min-h-[44px] font-semibold"
               >
-                Load older redemptions
-                <ArrowRight className="size-4 ml-2" />
+                {pageError ? (
+                  <><RotateCcw className="size-4 mr-2" />Retry older redemptions</>
+                ) : (
+                  <>Load older redemptions<ArrowRight className="size-4 ml-2" /></>
+                )}
               </Button>
             </div>
           )}

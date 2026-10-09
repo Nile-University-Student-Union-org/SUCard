@@ -40,6 +40,9 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
   const processFrameRef = useRef<() => void>(() => {});
   const isProcessingRef = useRef(false);
   const isSuccessRef = useRef(false);
+  const cameraGenerationRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [torchAvailable, setTorchAvailable] = useState(false);
@@ -50,6 +53,11 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
   // Stop camera media tracks
   const stopCamera = useCallback(() => {
+    cameraGenerationRef.current++;
+    if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+    if (successTimerRef.current) clearTimeout(successTimerRef.current);
+    retryTimerRef.current = null;
+    successTimerRef.current = null;
     if (scanLoopRef.current) {
       cancelAnimationFrame(scanLoopRef.current);
       scanLoopRef.current = null;
@@ -58,12 +66,14 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setTorchOn(false);
     setTorchAvailable(false);
   }, []);
 
   const handleClaim = useCallback(async (qrString: string) => {
     if (isProcessingRef.current) return;
+    const generation = cameraGenerationRef.current;
     isProcessingRef.current = true;
     setIsSubmitting(true);
     setClaimError(null);
@@ -79,6 +89,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       });
 
       const data = await res.json().catch(() => ({}));
+      if (generation !== cameraGenerationRef.current) return;
 
       if (!res.ok) {
         const code = (data.code as ClaimErrorCode) || "";
@@ -89,8 +100,12 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         setClaimError(message);
         setIsSubmitting(false);
         // Allow scanning again after 2 seconds
-        setTimeout(() => {
-          isProcessingRef.current = false;
+        retryTimerRef.current = setTimeout(() => {
+          if (generation === cameraGenerationRef.current) {
+            isProcessingRef.current = false;
+            scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
+          }
+          retryTimerRef.current = null;
         }, 2000);
         return;
       }
@@ -99,9 +114,12 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       isSuccessRef.current = true;
       setIsSuccess(true);
       stopCamera();
+      const successGeneration = cameraGenerationRef.current;
 
       // Delay to show celebration
-      setTimeout(() => {
+      successTimerRef.current = setTimeout(() => {
+        if (successGeneration !== cameraGenerationRef.current) return;
+        successTimerRef.current = null;
         if (onSuccess) {
           onSuccess();
         } else {
@@ -109,23 +127,22 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         }
       }, 1800);
     } catch {
+      if (generation !== cameraGenerationRef.current) return;
       setClaimError("Network error. Please check your connection and try again.");
       setIsSubmitting(false);
-      setTimeout(() => {
-        isProcessingRef.current = false;
+      retryTimerRef.current = setTimeout(() => {
+        if (generation === cameraGenerationRef.current) {
+          isProcessingRef.current = false;
+          scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
+        }
+        retryTimerRef.current = null;
       }, 2000);
     }
   }, [stopCamera, onSuccess, router]);
 
   const processFrame = useCallback(() => {
-    if (!videoRef.current || isProcessingRef.current || isSuccessRef.current) {
-      if (!isSuccessRef.current && scanLoopRef.current !== null) {
-        scanLoopRef.current = requestAnimationFrame(() => {
-          processFrameRef.current();
-        });
-      }
-      return;
-    }
+    const generation = cameraGenerationRef.current;
+    if (!videoRef.current || isProcessingRef.current || isSuccessRef.current) return;
 
     const video = videoRef.current;
     if (video.readyState === video.HAVE_ENOUGH_DATA) {
@@ -139,6 +156,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
           detector
             .detect(video)
             .then((barcodes: Array<{ rawValue: string }>) => {
+              if (generation !== cameraGenerationRef.current) return;
               if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
                 handleClaim(barcodes[0].rawValue);
               } else if (!isSuccessRef.current) {
@@ -148,7 +166,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               }
             })
             .catch(() => {
-              runJsQR();
+              if (generation === cameraGenerationRef.current) runJsQR();
             });
           return;
         } catch {
@@ -212,8 +230,14 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
   // Start camera
   const startCamera = useCallback(async () => {
+    stopCamera();
+    const generation = cameraGenerationRef.current;
     isProcessingRef.current = false;
     isSuccessRef.current = false;
+    setIsSuccess(false);
+    setIsSubmitting(false);
+    setClaimError(null);
+    setPermissionError(null);
 
     if (
       typeof navigator === "undefined" ||
@@ -236,12 +260,18 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         audio: false,
       });
 
+      if (generation !== cameraGenerationRef.current) {
+        stream.getTracks().forEach((track) => track.stop());
+        return;
+      }
+
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         videoRef.current.setAttribute("playsinline", "true");
         await videoRef.current.play();
       }
+      if (generation !== cameraGenerationRef.current) return;
 
       // Check for torch capability
       const videoTrack = stream.getVideoTracks()[0];
@@ -258,6 +288,8 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         processFrameRef.current();
       });
     } catch (err: unknown) {
+      if (generation !== cameraGenerationRef.current) return;
+      stopCamera();
       const error = err as Error;
       if (
         error.name === "NotAllowedError" ||
@@ -279,7 +311,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         );
       }
     }
-  }, []);
+  }, [stopCamera]);
 
   // Toggle torch
   const toggleTorch = async () => {
@@ -300,17 +332,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
   };
 
   useEffect(() => {
-    if (!isOpen) {
-      if (scanLoopRef.current) {
-        cancelAnimationFrame(scanLoopRef.current);
-        scanLoopRef.current = null;
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
-      return;
-    }
+    if (!isOpen) return;
 
     const timer = setTimeout(() => {
       startCamera();
@@ -318,16 +340,9 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
     return () => {
       clearTimeout(timer);
-      if (scanLoopRef.current) {
-        cancelAnimationFrame(scanLoopRef.current);
-        scanLoopRef.current = null;
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = null;
-      }
+      stopCamera();
     };
-  }, [isOpen, startCamera]);
+  }, [isOpen, startCamera, stopCamera]);
 
   return (
     <Modal
@@ -363,6 +378,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <Button
                 variant="primary"
                 onClick={() => {
+                  stopCamera();
                   if (onSuccess) onSuccess();
                   else router.push("/card");
                 }}
@@ -401,7 +417,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               </Button>
               <Button
                 variant="ghost"
-                onClick={onClose}
+                onClick={() => { stopCamera(); onClose(); }}
                 className="w-full normal-case font-semibold text-zinc-400 hover:text-white min-h-[44px]"
               >
                 Cancel
@@ -460,7 +476,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => { stopCamera(); onClose(); }}
                 aria-label="Close scanner"
                 className="p-2.5 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-md transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
               >

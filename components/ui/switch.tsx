@@ -73,7 +73,7 @@ export function Switch({
       >
         <span
           className={cn(
-            "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform motion-reduce:transition-none",
+            "absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform duration-180 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none",
             checked && "translate-x-5"
           )}
         />

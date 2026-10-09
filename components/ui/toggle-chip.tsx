@@ -38,7 +38,7 @@ export const ToggleChip: React.FC<ToggleChipProps> = ({
       disabled={disabled}
       onClick={handleClick}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-[12px] border-2 font-semibold transition-all duration-150 motion-reduce:transition-none motion-reduce:transform-none select-none cursor-pointer",
+        "inline-flex items-center justify-center gap-2 rounded-[12px] border-2 font-semibold transition-[transform,background-color,border-color,color,box-shadow] duration-140 motion-reduce:transition-none motion-reduce:transform-none select-none cursor-pointer",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2",
         "active:scale-95 disabled:opacity-40 disabled:pointer-events-none",
         size === "md"
@@ -54,17 +54,17 @@ export const ToggleChip: React.FC<ToggleChipProps> = ({
       {Icon && (
         <Icon
           className={cn(
-            "w-4 h-4 shrink-0 transition-transform",
+            "w-4 h-4 shrink-0 transition-transform duration-140 motion-reduce:transition-none",
             pressed
-              ? "text-brand dark:text-brand-soft scale-105"
-              : "text-ash dark:text-zinc-400",
+              ? "text-brand dark:text-brand-soft scale-110"
+              : "text-ash dark:text-zinc-400 scale-100",
           )}
         />
       )}
       <span className="inline-flex items-center gap-1.5 truncate">{children}</span>
       {pressed && (
         <span
-          className="w-1.5 h-1.5 rounded-full bg-brand dark:bg-brand-soft shrink-0"
+          className="w-1.5 h-1.5 rounded-full bg-brand dark:bg-brand-soft shrink-0 animate-in zoom-in-50 duration-140 motion-reduce:animate-none"
           aria-hidden="true"
         />
       )}

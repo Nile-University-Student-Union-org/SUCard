@@ -103,7 +103,7 @@ export function VendorsManager() {
     <div className="space-y-6">
       {/* Page Header Bar */}
       <PageHeader
-        title="PARTNER VENDORS"
+        title="Partner vendors"
         description="Manage stores, discounts, and staff scanner accounts."
         actions={
           <Button

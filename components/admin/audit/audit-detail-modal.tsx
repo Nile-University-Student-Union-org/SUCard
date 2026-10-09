@@ -163,7 +163,7 @@ export function AuditDetailModal({ entry, isOpen, onClose }: AuditDetailModalPro
               >
                 {isCopied ? (
                   <>
-                    <Check className="size-3.5 text-emerald-600" />
+                    <Check className="size-3.5 text-emerald-600 animate-icon-morph" />
                     <span>Copied JSON</span>
                   </>
                 ) : (

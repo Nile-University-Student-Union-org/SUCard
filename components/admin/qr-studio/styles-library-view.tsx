@@ -184,7 +184,7 @@ export function StylesLibraryView() {
     <div className="space-y-6 pb-12">
       {/* Top Header */}
       <PageHeader
-        title="QR STYLE STUDIO"
+        title="QR Style Studio"
         description="Visual QR designer for Nile University cards • Verified scan-safety • Versioned print batches"
         actions={
           <div className="flex items-center gap-2.5">
@@ -210,7 +210,7 @@ export function StylesLibraryView() {
       />
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3.5 rounded-2xl bg-white dark:bg-zinc-900 border border-slate-200/80 dark:border-zinc-800/80 shadow-xs">
         {/* Status Tabs */}
         <div className="flex flex-wrap items-center gap-1 p-1 bg-slate-100 dark:bg-zinc-800 rounded-xl">
           {(["all", "published", "draft", "archived"] as const).map((tab) => (
@@ -249,7 +249,7 @@ export function StylesLibraryView() {
           {Array.from({ length: 6 }).map((_, i) => (
             <div
               key={i}
-              className="p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 space-y-4"
+              className="p-5 rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 space-y-4"
             >
               <Skeleton className="aspect-square w-full rounded-xl" />
               <div className="space-y-2">
@@ -274,7 +274,7 @@ export function StylesLibraryView() {
       ) : filteredStyles.length === 0 ? (
         <EmptyState
           icon={<Palette className="size-6 text-brand" />}
-          title="NO QR STYLES FOUND"
+          title="No QR styles found"
           hint={
             searchQuery || statusFilter !== "all"
               ? "No styles match your current filter criteria."
@@ -302,10 +302,10 @@ export function StylesLibraryView() {
               <div
                 key={style.id}
                 className={cn(
-                  "rounded-2xl border-2 bg-white dark:bg-zinc-900 shadow-sm flex flex-col justify-between overflow-hidden group",
+                  "rounded-xl border bg-white dark:bg-zinc-900 shadow-xs flex flex-col justify-between overflow-hidden group",
                   style.isDefaultPrint
                     ? "border-brand dark:border-brand-soft ring-1 ring-brand/30"
-                    : "border-slate-200 dark:border-zinc-800"
+                    : "border-slate-200/80 dark:border-zinc-800/80"
                 )}
               >
                 {/* Visual Preview Canvas Top */}
@@ -353,7 +353,7 @@ export function StylesLibraryView() {
                     <div className="flex items-center justify-between gap-2">
                       <Link
                         href={`/admin/qr-studio/${style.id}`}
-                        className="font-heading text-lg sm:text-xl uppercase tracking-wide text-foreground hover:text-brand truncate"
+                        className="font-semibold text-base sm:text-lg text-foreground hover:text-brand dark:hover:text-brand-soft truncate"
                       >
                         {style.name}
                       </Link>

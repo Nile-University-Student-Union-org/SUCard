@@ -88,23 +88,23 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
   }[surround];
 
   return (
-    <div className="flex flex-col h-full rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-sm overflow-hidden select-none">
+    <div className="flex flex-col h-full rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden select-none">
       {/* PREVIEW TOOLBAR */}
-      <div className="p-2.5 sm:p-3 border-b border-slate-200 dark:border-zinc-800 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-zinc-900/90 shrink-0">
+      <div className="p-2 sm:p-2.5 border-b border-slate-200/80 dark:border-zinc-800/80 flex flex-wrap items-center justify-between gap-2 bg-slate-50 dark:bg-zinc-900/90 shrink-0">
         {/* Mode Selector */}
-        <div className="flex flex-wrap items-center gap-1 max-w-full bg-white dark:bg-zinc-800 p-1 rounded-xl border border-slate-200 dark:border-zinc-700">
+        <div className="flex flex-wrap items-center gap-1 max-w-full bg-slate-100 dark:bg-zinc-800/80 p-0.5 rounded-lg border border-slate-200/60 dark:border-zinc-700/60">
           <button
             type="button"
             onClick={() => setMode("qr")}
             className={cn(
-              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
+              "min-h-[34px] px-2.5 rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors",
               mode === "qr"
-                ? "bg-brand text-white shadow-xs"
-                : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
+                ? "bg-white dark:bg-zinc-900 text-charcoal dark:text-white shadow-2xs"
+                : "text-slate-600 dark:text-zinc-400 hover:text-foreground"
             )}
             title="Standard QR Preview"
           >
-            <QrCode className="size-3.5" />
+            <QrCode className="size-3.5 text-sky-500" />
             <span>QR</span>
           </button>
 
@@ -112,14 +112,14 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("card")}
             className={cn(
-              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
+              "min-h-[34px] px-2.5 rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors",
               mode === "card"
-                ? "bg-brand text-white shadow-xs"
-                : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
+                ? "bg-white dark:bg-zinc-900 text-charcoal dark:text-white shadow-2xs"
+                : "text-slate-600 dark:text-zinc-400 hover:text-foreground"
             )}
             title="CR80 Physical Card Mockup"
           >
-            <CreditCard className="size-3.5" />
+            <CreditCard className="size-3.5 text-sky-500" />
             <span>On Card</span>
           </button>
 
@@ -127,14 +127,14 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("web")}
             className={cn(
-              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
+              "min-h-[34px] px-2.5 rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors",
               mode === "web"
-                ? "bg-brand text-white shadow-xs"
-                : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
+                ? "bg-white dark:bg-zinc-900 text-charcoal dark:text-white shadow-2xs"
+                : "text-slate-600 dark:text-zinc-400 hover:text-foreground"
             )}
             title="Digital Student Pass Mockup"
           >
-            <Smartphone className="size-3.5" />
+            <Smartphone className="size-3.5 text-sky-500" />
             <span>Web Pass</span>
           </button>
 
@@ -142,14 +142,14 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
             type="button"
             onClick={() => setMode("compare")}
             className={cn(
-              "min-h-11 px-2.5 rounded-lg text-xs font-bold flex items-center gap-1.5 cursor-pointer",
+              "min-h-[34px] px-2.5 rounded-md text-xs font-semibold flex items-center gap-1.5 cursor-pointer transition-colors",
               mode === "compare"
-                ? "bg-brand text-white shadow-xs"
-                : "text-slate-600 dark:text-zinc-300 hover:text-foreground"
+                ? "bg-white dark:bg-zinc-900 text-charcoal dark:text-white shadow-2xs"
+                : "text-slate-600 dark:text-zinc-400 hover:text-foreground"
             )}
             title="Side-by-side A/B Compare"
           >
-            <SplitSquareVertical className="size-3.5" />
+            <SplitSquareVertical className="size-3.5 text-sky-500" />
             <span>Compare</span>
           </button>
         </div>
@@ -243,7 +243,7 @@ export const LivePreviewPanel: React.FC<LivePreviewPanelProps> = ({
       {/* PREVIEW CANVAS WORKSPACE */}
       <div
         className={cn(
-          "flex-1 min-h-[360px] sm:min-h-[460px] p-4 sm:p-8 flex items-center justify-center overflow-auto relative",
+          "flex-1 min-h-[260px] sm:min-h-[340px] p-4 sm:p-6 flex items-center justify-center overflow-auto relative",
           surroundBgClass
         )}
       >

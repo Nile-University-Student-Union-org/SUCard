@@ -169,33 +169,26 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
 
   return (
     <>
-      <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
-        <CardHeader className="pb-4">
-          <div className="flex items-center gap-3">
-            <div className="size-9 rounded-xl bg-brand text-white flex items-center justify-center shrink-0 shadow-xs">
-              <Plus className="size-5 stroke-[2.5]" />
-            </div>
-            <div>
-              <CardTitle className="text-xl sm:text-2xl text-foreground">
-                GENERATE PHYSICAL CARDS
-              </CardTitle>
-              <CardDescription className="text-xs text-muted-foreground">
-                Create a new physical batch with unique cryptographic QR tokens and branded styling.
-              </CardDescription>
-            </div>
-          </div>
+      <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs rounded-xl overflow-hidden">
+        <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800/80">
+          <CardTitle className="text-base sm:text-lg font-semibold text-foreground">
+            Generate physical cards
+          </CardTitle>
+          <CardDescription className="text-xs text-muted-foreground">
+            Create a new physical batch with unique cryptographic QR tokens and branded styling.
+          </CardDescription>
         </CardHeader>
 
-        <CardContent className="pt-0 space-y-4">
+        <CardContent className="p-4 sm:p-5 space-y-4">
           {/* Post-Creation Immediate Download & Count Display */}
           {createdBatch && (
-            <div className="p-4 sm:p-5 rounded-2xl bg-emerald-500/10 border-2 border-emerald-500/30 text-xs space-y-3 animate-in fade-in duration-200">
+            <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs space-y-3 animate-in fade-in duration-150">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="size-5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
                   <div>
-                    <h3 className="text-sm font-bold text-emerald-950 dark:text-emerald-100">
-                      {formatBatchNumber(createdBatch.number)} Generated Successfully!
+                    <h3 className="text-sm font-semibold text-emerald-950 dark:text-emerald-100">
+                      {formatBatchNumber(createdBatch.number)} Generated Successfully
                     </h3>
                     <p className="text-[11px] text-emerald-800/80 dark:text-emerald-300 font-medium">
                       Label: <strong>{createdBatch.label}</strong> &bull; Total Quantity:{" "}
@@ -280,7 +273,7 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
 
               {/* QR Style Picker */}
               <div className="md:col-span-3 space-y-1.5">
-                <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                   <Palette className="size-3.5 text-brand" />
                   <span>QR Style Version</span>
                 </label>
@@ -292,7 +285,7 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
                       setValue("qrStyleVersionId", e.target.value);
                     }}
                     disabled={isSubmitting || publishedStyles.length === 0}
-                    className="w-full min-h-[44px] rounded-xl border-2 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
+                    className="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
                   >
                     {publishedStyles.map((s) => (
                       <option key={s.id} value={s.latestVersion!.id}>
@@ -327,14 +320,14 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
 
                 {/* Quick-pick Chips */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[11px] font-bold text-ash dark:text-zinc-400 mr-1 select-none">Quick:</span>
+                  <span className="text-[11px] font-semibold text-ash dark:text-zinc-400 mr-1 select-none">Quick:</span>
                   {QUICK_PICK_COUNTS.map((chipCount) => (
                     <button
                       key={chipCount}
                       type="button"
                       onClick={() => setValue("count", chipCount, { shouldValidate: true })}
                       disabled={isSubmitting}
-                      className={`text-xs px-2.5 min-h-[36px] rounded-lg border font-bold transition-all cursor-pointer select-none active:scale-95 ${
+                      className={`text-xs px-2.5 min-h-[32px] rounded-lg border font-semibold transition-all cursor-pointer select-none active:scale-95 ${
                         currentCount === chipCount
                           ? "bg-brand text-white border-brand shadow-xs"
                           : "bg-white dark:bg-zinc-800 text-charcoal dark:text-zinc-200 border-slate-200 dark:border-zinc-700 hover:border-brand/40"

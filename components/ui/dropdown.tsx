@@ -189,7 +189,7 @@ export const Dropdown: React.FC<DropdownRootProps> = ({
                      border-2 ${error ? "border-destructive focus:border-destructive text-destructive" : "border-slate-300 dark:border-zinc-700 text-charcoal dark:text-zinc-200 hover:border-brand/50 dark:hover:border-brand-soft/50"}
                      text-sm font-medium
                      focus:outline-none focus:border-brand dark:focus:border-brand-soft focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft
-                     transition-all duration-150 cursor-pointer shadow-xs
+                     transition-[transform,border-color,background-color,box-shadow,color] duration-140 active:scale-[0.98] motion-reduce:transition-none motion-reduce:transform-none cursor-pointer shadow-xs
                      disabled:opacity-50 disabled:pointer-events-none select-none ${buttonClassName}`}
           aria-haspopup="menu"
           aria-label={ariaLabel}
@@ -436,11 +436,11 @@ export const DropdownContent: React.FC<DropdownContentProps> = ({
         bg-white/95 dark:bg-zinc-900/90 backdrop-blur-md backdrop-saturate-150
         border-2 border-slate-300 dark:border-zinc-800
         shadow-xl shadow-slate-900/5 dark:shadow-black/50
-        transition-all duration-200 ease-out motion-reduce:transition-none motion-reduce:transform-none
+        transition-[transform,opacity] motion-reduce:transition-none motion-reduce:transform-none
         ${
           isOpen
-            ? "opacity-100 transform-none pointer-events-auto"
-            : `opacity-0 scale-95 pointer-events-none ${
+            ? "opacity-100 transform-none pointer-events-auto duration-180 ease-out"
+            : `opacity-0 scale-95 pointer-events-none duration-120 ease-in ${
                 placement === "top" ? "translate-y-2" : "-translate-y-2"
               }`
         }
@@ -485,13 +485,13 @@ export const DropdownItem: React.FC<DropdownItemProps> = ({
       className={`
         group w-full min-h-[44px] flex items-center px-3 py-2 rounded-[10px] text-xs font-bold
         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft
-        transition-all duration-150 select-none text-left cursor-pointer motion-reduce:transition-none motion-reduce:transform-none
+        transition-[transform,background-color,color] duration-140 select-none text-left cursor-pointer motion-reduce:transition-none motion-reduce:transform-none
         ${
           active
             ? "bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft"
             : "text-charcoal dark:text-zinc-200 hover:bg-slate-100/80 dark:hover:bg-zinc-800/70 hover:text-brand dark:hover:text-white"
         }
-        ${disabled ? "opacity-40 pointer-events-none" : "active:scale-[0.99] motion-reduce:active:scale-100"}
+        ${disabled ? "opacity-40 pointer-events-none" : "active:scale-[0.97] motion-reduce:active:scale-100"}
         ${className}
       `}
     >

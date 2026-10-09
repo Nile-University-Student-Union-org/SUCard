@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   CreditCard,
   Building2,
@@ -43,6 +43,8 @@ export function SettingsManager({ role }: SettingsManagerProps) {
   const [mode, setMode] = useState<"digital" | "physical">("digital");
   const [hasQuota, setHasQuota] = useState(false);
   const [quotaRemaining, setQuotaRemaining] = useState<string>("");
+  const [quotaError, setQuotaError] = useState<string | null>(null);
+  const quotaInputRef = useRef<HTMLInputElement>(null);
   const [allowDigitalUpgrade, setAllowDigitalUpgrade] = useState(true);
   const [officeLocation, setOfficeLocation] = useState("");
   const [officeHours, setOfficeHours] = useState("");
@@ -102,20 +104,15 @@ export function SettingsManager({ role }: SettingsManagerProps) {
   }, [refreshTrigger]);
 
   const executeSave = async () => {
-    setIsSaving(true);
-    setSaveError(null);
-
-    const parsedQuota =
-      mode === "physical" && hasQuota && quotaRemaining.trim() !== ""
-        ? parseInt(quotaRemaining.trim(), 10)
-        : null;
-
-    if (hasQuota && mode === "physical" && (isNaN(parsedQuota as number) || (parsedQuota as number) < 0)) {
-      setSaveError("Please enter a valid non-negative quota number.");
-      setIsSaving(false);
+    const parsedQuota = mode === "physical" && hasQuota ? Number(quotaRemaining) : null;
+    if (parsedQuota !== null && (!/^(0|[1-9]\d*)$/.test(quotaRemaining) || !Number.isSafeInteger(parsedQuota))) {
+      setQuotaError("Enter a whole, nonnegative number of physical sign-ups.");
       setIsConfirmSaveOpen(false);
+      requestAnimationFrame(() => quotaInputRef.current?.focus());
       return;
     }
+    setIsSaving(true);
+    setSaveError(null);
 
     const patch: Partial<Settings> = {
       issuance: {
@@ -165,6 +162,12 @@ export function SettingsManager({ role }: SettingsManagerProps) {
   const handleSaveClick = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
+    if (mode === "physical" && hasQuota && (!/^(0|[1-9]\d*)$/.test(quotaRemaining) || !Number.isSafeInteger(Number(quotaRemaining)))) {
+      setQuotaError("Enter a whole, nonnegative number of physical sign-ups.");
+      quotaInputRef.current?.focus();
+      return;
+    }
+    setQuotaError(null);
 
     // If mode is changing, confirm with high-impact dialog
     const isModeChanging = data && mode !== data.settings.issuance.mode;
@@ -399,6 +402,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                   checked={hasQuota}
                   onCheckedChange={(checked) => {
                     setHasQuota(checked);
+                    setQuotaError(null);
                     if (!checked) setQuotaRemaining("");
                   }}
                   label="Limit physical cards to next N sign-ups"
@@ -408,13 +412,20 @@ export function SettingsManager({ role }: SettingsManagerProps) {
                 {hasQuota && (
                   <div className="pt-2 max-w-xs">
                     <Input
+                      ref={quotaInputRef}
                       id="quotaRemaining"
-                      type="number"
-                      min={0}
+                      name="quotaRemaining"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="off"
                       label="Remaining Physical Sign-ups"
                       placeholder="e.g. 50"
                       value={quotaRemaining}
-                      onChange={(e) => setQuotaRemaining(e.target.value)}
+                      onChange={(e) => {
+                        setQuotaRemaining(e.target.value);
+                        setQuotaError(null);
+                      }}
+                      error={quotaError ?? undefined}
                       helperText="Decrements automatically with every new student registration."
                     />
                   </div>

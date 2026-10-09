@@ -170,8 +170,8 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
             )}
           </div>
           <DateRangePicker
-            from={data.range.from}
-            to={data.range.to}
+            from={dateRange.from ?? data.range.from}
+            to={dateRange.to ?? data.range.to}
             onChange={({ from, to }) => setDateRange({ from, to })}
           />
         </div>
@@ -179,7 +179,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
         <div className="flex items-center justify-between md:justify-end gap-3 text-left md:text-right">
           <div className="text-xs text-muted-foreground font-mono">
             <span className="font-bold text-foreground block">
-              {formatCairoDateOnly(data.range.from)} &rarr; {formatCairoDateOnly(data.range.to)}
+              Showing: {formatCairoDateOnly(data.range.from)} &rarr; {formatCairoDateOnly(data.range.to)}
             </span>
             <span className="block text-[11px] text-ash dark:text-zinc-400 font-sans">
               vs prev ({formatCairoDateOnly(data.range.previousFrom)} – {formatCairoDateOnly(data.range.previousTo)})
@@ -205,6 +205,16 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
           </Button>
         </div>
       </div>
+
+      {error && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+          <p className="min-w-0 break-words">Could not refresh insights for the selected range. Showing the last loaded figures. {error}</p>
+          <Button variant="outline" size="sm" onClick={() => setRefreshKey((key) => key + 1)} className="min-h-11 normal-case">
+            <RotateCcw className="mr-1.5 size-4" aria-hidden="true" />
+            Retry refresh
+          </Button>
+        </div>
+      )}
 
       {/* 4 KPIs GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

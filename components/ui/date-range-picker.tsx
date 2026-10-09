@@ -4,11 +4,12 @@ import React, { useState } from "react";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ToggleChip } from "@/components/ui/toggle-chip";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   getDatePresets,
   type DatePresetKey,
 } from "@/components/ui/analytics-format";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 
 export interface DateRangePickerProps {
   from?: string;
@@ -42,6 +43,17 @@ export function DateRangePicker({
   const [isCustomOpen, setIsCustomOpen] = useState(activePreset === "custom");
   const [customFrom, setCustomFrom] = useState(from || "");
   const [customTo, setCustomTo] = useState(to || "");
+  const [prevFrom, setPrevFrom] = useState(from);
+  const [prevTo, setPrevTo] = useState(to);
+
+  if (from !== prevFrom) {
+    setPrevFrom(from);
+    setCustomFrom(from || "");
+  }
+  if (to !== prevTo) {
+    setPrevTo(to);
+    setCustomTo(to || "");
+  }
 
   const handleSelectPreset = (key: DatePresetKey) => {
     if (key === "custom") {
@@ -64,7 +76,7 @@ export function DateRangePicker({
   };
 
   return (
-    <div className={cn("space-y-3", className)}>
+    <div className={cn("space-y-3 font-sans", className)}>
       {/* Preset Chips Row */}
       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
         {presets.map((preset) => {
@@ -91,40 +103,36 @@ export function DateRangePicker({
         </ToggleChip>
       </div>
 
-      {/* Custom Date Inputs Dropdown/Panel */}
+      {/* Custom Date Inputs Panel */}
       {isCustomOpen && (
         <form
           onSubmit={handleApplyCustom}
-          className="flex flex-wrap items-center gap-2 p-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs animate-in fade-in-0 duration-150 motion-reduce:animate-none"
+          className="flex flex-col sm:flex-row sm:items-end gap-3 p-3.5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs animate-in fade-in-0 duration-150 motion-reduce:animate-none"
         >
-          <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-            <div className="flex-1">
-              <label htmlFor="custom-from" className="block text-[10px] font-bold uppercase text-stone-600 dark:text-zinc-300 mb-1">
-                From
-              </label>
-              <input
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 min-w-0">
+            <div className="flex-1 min-w-[130px]">
+              <DatePicker
                 id="custom-from"
-                type="date"
+                label="From"
                 value={customFrom}
-                max={customTo || undefined}
-                onChange={(e) => setCustomFrom(e.target.value)}
-                className="w-full h-11 min-h-[44px] px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
-                required
+                maxDate={customTo || undefined}
+                onChange={(val) => setCustomFrom(val)}
+                placeholder="Start date"
+                clearable={false}
               />
             </div>
-            <span className="text-muted-foreground self-end pb-3">&rarr;</span>
-            <div className="flex-1">
-              <label htmlFor="custom-to" className="block text-[10px] font-bold uppercase text-stone-600 dark:text-zinc-300 mb-1">
-                To
-              </label>
-              <input
+            <span className="hidden sm:inline-block text-muted-foreground self-end pb-3 shrink-0 font-bold">
+              &rarr;
+            </span>
+            <div className="flex-1 min-w-[130px]">
+              <DatePicker
                 id="custom-to"
-                type="date"
+                label="To"
                 value={customTo}
-                min={customFrom || undefined}
-                onChange={(e) => setCustomTo(e.target.value)}
-                className="w-full h-11 min-h-[44px] px-3 rounded-xl border border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800 text-xs font-mono text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
-                required
+                minDate={customFrom || undefined}
+                onChange={(val) => setCustomTo(val)}
+                placeholder="End date"
+                clearable={false}
               />
             </div>
           </div>
@@ -134,7 +142,7 @@ export function DateRangePicker({
             variant="primary"
             size="sm"
             disabled={!customFrom || !customTo || customFrom > customTo}
-            className="self-end normal-case font-bold h-11 min-h-[44px] px-4 shrink-0"
+            className="self-stretch sm:self-end normal-case font-bold h-11 min-h-[44px] px-5 shrink-0"
           >
             Apply
           </Button>

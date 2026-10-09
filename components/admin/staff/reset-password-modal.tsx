@@ -165,7 +165,7 @@ export function ResetPasswordModal({
             >
               {isCopied ? (
                 <>
-                  <Check className="size-4 mr-1.5 text-emerald-600" />
+                  <Check className="size-4 mr-1.5 text-emerald-600 animate-icon-morph" />
                   Copied!
                 </>
               ) : (

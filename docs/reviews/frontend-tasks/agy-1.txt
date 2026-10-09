@@ -1,0 +1,11 @@
+<goal>Remove generic typographic styling from sign-in without changing authentication behavior.</goal>
+<context>
+Read AGENTS.md, docs/REQUIREMENTS.md (issuance modes), docs/reviews/frontend-audit-2026-10-09.md, and docs/reviews/ui-review-2026-10-08.md. Own only: app/login/page.tsx. The other implementer owns no file in this list. Preserve the current NUSU black/navy/blue/sky/white palette and Anton/Poppins typography. Before UI work read C:\Users\Ahmed\.claude\plugins\cache\taste-skill\taste-skill\1.0.0\skills\taste-skill\SKILL.md, C:\Users\Ahmed\.claude\skills\impeccable\SKILL.md plus reference/audit.md, critique.md, craft-floor.md and anti-patterns reference, and the installed frontend-design SKILL.md under C:\Users\Ahmed\.claude\plugins\cache\claude-plugins-official\frontend-design\. Also follow ~/.agents/skills/web-design-guidelines/SKILL.md and its fresh linked rules, ~/.agents/skills/vercel-react-best-practices/SKILL.md, ~/.agents/skills/vercel-composition-patterns/SKILL.md, and ~/.agents/skills/vercel-react-view-transitions/SKILL.md where motion is involved. Read relevant Next 16 guidance in node_modules/next/dist/docs/ before changing route code.
+</context>
+<task>
+- At login/page.tsx:314, remove gradient text as display emphasis; make typography, spacing, and brand color identify the page. Keep the existing authentication flow, recovery links, 2FA states, and loading skeleton.
+- Check 360px, 430px, tablet, and desktop in light/dark, keyboard focus, readable headings, and the mobile keyboard state. Preserve the already-fixed issuance copy.
+</task>
+<do_not>No new dependencies unless essential and named in the report. No business-logic, API, or DB changes. No sparkles icon or similar glyph. Do not commit. Do not run next dev. Do not duplicate the concurrent micro-animation work or touch files owned by other tasks or active admin/QR Studio/Canvas date-picker/scan-panel work.</do_not>
+<gates>pnpm typecheck && pnpm lint && pnpm test && pnpm build</gates>
+<report>List changed files, visual checks performed, gate results, any dependency added, and remaining limitations in a short report.</report>

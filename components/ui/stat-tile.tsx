@@ -16,28 +16,94 @@ export interface StatTileProps {
 }
 
 const accentIconStyles = {
-  brand: "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-soft border-brand/20",
-  blue: "bg-blue-500/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 border-blue-500/20",
-  orange: "bg-orange-500/10 text-orange-600 dark:bg-orange-500/20 dark:text-orange-400 border-orange-500/20",
-  green: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20",
-  emerald: "bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-500/20",
-  amber: "bg-amber-500/10 text-amber-800 dark:text-amber-400 border-amber-500/20",
-  rose: "bg-rose-500/10 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 border-rose-500/20",
-  violet: "bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-400 border-purple-500/20",
-  neutral: "bg-slate-100 text-slate-600 dark:bg-zinc-800 dark:text-zinc-300 border-slate-200 dark:border-zinc-700",
+  brand: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  blue: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  orange: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  green: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  emerald: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  amber: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  rose: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  violet: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
+  neutral: "bg-slate-100 dark:bg-zinc-800 text-slate-600 dark:text-zinc-300 border-slate-200/60 dark:border-zinc-700/60",
 };
 
-const accentBorderTop = {
-  brand: "border-t-brand dark:border-t-brand-soft",
-  blue: "border-t-blue-500 dark:border-t-blue-400",
-  orange: "border-t-orange-500 dark:border-t-orange-400",
-  green: "border-t-emerald-500 dark:border-t-emerald-400",
-  emerald: "border-t-emerald-500 dark:border-t-emerald-400",
-  amber: "border-t-amber-500 dark:border-t-amber-400",
-  rose: "border-t-rose-500 dark:border-t-rose-400",
-  violet: "border-t-purple-500 dark:border-t-purple-400",
-  neutral: "border-t-slate-300 dark:border-t-zinc-700",
-};
+function parseNumberString(str: string): { prefix: string; num: number; suffix: string; hasCommas: boolean; decimals: number } | null {
+  const match = str.match(/^([^\d.-]*)([0-9,.]+)(.*)$/);
+  if (!match) return null;
+  const prefix = match[1];
+  const numStr = match[2];
+  const suffix = match[3];
+  const hasCommas = numStr.includes(",");
+  const clean = numStr.replaceAll(",", "");
+  const num = parseFloat(clean);
+  if (isNaN(num)) return null;
+  const parts = clean.split(".");
+  const decimals = parts.length > 1 ? parts[1].length : 0;
+  return { prefix, num, suffix, hasCommas, decimals };
+}
+
+function CountUpValue({ value }: { value: React.ReactNode }) {
+  const spanRef = React.useRef<HTMLSpanElement>(null);
+  const animatedRef = React.useRef(false);
+
+  React.useEffect(() => {
+    if (animatedRef.current) return;
+    animatedRef.current = true;
+
+    if (typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+
+    let parsed: ReturnType<typeof parseNumberString> = null;
+    if (typeof value === "number") {
+      parsed = { prefix: "", num: value, suffix: "", hasCommas: false, decimals: 0 };
+    } else if (typeof value === "string") {
+      parsed = parseNumberString(value);
+    }
+
+    if (!parsed || parsed.num === 0 || !spanRef.current) {
+      return;
+    }
+
+    const { prefix, num: target, suffix, hasCommas, decimals } = parsed;
+    const duration = 280;
+    const startTime = performance.now();
+    const el = spanRef.current;
+
+    // Start counter from 0
+    el.textContent = `${prefix}0${suffix}`;
+
+    let rafId: number;
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const ease = 1 - Math.pow(1 - progress, 3);
+      const current = target * ease;
+
+      const formattedNum = decimals > 0
+        ? current.toFixed(decimals)
+        : Math.round(current).toString();
+
+      const withCommas = hasCommas
+        ? formattedNum.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
+        : formattedNum;
+
+      el.textContent = `${prefix}${withCommas}${suffix}`;
+
+      if (progress < 1) {
+        rafId = requestAnimationFrame(animate);
+      } else {
+        // Ensure final value matches original exactly
+        el.textContent = typeof value === "string" || typeof value === "number" ? String(value) : `${prefix}${withCommas}${suffix}`;
+      }
+    };
+
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [value]);
+
+  return <span ref={spanRef}>{value}</span>;
+}
 
 export const StatTile: React.FC<StatTileProps> = ({
   label,
@@ -56,9 +122,8 @@ export const StatTile: React.FC<StatTileProps> = ({
   return (
     <div
       className={cn(
-        "relative flex flex-col justify-between overflow-hidden rounded-[16px] border-2 border-slate-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs transition-all duration-200 motion-reduce:transition-none",
-        isHero ? "p-4 sm:p-5 border-t-4" : isCompact ? "p-3 sm:p-3.5" : "p-4 sm:p-5",
-        isHero && accentBorderTop[accent],
+        "relative flex flex-col justify-between overflow-hidden rounded-xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs transition-[border-color,background-color] duration-140 motion-reduce:transition-none",
+        isHero ? "p-4 sm:p-5" : isCompact ? "p-3 sm:p-3.5" : "p-4 sm:p-5",
         className
       )}
     >
@@ -67,8 +132,8 @@ export const StatTile: React.FC<StatTileProps> = ({
         <div className="min-w-0 flex-1">
           <p
             className={cn(
-              "font-bold text-stone-600 dark:text-zinc-300 leading-snug break-normal hyphens-none",
-              isCompact ? "text-xs" : "text-xs uppercase tracking-wider"
+              "font-medium text-slate-500 dark:text-zinc-400 leading-snug break-normal hyphens-none",
+              isCompact ? "text-[11px]" : "text-xs"
             )}
           >
             {label}
@@ -77,9 +142,9 @@ export const StatTile: React.FC<StatTileProps> = ({
         {icon && (
           <div
             className={cn(
-              "flex items-center justify-center rounded-xl border p-2 shrink-0 transition-transform motion-reduce:transition-none",
+              "flex items-center justify-center rounded-lg border p-1.5 shrink-0",
               accentIconStyles[accent],
-              isCompact ? "h-7 w-7 [&>svg]:h-3.5 [&>svg]:w-3.5" : "h-9 w-9 sm:h-10 sm:w-10 [&>svg]:h-4.5 sm:[&>svg]:h-5 [&>svg]:w-4.5 sm:[&>svg]:w-5"
+              isCompact ? "h-6 w-6 [&>svg]:h-3 [&>svg]:w-3" : "h-7 w-7 sm:h-8 sm:w-8 [&>svg]:h-3.5 sm:[&>svg]:h-4 [&>svg]:w-3.5 sm:[&>svg]:w-4"
             )}
           >
             {icon}
@@ -88,30 +153,30 @@ export const StatTile: React.FC<StatTileProps> = ({
       </div>
 
       {/* Main value display */}
-      <div className={cn("min-w-0 flex-1", isCompact ? "mt-1.5" : "mt-2.5")}>
+      <div className={cn("min-w-0 flex-1", isCompact ? "mt-1" : "mt-2")}>
         <div
           className={cn(
-            "font-extrabold tracking-tight text-charcoal dark:text-white whitespace-nowrap overflow-hidden text-ellipsis",
+            "font-semibold tracking-tight text-charcoal dark:text-white tabular-nums font-sans whitespace-nowrap overflow-hidden text-ellipsis",
             isHero
-              ? "text-xl sm:text-2xl 2xl:text-3xl font-heading uppercase"
+              ? "text-2xl sm:text-3xl"
               : isCompact
-              ? "text-base sm:text-lg font-bold"
-              : "text-lg sm:text-xl font-bold"
+              ? "text-base sm:text-lg"
+              : "text-xl sm:text-2xl"
           )}
           title={typeof value === "string" ? value : undefined}
         >
-          {value}
+          <CountUpValue value={value} />
         </div>
 
         {/* Badge on its own dedicated row under the value */}
         {badge && (
-          <div className="mt-1.5 flex items-center">
+          <div className="mt-1 flex items-center">
             {badge}
           </div>
         )}
 
         {subText && (
-          <p className="mt-1.5 text-xs text-stone-600 dark:text-zinc-400 leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
+          <p className="mt-1 text-xs text-slate-500 dark:text-zinc-400 leading-relaxed font-normal break-words [overflow-wrap:anywhere]">
             {subText}
           </p>
         )}

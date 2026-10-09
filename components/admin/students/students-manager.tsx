@@ -22,6 +22,7 @@ import { toast } from "sonner";
 import type { StudentSearchItem, StudentSearchResponse, CardFlow } from "@/lib/student/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -468,7 +469,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
-        title="STUDENTS"
+        title="Students"
         description="Search Nile University students, inspect card status, manage suspensions, and export records."
         actions={
           <Button
@@ -484,7 +485,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       />
 
       {/* Search & Filter Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs space-y-3">
+      <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
           {/* Instant Search Bar */}
           <div className="relative flex-1 max-w-md">
@@ -551,37 +552,37 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
         {/* Optional Sign-up Date Range Filter Panel */}
         {isDateFilterOpen && (
-          <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-border animate-in fade-in-0 duration-150">
-            <div className="flex items-center gap-2 flex-1 min-w-[240px]">
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
-                  Registered From
-                </label>
-                <input
-                  type="date"
+          <div className="flex flex-col sm:flex-row sm:items-end gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-border animate-in fade-in-0 duration-150">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 flex-1 min-w-0">
+              <div className="flex-1 min-w-[140px]">
+                <DatePicker
+                  id="registered-from"
+                  label="Registered From"
                   value={signedUpFrom}
-                  max={signedUpTo || undefined}
-                  onChange={(e) => {
-                    setSignedUpFrom(e.target.value);
+                  maxDate={signedUpTo || undefined}
+                  onChange={(val) => {
+                    setSignedUpFrom(val);
                     setIsLoading(true);
                   }}
-                  className="w-full min-h-[44px] px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                  placeholder="Select start date..."
+                  clearable
                 />
               </div>
-              <span className="text-muted-foreground self-end pb-3">&rarr;</span>
-              <div className="flex-1">
-                <label className="block text-[10px] font-bold uppercase text-muted-foreground mb-1">
-                  Registered To
-                </label>
-                <input
-                  type="date"
+              <span className="hidden sm:inline-block text-muted-foreground self-end pb-3 shrink-0 font-bold">
+                &rarr;
+              </span>
+              <div className="flex-1 min-w-[140px]">
+                <DatePicker
+                  id="registered-to"
+                  label="Registered To"
                   value={signedUpTo}
-                  min={signedUpFrom || undefined}
-                  onChange={(e) => {
-                    setSignedUpTo(e.target.value);
+                  minDate={signedUpFrom || undefined}
+                  onChange={(val) => {
+                    setSignedUpTo(val);
                     setIsLoading(true);
                   }}
-                  className="w-full min-h-[44px] px-2.5 rounded-lg border border-border bg-card text-xs font-mono text-foreground"
+                  placeholder="Select end date..."
+                  clearable
                 />
               </div>
             </div>
@@ -595,7 +596,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                   setSignedUpTo("");
                   setIsLoading(true);
                 }}
-                className="self-end text-xs font-semibold normal-case min-h-[44px]"
+                className="self-stretch sm:self-end text-xs font-semibold normal-case min-h-[44px]"
               >
                 Clear Dates
               </Button>
@@ -654,11 +655,11 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       )}
 
       {/* Students Data Display */}
-      <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
+      <Card className="border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden">
         <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-center justify-between">
           <div className="flex items-center gap-3">
-            <CardTitle className="text-xl sm:text-2xl text-foreground">
-              STUDENT DIRECTORY
+            <CardTitle className="text-lg sm:text-xl text-foreground">
+              Student directory
             </CardTitle>
           </div>
           <Badge variant="brand" className="text-xs font-bold font-mono">

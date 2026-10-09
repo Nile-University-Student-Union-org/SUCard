@@ -160,7 +160,11 @@ export function HowItWorks() {
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
     const total = el.offsetHeight - window.innerHeight;
-    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (total <= 0) {
+      setMobileActive(i);
+      return;
+    }
     window.scrollTo({
       top: top + ((i + 0.5) / steps.length) * total,
       behavior: prefersReducedMotion ? "auto" : "smooth",
@@ -172,7 +176,7 @@ export function HowItWorks() {
       ref={sectionRef}
       id="how-it-works"
       aria-labelledby="how-it-works-title"
-      className="relative border-t border-border/80 py-12 sm:py-16 md:py-0 md:h-[300vh]"
+      className="relative border-t border-border/80 py-12 sm:py-16 md:py-0 md:h-[160vh]"
     >
       <div className="md:sticky md:top-0 md:h-svh md:flex md:items-center md:overflow-hidden">
         {/* Dot-grid texture, fading out toward the edges */}
@@ -226,7 +230,7 @@ export function HowItWorks() {
             >
               Three steps
               <br /> to{" "}
-              <span className="bg-gradient-to-r from-brand to-macaw-blue bg-clip-text text-transparent dark:from-brand-soft dark:to-macaw-blue">
+              <span className="text-brand dark:text-brand-soft">
                 student savings
               </span>
             </h2>

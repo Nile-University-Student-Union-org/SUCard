@@ -1,0 +1,15 @@
+<goal>Prevent scanner camera/request races and retain useful student history during pagination errors.</goal>
+<context>
+Read AGENTS.md, docs/reviews/frontend-audit-2026-10-09.md, and docs/reviews/ui-review-2026-10-08.md. Own only: components/student/card-scanner.tsx; components/student/history-view.tsx; components/scanner/scanner-manager.tsx; components/landing/lanyard-hero.tsx; hooks/use-qr-camera.ts. Files are disjoint from every AGY and CX-1/CX-3 task. Follow ~/.agents/skills/web-design-guidelines/SKILL.md and its fresh linked rules, ~/.agents/skills/vercel-react-best-practices/SKILL.md, ~/.agents/skills/vercel-composition-patterns/SKILL.md, ~/.agents/skills/vercel-react-view-transitions/SKILL.md if touching motion, and C:\Users\Ahmed\.claude\skills\impeccable\SKILL.md plus reference/audit.md and craft-floor.md. Check relevant Next 16 local docs before changing client/server boundaries. Keep lib/cards/types.ts and lib/auth/guards.ts signatures stable.
+</context>
+<task>
+- In card-scanner.tsx, invalidate pending getUserMedia/play/BarcodeDetector work on close/unmount and stop any stream that resolves late; clear delayed retry/success timers so closing cannot reopen the camera or navigate later. Keep the existing claim endpoint and result contract.
+- Apply the same late-permission cleanup in hooks/use-qr-camera.ts for cashier tab switches/unmounts, and reuse a BarcodeDetector instance instead of constructing one per video frame.
+- In scanner-manager.tsx, use a synchronous in-flight guard for QR validation and confirmation so rapid different QR frames or double taps cannot create overlapping result requests; release the guard on every completion path and keep scan decisions uncached.
+- In history-view.tsx, keep previously loaded entries visible when a later page fails, show an inline retry for that page, and prevent duplicate or stale page appends.
+- In lanyard-hero.tsx, evaluate WebGL support once per mounted instance or external snapshot rather than constructing a canvas on every state update; preserve reduced-motion/static fallback and WebGL context-loss behavior.
+- Verify camera permission denial, close-during-permission, repeated scans, network failures, retry, and the student history empty/loading/error states. Relay result-panel focus/safe-area issues to the active scan-panel implementer without editing those files.
+</task>
+<do_not>No new dependencies unless essential and named in the report. No business-logic, API, or DB changes. No sparkles icon or similar glyph. Do not commit. Do not run next dev. Do not touch files owned by other tasks or active admin redesign/QR Studio/Canvas date-picker/scan-panel work.</do_not>
+<gates>pnpm typecheck && pnpm lint && pnpm test && pnpm build</gates>
+<report>List changed files, race/error cases verified, gate results, any dependency added, and residual risk briefly.</report>

@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert } from "@/components/ui/alert";
@@ -434,42 +435,29 @@ export function VendorOverviewTab({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="v-cstart" className="text-xs font-semibold text-foreground">
-                  Contract Start Date
-                </Label>
-                <Input
-                  id="v-cstart"
-                  type="date"
-                  value={contractStart}
-                  onChange={(e) => setContractStart(e.target.value)}
-                  className="h-11 min-h-[44px] rounded-xl"
-                />
-              </div>
+              <DatePicker
+                id="v-cstart"
+                label="Contract Start Date"
+                value={contractStart}
+                maxDate={contractEnd || undefined}
+                onChange={(date) => setContractStart(date)}
+                clearable
+              />
 
-              <div className="space-y-1.5">
-                <Label htmlFor="v-cend" className="text-xs font-semibold text-foreground">
-                  Contract End Date
-                </Label>
-                <Input
-                  id="v-cend"
-                  type="date"
-                  value={contractEnd}
-                  onChange={(e) => {
-                    setContractEnd(e.target.value);
-                    if (fieldErrors.contractEnd) {
-                      setFieldErrors((prev) => ({ ...prev, contractEnd: "" }));
-                    }
-                  }}
-                  className={cn(
-                    "h-11 min-h-[44px] rounded-xl",
-                    fieldErrors.contractEnd && "border-rose-500 focus-visible:ring-rose-500"
-                  )}
-                />
-                {fieldErrors.contractEnd && (
-                  <p className="text-xs text-rose-500 font-semibold">{fieldErrors.contractEnd}</p>
-                )}
-              </div>
+              <DatePicker
+                id="v-cend"
+                label="Contract End Date"
+                value={contractEnd}
+                minDate={contractStart || undefined}
+                onChange={(date) => {
+                  setContractEnd(date);
+                  if (fieldErrors.contractEnd) {
+                    setFieldErrors((prev) => ({ ...prev, contractEnd: "" }));
+                  }
+                }}
+                error={fieldErrors.contractEnd || undefined}
+                clearable
+              />
 
               <div className="space-y-1.5 sm:col-span-2">
                 <Label htmlFor="v-notes" className="text-xs font-semibold text-foreground">
