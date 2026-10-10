@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import Image from "next/image";
 import { cn } from "cn";
 import { BACK, CardFront, CardStage, VEIL, win } from "./how-it-works-stage";
-import { lanyardHandoff, quadToMatrix3d, signedArea, type Quad } from "./lanyard-handoff";
+import { lanyardHandoff, quadToAffine, signedArea, type Quad } from "./lanyard-handoff";
 import s from "./how-it-works.module.css";
 
 const STEPS = [
@@ -74,7 +74,13 @@ function createHandoff(track: HTMLElement, travel: HTMLElement) {
     // Follow the live 3D card until it hides, then fly from where it was last seen.
     if (!snap || t <= CROSSFADE) {
       const seen = lanyardHandoff.probe?.();
-      if (seen) snap = seen.map(([x, y]) => [x, y + scrollY]);
+      // A card seen edge-on or partly behind the camera projects to garbage; keep the last good snapshot.
+      const sane =
+        seen &&
+        seen.every(([x, y]) => Number.isFinite(x) && Number.isFinite(y)) &&
+        Math.abs(signedArea(seen)) > 400 &&
+        Math.abs(signedArea(seen)) < window.innerWidth * window.innerHeight * 0.5;
+      if (sane) snap = seen.map(([x, y]) => [x, y + scrollY]);
       else if (!snap) return setMode("none");
     }
 
@@ -100,7 +106,7 @@ function createHandoff(track: HTMLElement, travel: HTMLElement) {
       return [cx + dx * cos - dy * sin, cy + dx * sin + dy * cos];
     });
 
-    box.style.transform = `matrix3d(${quadToMatrix3d(TRAVEL_W, TRAVEL_H, quad).join(",")})`;
+    box.style.transform = `matrix(${quadToAffine(TRAVEL_W, TRAVEL_H, quad).join(",")})`;
     const facing = signedArea(quad) >= 0;
     front.style.visibility = facing ? "visible" : "hidden";
     back.style.visibility = facing ? "hidden" : "visible";

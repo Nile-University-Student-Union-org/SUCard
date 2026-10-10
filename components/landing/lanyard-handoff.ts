@@ -13,25 +13,18 @@ export const lanyardHandoff: {
 } = { probe: null, setDetached: null };
 
 /**
- * CSS matrix3d that maps a w x h box (transform-origin 0 0) onto an arbitrary quad: the projective
- * transform of a plane, so it reproduces a perspective-rendered card exactly.
+ * CSS matrix() of the parallelogram that best fits the quad (averaged opposite edges). Unlike the
+ * projective fit it can never blow up when the quad is skewed or nearly degenerate mid-flight.
  */
-export function quadToMatrix3d(w: number, h: number, q: Quad) {
+export function quadToAffine(w: number, h: number, q: Quad) {
   const [[x0, y0], [x1, y1], [x2, y2], [x3, y3]] = q;
-  const dx1 = x1 - x2;
-  const dx2 = x3 - x2;
-  const dy1 = y1 - y2;
-  const dy2 = y3 - y2;
-  const sx = x0 - x1 + x2 - x3;
-  const sy = y0 - y1 + y2 - y3;
-  const den = dx1 * dy2 - dx2 * dy1 || 1e-9;
-  const g = (sx * dy2 - dx2 * sy) / den;
-  const k = (dx1 * sy - sx * dy1) / den;
-  const a = x1 - x0 + g * x1;
-  const b = x3 - x0 + k * x3;
-  const d = y1 - y0 + g * y1;
-  const e = y3 - y0 + k * y3;
-  return [a / w, d / w, 0, g / w, b / h, e / h, 0, k / h, 0, 0, 1, 0, x0, y0, 0, 1];
+  const ux = (x1 - x0 + x2 - x3) / 2;
+  const uy = (y1 - y0 + y2 - y3) / 2;
+  const vx = (x3 - x0 + x2 - x1) / 2;
+  const vy = (y3 - y0 + y2 - y1) / 2;
+  const cx = (x0 + x1 + x2 + x3) / 4;
+  const cy = (y0 + y1 + y2 + y3) / 4;
+  return [ux / w, uy / w, vx / h, vy / h, cx - (ux + vx) / 2, cy - (uy + vy) / 2];
 }
 
 /** Positive when the quad's corners run clockwise on screen, i.e. the card's front faces the viewer. */

@@ -1,26 +1,30 @@
 import { describe, expect, it } from "vitest";
-import { quadToMatrix3d, signedArea, type Quad } from "./lanyard-handoff";
+import { quadToAffine, signedArea, type Quad } from "./lanyard-handoff";
 
-/** Applies a column-major matrix3d to a 2D point. */
+/** Applies a CSS matrix(a, b, c, d, e, f) to a 2D point. */
 function apply(m: number[], x: number, y: number) {
-  const w = m[3] * x + m[7] * y + m[15];
-  return [(m[0] * x + m[4] * y + m[12]) / w, (m[1] * x + m[5] * y + m[13]) / w];
+  return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 }
 
-describe("quadToMatrix3d", () => {
-  it("maps the box corners onto a perspective quad", () => {
+describe("quadToAffine", () => {
+  it("maps the box corners onto a parallelogram exactly", () => {
     const quad: Quad = [
       [120, 80],
       [410, 110],
       [380, 330],
-      [90, 290],
+      [90, 300],
     ];
-    const m = quadToMatrix3d(707, 516, quad);
+    const m = quadToAffine(707, 516, quad);
     const corners = [apply(m, 0, 0), apply(m, 707, 0), apply(m, 707, 516), apply(m, 0, 516)];
     corners.forEach(([x, y], i) => {
       expect(x).toBeCloseTo(quad[i][0], 6);
       expect(y).toBeCloseTo(quad[i][1], 6);
     });
+  });
+
+  it("stays bounded for a degenerate edge-on quad", () => {
+    const m = quadToAffine(707, 516, [[100, 100], [101, 100], [101, 300], [100, 300]]);
+    m.forEach((v) => expect(Math.abs(v)).toBeLessThan(1000));
   });
 
   it("tells a front-facing quad from a mirrored one", () => {
