@@ -2,7 +2,7 @@
 
 import React, { type CSSProperties } from "react";
 import Image from "next/image";
-import { CARD_ART } from "./card-art";
+import { CARD_ART, SAMPLE_PATCH_STYLE } from "./card-art";
 
 /** Navy woven strap, matching the real lanyard's colours. */
 const STRAP_STYLE: CSSProperties = {
@@ -61,6 +61,7 @@ export function StaticCard() {
             className="object-contain select-none pointer-events-none"
             priority
           />
+          <div className="absolute" style={SAMPLE_PATCH_STYLE} />
         </div>
       </div>
 

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import QRCode from "qrcode";
-import { CARD_ART } from "./card-art";
+import { CARD_ART, SAMPLE_PATCH } from "./card-art";
 
 /** Card face texture size, matching the card artwork in public/card (1.37 : 1). */
 export const CARD_TEX_W = 2560;
@@ -341,8 +341,13 @@ function paintStrap(ctx: CanvasRenderingContext2D, icon: HTMLImageElement | null
 }
 
 /** Draws an artist-supplied PNG over the whole face. */
-function paintArt(ctx: CanvasRenderingContext2D, art: HTMLImageElement) {
-  ctx.drawImage(art, 0, 0, ctx.canvas.width, ctx.canvas.height);
+function paintArt(ctx: CanvasRenderingContext2D, art: HTMLImageElement, generic = false) {
+  const { width: w, height: h } = ctx.canvas;
+  ctx.drawImage(art, 0, 0, w, h);
+  if (!generic) return;
+  // The sample artwork carries a name and ID; real cards are identical, so paint that area out.
+  ctx.fillStyle = SAMPLE_PATCH.color;
+  ctx.fillRect(w * SAMPLE_PATCH.x, h * SAMPLE_PATCH.y, w * SAMPLE_PATCH.w, h * SAMPLE_PATCH.h);
 }
 
 /**
@@ -406,7 +411,7 @@ export function createCardTextures(maxAnisotropy: number): CardTextures {
       loadFont(`500 100px ${sans}`),
     ]);
     if (disposed) return;
-    if (frontArt) paintArt(front.ctx, frontArt);
+    if (frontArt) paintArt(front.ctx, frontArt, true);
     else await paintFront(front.ctx, logo, icon);
     if (backArt) paintArt(back.ctx, backArt);
     else paintBack(back.ctx, icon, logo);

@@ -6,6 +6,7 @@ import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/drei";
 import { LanyardSim, TICK, stretchMax } from "./lanyard-sim";
 import { CARD_TEX_H, CARD_TEX_W, SLOT, STRAP_TEX_H, STRAP_TEX_W, createCardTextures } from "./card-textures";
+import { lanyardHandoff, type Quad } from "./lanyard-handoff";
 
 // Card in world units, in the artwork's proportions.
 const CARD_W = 3.2;
@@ -164,6 +165,7 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   const { gl, camera } = useThree();
   const invalidate = useThree((s) => s.invalidate);
   const cardMesh = useRef<THREE.Group>(null);
+  const cardBody = useRef<THREE.Group>(null);
   const ribbon = useRef<THREE.Mesh>(null);
   const ribbonBack = useRef<THREE.Mesh>(null);
   const sim = useMemo(() => {
@@ -252,6 +254,38 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       live = false;
     };
   }, [textures, materials, gl, getState, onReady, invalidate]);
+
+  // Shared-element handoff: report where the card face is on screen, and hide it (leaving the clip on the
+  // strap) while the How-it-works section carries the card on.
+  useEffect(() => {
+    const corner = new THREE.Vector3();
+    const local: [number, number][] = [
+      [-CARD_W / 2, CARD_H / 2],
+      [CARD_W / 2, CARD_H / 2],
+      [CARD_W / 2, -CARD_H / 2],
+      [-CARD_W / 2, -CARD_H / 2],
+    ];
+    lanyardHandoff.probe = () => {
+      const card = cardMesh.current;
+      if (!prepared || !card) return null;
+      const rect = gl.domElement.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return null;
+      card.updateMatrixWorld();
+      return local.map(([x, y]) => {
+        corner.set(x, y, CARD_DEPTH / 2 + BEVEL).applyMatrix4(card.matrixWorld).project(camera);
+        return [rect.left + ((corner.x + 1) / 2) * rect.width, rect.top + ((1 - corner.y) / 2) * rect.height];
+      }) as Quad;
+    };
+    lanyardHandoff.setDetached = (detached) => {
+      if (!cardBody.current || cardBody.current.visible === !detached) return;
+      cardBody.current.visible = !detached;
+      invalidate();
+    };
+    return () => {
+      lanyardHandoff.probe = null;
+      lanyardHandoff.setDetached = null;
+    };
+  }, [prepared, gl, camera, invalidate]);
 
   // The mirrored strap print shares the painted image but is its own texture, so re-upload it once painting is done.
   useEffect(() => {
@@ -497,14 +531,16 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
         }}
         onPointerDown={grab}
       >
-        <mesh geometry={geometries.body} material={materials.edge} />
-        <mesh geometry={geometries.face} material={materials.front} position={[0, 0, CARD_DEPTH / 2 + BEVEL + 0.0006]} />
-        <mesh
-          geometry={geometries.face}
-          material={materials.back}
-          position={[0, 0, -(CARD_DEPTH / 2 + BEVEL + 0.0006)]}
-          rotation={[0, Math.PI, 0]}
-        />
+        <group ref={cardBody}>
+          <mesh geometry={geometries.body} material={materials.edge} />
+          <mesh geometry={geometries.face} material={materials.front} position={[0, 0, CARD_DEPTH / 2 + BEVEL + 0.0006]} />
+          <mesh
+            geometry={geometries.face}
+            material={materials.back}
+            position={[0, 0, -(CARD_DEPTH / 2 + BEVEL + 0.0006)]}
+            rotation={[0, Math.PI, 0]}
+          />
+        </group>
         {/* Split ring through the slot (turned so it reads as a ring from the front) */}
         <mesh material={materials.metal} position={[0, RING_Y, 0]} rotation={[0, Math.PI * 0.32, 0]}>
           <torusGeometry args={[RING_R, 0.017, 24, 72]} />
