@@ -154,8 +154,8 @@ export function ScannerHeader({
         title={muted ? "Unmute scanner sound" : "Mute scanner sound"}
         aria-pressed={!muted}
         className={cn(
-          "group/sound relative size-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none",
-          "bg-[#0F3056]/[0.05] dark:bg-white/15 hover:bg-[#0F3056]/10 dark:hover:bg-white/25 ring-1 ring-black/[0.06] dark:ring-white/25 shadow-2xs dark:shadow-xs"
+          "group/sound relative size-10 rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+          "hover:bg-white hover:shadow-xs dark:hover:bg-white/15 dark:hover:shadow-none"
         )}
       >
         <span className="relative size-4 sm:size-4.5 flex items-center justify-center pointer-events-none">

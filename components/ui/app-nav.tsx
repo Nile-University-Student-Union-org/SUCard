@@ -562,6 +562,13 @@ export function AppNav({
 
             {/* Action Island: Extra Actions + Theme Toggle + User Menu + Mobile Menu Toggle */}
             <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              {/* Tool group: extra actions + theme toggle share one quiet pill instead of separate grey circles */}
+              <div
+                className={cn(
+                  "flex items-center gap-0.5 rounded-full p-0.5",
+                  isDark ? "bg-white/[0.08] ring-1 ring-white/15" : "bg-[#0F3056]/[0.04] ring-1 ring-black/[0.06]"
+                )}
+              >
               {/* Extra Right Actions Slot (e.g. Sound toggle, online status) */}
               {rightSlot}
 
@@ -573,10 +580,8 @@ export function AppNav({
                 aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 title={isDark ? "Switch to light mode" : "Switch to dark mode"}
                 className={cn(
-                  "group/theme relative size-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none",
-                  isDark
-                    ? "bg-white/15 hover:bg-white/25 ring-1 ring-white/25 shadow-xs"
-                    : "bg-[#0F3056]/[0.05] hover:bg-[#0F3056]/10 ring-1 ring-black/[0.06] shadow-2xs"
+                  "group/theme relative size-10 rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
+                  isDark ? "hover:bg-white/15" : "hover:bg-white hover:shadow-xs"
                 )}
               >
                 {isDark ? (
@@ -600,6 +605,8 @@ export function AppNav({
                   />
                 )}
               </button>
+
+              </div>
 
               {/* Desktop User Menu Dropdown */}
               {user && (
