@@ -58,7 +58,7 @@ export function ScannerViewfinder({
   // 1. Inactive Vendor Blocking State
   if (!vendorActive) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28">
         <div className="max-w-md w-full">
           <StatusState
             icon={<Store className="size-6" />}
@@ -74,7 +74,7 @@ export function ScannerViewfinder({
   // 2. Camera Permission Denied / Unavailable State
   if (permissionError) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 bg-slate-950 text-white">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28 bg-slate-950 text-white">
         <div className="max-w-md w-full space-y-6 text-center">
           <div className="size-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg">
             <ShieldAlert className="size-8" />
@@ -153,7 +153,7 @@ export function ScannerViewfinder({
       </div>
 
       {/* Top Floating Controls: Torch Toggle & Scanner Status */}
-      <div className="absolute top-4 inset-x-3 sm:inset-x-4 flex items-center justify-between z-20 pointer-events-auto pt-safe">
+      <div className="absolute top-18 sm:top-20 md:top-22 inset-x-3 sm:inset-x-6 flex items-center justify-between z-20 pointer-events-auto pt-safe">
         {torchAvailable ? (
           <button
             type="button"

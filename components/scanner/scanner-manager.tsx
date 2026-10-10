@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useSyncExternalStore } from "react";
-import { QrCode, Receipt } from "lucide-react";
 import { toast } from "sonner";
-import { TabBar, type TabBarItem } from "@/components/ui/tab-bar";
 import { ScannerHeader } from "./scanner-header";
 import { ScannerViewfinder } from "./scanner-viewfinder";
 import { ScanValidPanel } from "./scan-valid-panel";
@@ -26,19 +24,6 @@ interface ScannerManagerProps {
 }
 
 type TabKey = "scan" | "today";
-
-const TABS: TabBarItem<TabKey>[] = [
-  {
-    id: "scan",
-    label: "Scan Card",
-    icon: <QrCode className="size-4" />,
-  },
-  {
-    id: "today",
-    label: "Today's Scans",
-    icon: <Receipt className="size-4" />,
-  },
-];
 
 function subscribeOnline(onChange: () => void) {
   window.addEventListener("online", onChange);
@@ -91,6 +76,17 @@ export function ScannerManager({
   // Debounce tracking: ignore same QR for 3 seconds
   const lastScannedQrRef = useRef<string | null>(null);
   const lastScannedTimeRef = useRef<number>(0);
+
+  const handleTabChange = useCallback((tab: TabKey) => {
+    activeTabRef.current = tab;
+    scanGenerationRef.current++;
+    resultOpenRef.current = false;
+    setActiveTab(tab);
+    // Clear any modals when switching tabs
+    setValidResult(null);
+    setInvalidResult(null);
+    setSuccessResult(null);
+  }, []);
 
   const handleQrDecoded = useCallback(
     async (qrString: string) => {
@@ -198,14 +194,16 @@ export function ScannerManager({
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-background text-foreground select-none">
-      {/* Top Navigation Bar */}
+    <div className="min-h-[100dvh] flex flex-col bg-background text-foreground select-none relative isolate">
+      {/* Top Floating Navigation Bar (Identical liquid glass style as student area) */}
       <ScannerHeader
         user={user}
         areas={areas}
         vendorName={initialContext.vendorName}
         vendorLogoUrl={initialContext.vendorLogoUrl}
         isOnline={isOnline}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
       />
 
       {/* Main Viewport Content */}
@@ -220,7 +218,7 @@ export function ScannerManager({
             isValidating={isValidating}
           />
         ) : (
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pt-20 sm:pt-24 md:pt-28 pb-12 sm:pb-16 pb-safe">
             <ScannerTodayTab />
           </div>
         )}
@@ -259,32 +257,6 @@ export function ScannerManager({
           />
         )}
       </main>
-
-      {/* Bottom Floating Navigation Tabs */}
-      <nav
-        aria-label="Scanner views"
-        className="sticky bottom-0 z-30 p-2.5 bg-background/95 backdrop-blur-xl border-t border-border shadow-lg"
-      >
-        <div className="max-w-md mx-auto">
-          <TabBar
-            items={TABS}
-            value={activeTab}
-            onChange={(tab) => {
-              activeTabRef.current = tab;
-              scanGenerationRef.current++;
-              resultOpenRef.current = false;
-              setActiveTab(tab);
-              // Clear any modals when switching tabs
-              setValidResult(null);
-              setInvalidResult(null);
-              setSuccessResult(null);
-            }}
-            ariaLabel="Scanner Modes"
-            fullWidth
-            size="md"
-          />
-        </div>
-      </nav>
     </div>
   );
 }

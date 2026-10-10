@@ -46,3 +46,4 @@ export * from "./file-drop";
 export * from "./color-input";
 export * from "./sticky-save-bar";
 export * from "./review-changes-modal";
+export * from "./app-nav";

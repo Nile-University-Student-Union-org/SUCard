@@ -1,12 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
-import { Volume2, VolumeX, WifiOff, MapPin } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { UserNavDropdown, type UserNavUser, type UserNavArea } from "@/components/ui/user-nav-dropdown";
-import { cn } from "cn";
+import { QrCode, Receipt, Volume2, VolumeX, WifiOff, MapPin } from "lucide-react";
+import { AppNav, type AppNavItem } from "@/components/ui/app-nav";
+import type { UserNavUser, UserNavArea } from "@/components/ui/user-nav-dropdown";
 import { isScannerMuted, setScannerMuted } from "@/lib/scanner/feedback";
+import { cn } from "cn";
 
 export interface ScannerHeaderProps {
   user: UserNavUser;
@@ -17,6 +17,8 @@ export interface ScannerHeaderProps {
   branchName?: string | null;
   branch?: string | null;
   onMuteToggle?: (isMuted: boolean) => void;
+  activeTab?: "scan" | "today";
+  onTabChange?: (tab: "scan" | "today") => void;
 }
 
 function getVendorInitials(name: string): string {
@@ -36,8 +38,10 @@ export function ScannerHeader({
   branchName,
   branch,
   onMuteToggle,
+  activeTab = "scan",
+  onTabChange,
 }: ScannerHeaderProps) {
-  const [muted, setMuted] = React.useState(() => isScannerMuted());
+  const [muted, setMuted] = useState(() => isScannerMuted());
 
   const handleToggleMute = () => {
     const next = !muted;
@@ -51,113 +55,176 @@ export function ScannerHeader({
     branchText && branchText.length > 0 && branchText.toLowerCase() !== "x"
   );
 
-  return (
-    <header className="sticky top-0 z-40 w-full bg-background/85 dark:bg-[#081424]/85 backdrop-blur-md backdrop-saturate-150 text-foreground border-b border-border/60 dark:border-white/10 shadow-xs dark:shadow-none pt-[env(safe-area-inset-top,0px)] transition-colors duration-200">
-      <div className="flex items-center justify-between px-3 sm:px-6 h-14 sm:h-16 gap-2 sm:gap-4 max-w-7xl mx-auto">
-        {/* Left: Vendor Identity */}
-        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-          <div className="relative size-9 sm:size-10 rounded-xl bg-card border border-border/70 p-1 flex items-center justify-center shrink-0 overflow-hidden shadow-xs dark:bg-slate-900/60 dark:border-white/10">
-            {vendorLogoUrl ? (
-              <Image
-                src={vendorLogoUrl}
-                alt={vendorName}
-                width={36}
-                height={36}
-                className="w-full h-full object-contain"
-                unoptimized
-              />
-            ) : (
-              <div className="w-full h-full rounded-lg bg-gradient-to-br from-[#0F3056] to-[#0F548D] dark:from-[#0F548D]/40 dark:to-[#018BCE]/20 flex items-center justify-center text-white dark:text-sky-200">
-                <span className="font-sans font-bold text-xs sm:text-sm tracking-wider">
-                  {getVendorInitials(vendorName)}
-                </span>
-              </div>
-            )}
-          </div>
+  const navItems: AppNavItem[] = [
+    {
+      label: "Scan card",
+      icon: QrCode,
+      active: activeTab === "scan",
+      onClick: () => onTabChange?.("scan"),
+    },
+    {
+      label: "Today's scans",
+      icon: Receipt,
+      active: activeTab === "today",
+      onClick: () => onTabChange?.("today"),
+    },
+  ];
 
-          <div className="min-w-0 flex-1 flex flex-col justify-center">
-            <h1 className="font-sans font-semibold text-sm sm:text-base text-foreground tracking-tight truncate leading-tight">
-              {vendorName}
-            </h1>
-            {showBranch && (
-              <div className="flex items-center gap-1 text-[11px] sm:text-xs text-muted-foreground truncate leading-none mt-0.5">
-                <MapPin className="size-3 shrink-0 text-muted-foreground/70" aria-hidden="true" />
-                <span className="truncate">{branchText}</span>
-              </div>
-            )}
-          </div>
+  // Desktop Vendor Context line/chip next to NUSU brand
+  const brandContext = (
+    <div className="flex items-center gap-2 pl-2.5 border-l border-slate-300/40 dark:border-white/15 max-w-[150px] lg:max-w-[210px] min-w-0 select-none">
+      {vendorLogoUrl ? (
+        <Image
+          src={vendorLogoUrl}
+          alt={vendorName}
+          width={22}
+          height={22}
+          className="size-5.5 rounded-md object-contain shrink-0 bg-white/60 dark:bg-slate-900/60 p-0.5 border border-border/40"
+          unoptimized
+        />
+      ) : (
+        <div className="size-5.5 rounded-md bg-[#0F3056]/10 dark:bg-white/10 flex items-center justify-center text-[#0F3056] dark:text-sky-300 shrink-0 font-bold text-[10px]">
+          {getVendorInitials(vendorName)}
         </div>
+      )}
+      <div className="flex flex-col min-w-0 leading-tight">
+        <span className="font-bold text-xs text-foreground truncate">
+          {vendorName}
+        </span>
+        {showBranch && (
+          <span className="text-[10px] font-medium text-muted-foreground truncate flex items-center gap-0.5">
+            <MapPin className="size-2.5 shrink-0 opacity-70" />
+            <span className="truncate">{branchText}</span>
+          </span>
+        )}
+      </div>
+    </div>
+  );
 
-        {/* Right: Sound Toggle + Status Pill + User Dropdown */}
-        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-          {/* Status Pill */}
-          {!isOnline ? (
-            <span
-              role="status"
-              aria-label="Device is offline"
-              className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
-            >
-              <span
-                className="size-1.5 rounded-full bg-rose-500 animate-pulse motion-reduce:animate-none shrink-0"
-                aria-hidden="true"
-              />
-              <WifiOff className="size-3 shrink-0" aria-hidden="true" />
-              <span>Offline</span>
-            </span>
-          ) : (
-            <span
-              role="status"
-              aria-label="Scanner is online"
-              className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
-            >
-              <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
-              <span>Online</span>
-            </span>
-          )}
-
-          {/* Theme toggle, styled to match the quiet sound button */}
-          <ThemeToggle className="size-10 sm:size-11 min-h-0 min-w-0 rounded-xl border-0 bg-transparent dark:bg-transparent shadow-none hover:bg-muted/80" />
-
-          {/* Sound Toggle Icon Button */}
-          <button
-            type="button"
-            onClick={handleToggleMute}
-            aria-label={muted ? "Unmute scanner sound" : "Mute scanner sound"}
-            title={muted ? "Unmute scanner sound" : "Mute scanner sound"}
-            aria-pressed={!muted}
-            className="relative size-10 sm:size-11 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 active:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 transition-colors flex items-center justify-center cursor-pointer active:scale-95 shrink-0"
-          >
-            <span className="relative size-4 sm:size-4.5 flex items-center justify-center pointer-events-none">
-              <Volume2
-                className={cn(
-                  "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-foreground",
-                  muted
-                    ? "opacity-0 scale-75 rotate-45 absolute"
-                    : "opacity-100 scale-100 rotate-0"
-                )}
-                aria-hidden="true"
-              />
-              <VolumeX
-                className={cn(
-                  "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-muted-foreground",
-                  muted
-                    ? "opacity-100 scale-100 rotate-0"
-                    : "opacity-0 scale-75 -rotate-45 absolute"
-                )}
-                aria-hidden="true"
-              />
-            </span>
-          </button>
-
-          {/* User Account Menu */}
-          <UserNavDropdown
-            user={user}
-            areas={areas}
-            currentArea="scanner"
-            className="shrink-0"
+  // Mobile Vendor Context card shown in the expanded drawer
+  const mobileBrandContext = (
+    <div className="p-2.5 rounded-xl flex items-center justify-between gap-2.5 bg-black/[0.03] dark:bg-white/5 border border-black/[0.06] dark:border-white/10">
+      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+        {vendorLogoUrl ? (
+          <Image
+            src={vendorLogoUrl}
+            alt={vendorName}
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-contain shrink-0 bg-white/70 dark:bg-slate-900/60 p-1 border border-border/40"
+            unoptimized
           />
+        ) : (
+          <div className="size-8 rounded-lg bg-gradient-to-br from-[#0F3056] to-[#0F548D] dark:from-[#0F548D]/40 dark:to-[#018BCE]/20 flex items-center justify-center text-white dark:text-sky-200 font-bold text-xs shrink-0">
+            {getVendorInitials(vendorName)}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-bold text-foreground truncate leading-tight">
+            {vendorName}
+          </p>
+          {showBranch ? (
+            <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+              <MapPin className="size-2.5 shrink-0" />
+              <span className="truncate">{branchText}</span>
+            </p>
+          ) : (
+            <p className="text-[10px] text-muted-foreground truncate">
+              Partner Vendor
+            </p>
+          )}
         </div>
       </div>
-    </header>
+
+      {!isOnline && (
+        <span
+          role="status"
+          aria-label="Device is offline"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
+        >
+          <WifiOff className="size-3" />
+          <span>Offline</span>
+        </span>
+      )}
+    </div>
+  );
+
+  // Right actions slot: Sound toggle + Offline/Online status
+  const rightSlot = (
+    <div className="flex items-center gap-1.5 sm:gap-2">
+      {/* Offline Status Pill */}
+      {!isOnline ? (
+        <span
+          role="status"
+          aria-label="Device is offline"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
+        >
+          <span
+            className="size-1.5 rounded-full bg-rose-500 animate-pulse motion-reduce:animate-none shrink-0"
+            aria-hidden="true"
+          />
+          <WifiOff className="size-3 shrink-0" aria-hidden="true" />
+          <span>Offline</span>
+        </span>
+      ) : (
+        <span
+          role="status"
+          aria-label="Scanner is online"
+          className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
+        >
+          <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
+          <span>Online</span>
+        </span>
+      )}
+
+      {/* Sound Toggle Icon Button */}
+      <button
+        type="button"
+        onClick={handleToggleMute}
+        aria-label={muted ? "Unmute scanner sound" : "Mute scanner sound"}
+        title={muted ? "Unmute scanner sound" : "Mute scanner sound"}
+        aria-pressed={!muted}
+        className={cn(
+          "group/sound relative size-11 min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none",
+          "bg-[#0F3056]/[0.05] dark:bg-white/15 hover:bg-[#0F3056]/10 dark:hover:bg-white/25 ring-1 ring-black/[0.06] dark:ring-white/25 shadow-2xs dark:shadow-xs"
+        )}
+      >
+        <span className="relative size-4 sm:size-4.5 flex items-center justify-center pointer-events-none">
+          <Volume2
+            className={cn(
+              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-[#0F3056] dark:text-white",
+              muted
+                ? "opacity-0 scale-75 rotate-45 absolute"
+                : "opacity-100 scale-100 rotate-0"
+            )}
+            aria-hidden="true"
+          />
+          <VolumeX
+            className={cn(
+              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-muted-foreground dark:text-white/60",
+              muted
+                ? "opacity-100 scale-100 rotate-0"
+                : "opacity-0 scale-75 -rotate-45 absolute"
+            )}
+            aria-hidden="true"
+          />
+        </span>
+      </button>
+    </div>
+  );
+
+  return (
+    <AppNav
+      items={navItems}
+      homeHref="/scan"
+      brandSubtitle="Student Union"
+      brandContext={brandContext}
+      mobileBrandContext={mobileBrandContext}
+      user={user}
+      areas={areas}
+      currentArea="scanner"
+      rightSlot={rightSlot}
+      ariaLabel="Cashier Scanner Navigation"
+    />
   );
 }

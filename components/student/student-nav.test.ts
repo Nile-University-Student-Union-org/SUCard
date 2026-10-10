@@ -16,23 +16,26 @@ describe("StudentNav exports and contracts", () => {
   });
 
   it("enforces slim closed navbar architecture with zero-height collapsed dropdown and 44px tap targets", () => {
-    const filePath = path.resolve(__dirname, "./student-nav.tsx");
-    const content = fs.readFileSync(filePath, "utf-8");
+    const studentNavPath = path.resolve(__dirname, "./student-nav.tsx");
+    const appNavPath = path.resolve(__dirname, "../ui/app-nav.tsx");
+    const studentContent = fs.readFileSync(studentNavPath, "utf-8");
+    const appNavContent = fs.readFileSync(appNavPath, "utf-8");
 
     // Collapsed dropdown must use min-h-0 overflow-hidden wrapper so 0fr track collapses to exactly 0px
-    expect(content).toMatch(/grid-rows-\[0fr\]/);
-    expect(content).toMatch(/grid-rows-\[1fr\]/);
-    expect(content).toMatch(/<div className="min-h-0 overflow-hidden">/);
+    expect(appNavContent).toMatch(/grid-rows-\[0fr\]/);
+    expect(appNavContent).toMatch(/grid-rows-\[1fr\]/);
+    expect(appNavContent).toMatch(/<div className="min-h-0 overflow-hidden">/);
 
     // Tap targets: 44px touch targets on brand link, theme toggle and mobile toggle
-    expect(content).toMatch(/size-11 min-h-\[44px\] min-w-\[44px\]/);
-    expect(content).toMatch(/min-h-\[44px\]/);
+    expect(appNavContent).toMatch(/size-11 min-h-\[44px\] min-w-\[44px\]/);
+    expect(appNavContent).toMatch(/min-h-\[44px\]/);
 
     // Equal padding and vertical centering
-    expect(content).toMatch(/flex items-center justify-between gap-2\.5 sm:gap-4 p-1\.5 sm:p-2/);
+    expect(appNavContent).toMatch(/flex items-center justify-between gap-2\.5 sm:gap-4 p-1\.5 sm:p-2/);
 
-    // No sparkles icon
+    // No sparkles icon in either file
     const forbiddenSparklePattern = new RegExp(["Spark", "les"].join(""), "i");
-    expect(content).not.toMatch(forbiddenSparklePattern);
+    expect(studentContent).not.toMatch(forbiddenSparklePattern);
+    expect(appNavContent).not.toMatch(forbiddenSparklePattern);
   });
 });
