@@ -3,6 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { Volume2, VolumeX, WifiOff, MapPin } from "lucide-react";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { UserNavDropdown, type UserNavUser, type UserNavArea } from "@/components/ui/user-nav-dropdown";
 import { cn } from "cn";
 import { isScannerMuted, setScannerMuted } from "@/lib/scanner/feedback";
@@ -113,6 +114,9 @@ export function ScannerHeader({
               <span>Online</span>
             </span>
           )}
+
+          {/* Theme toggle, styled to match the quiet sound button */}
+          <ThemeToggle className="size-10 sm:size-11 min-h-0 min-w-0 rounded-xl border-0 bg-transparent dark:bg-transparent shadow-none hover:bg-muted/80" />
 
           {/* Sound Toggle Icon Button */}
           <button
