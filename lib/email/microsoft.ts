@@ -4,7 +4,7 @@ import { z } from "zod";
 const microsoftEnvSchema = z.object({ MICROSOFT_TENANT_ID: z.uuid(), MICROSOFT_CLIENT_ID: z.uuid(),
   MICROSOFT_CLIENT_SECRET: z.string().min(1) });
 export function microsoftMailerEnv() { return microsoftEnvSchema.safeParse(process.env); }
-export function mailerFrom() { return z.email().parse(process.env.MAILER_FROM ?? "su@nu.edu.eg"); }
+export function mailerFrom() { return z.email().parse(process.env.MAILER_FROM ?? "Registrationsu@nu.edu.eg"); }
 export function oauthBase(tenant: string) { return `https://login.microsoftonline.com/${tenant}/oauth2/v2.0`; }
 
 export function allowedRedirectUri(requestUrl: string): string | null {

@@ -35,7 +35,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 | Print files | **PDFKit + SVG-to-PDFKit** (vector QR in print-ready CR80 PDFs and test sheets), **@resvg/resvg-js** for PNG exports, CSV export |
 | Apple Wallet | **passkit-generator** + Apple Wallet web service endpoints + APNs push |
 | Google Wallet | **google-auth-library** + Google Wallet REST API (service account) |
-| Email | `email_outbox` → delegated Microsoft Graph from `su@nu.edu.eg`; RSS feed and Power Automate remain a fallback. See [EMAIL-SETUP.md](EMAIL-SETUP.md). |
+| Email | `email_outbox` → delegated Microsoft Graph from `Registrationsu@nu.edu.eg`; RSS feed and Power Automate remain a fallback. See [EMAIL-SETUP.md](EMAIL-SETUP.md). |
 | Cache & rate limiting | **Redis** (Docker, same VPS) + `rate-limiter-flexible` |
 | Scheduled jobs | **supercronic** container calling `/api/cron/*` with `CRON_SECRET` (nightly stats rollup, wallet update retries, outbox cleanup, backups) |
 | File storage | Docker volume on the VPS (vendor logos, print files), included in backups |
@@ -90,7 +90,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 ┌───▼─────┐ ┌──▼────────┐ ┌▼──────────┐ ┌▼─────────┐ ┌▼──────────────────┐
 │Postgres │ │ Microsoft │ │ Google    │ │ Apple    │ │ Power Automate    │
 │Postgres │ │ Entra ID  │ │ Wallet    │ │ PassKit  │ │ (polls RSS, sends │
-│ (VPS)   │ │ NU tenant │ │ API       │ │ + APNs   │ │ via su@nu.edu.eg) │
+│ (VPS)   │ │ NU tenant │ │ API       │ │ + APNs   │ │ via Registrationsu@) │
 └─────────┘ └───────────┘ └───────────┘ └──────────┘ └───────────────────┘
         Redis (VPS: cache + rate limits) · Cloudflare (CDN) · Sentry (errors) · UptimeRobot
 ```
@@ -150,7 +150,7 @@ Admin suspends student, corrects name/ID, or student links a replacement card
 **Email**
 ```
 enqueueEmail(to, name, kind) → email_outbox row
-  → Microsoft Graph delegated send from su@nu.edu.eg after enqueue
+  → Microsoft Graph delegated send from Registrationsu@nu.edu.eg after enqueue
   → fallback: GET /api/mailer/feed (RSS, Bearer MAILER_FEED_KEY)
   → Power Automate sends and POSTs /api/mailer/ack with the item ID and lease ID
 ```
