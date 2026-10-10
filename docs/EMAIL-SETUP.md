@@ -1,11 +1,28 @@
-# SU Card email delivery with Power Automate
+# SU Card email delivery
 
-SU Card queues transactional email in PostgreSQL. A Power Automate cloud flow sends it from `su@nu.edu.eg`. Set `PUBLIC_BASE_URL` to the public HTTPS app origin, and set `MAILER_FEED_KEY` to a unique random value of at least 32 characters on the app server. Keep the key only in server configuration and the flow.
+Transactional messages are queued in PostgreSQL. Microsoft Graph sends them from `su@nu.edu.eg` after a super admin connects that account. A Power Automate flow can still consume the same outbox if Graph is disconnected.
 
-1. In Power Automate, create a **Scheduled cloud flow** that runs every minute under the SU Microsoft account with permission to send as `su@nu.edu.eg`.
-2. Add an HTTP GET step to `https://YOUR-APP/api/mailer/feed?key=YOUR_KEY`. The response is RSS 2.0 and has `Cache-Control: no-store`. Parse the RSS XML items. Each `guid` is the outbox UUID; `title` is the subject; `description` is HTML inside CDATA; `author` and `category` both contain the recipient email. Use `author` as the recipient.
-3. For each item, use **Send an email (V2)** with **From** `su@nu.edu.eg`, **To** from `author`, **Subject** from `title`, and **Body** from the HTML `description`. Configure the action to treat the body as HTML.
-4. Only after the send action succeeds, POST `https://YOUR-APP/api/mailer/ack` with JSON `{"key":"YOUR_KEY","ids":["THE-GUID"]}` and `Content-Type: application/json`. A successful ack responds with the IDs it marked sent. Leave failed sends unacknowledged so the next poll retries.
-5. Test by requesting a password reset for a seeded account, checking that the item appears in the feed, sending it, acknowledging it, and confirming it disappears.
+## Primary: Microsoft Graph delegated mail
 
-The flow can retry a sent message if delivery succeeds but acknowledgement fails. Configure the flow to avoid concurrent runs and use the `guid` as its idempotency key if the mail action supports it. Do not publish the feed URL or include it in client-side code.
+1. Configure `MICROSOFT_TENANT_ID`, `MICROSOFT_CLIENT_ID`, and `MICROSOFT_CLIENT_SECRET` for the existing Entra app. Grant delegated `Mail.Send`, `offline_access`, and `User.Read` permissions. Register `/api/admin/mailer/microsoft/callback` on each app origin as a Web redirect URI.
+2. Generate 32 random bytes, encode them as base64, and set `MAILER_TOKEN_KEY` on the app server. Set `MAILER_FROM` if the sender differs from `su@nu.edu.eg`. Keep the key stable: changing it makes the stored refresh token unreadable and requires reconnection.
+3. Sign in as a super admin, open **Admin → Settings → Mail sender**, and select **Connect**. At Microsoft sign-in, choose `su@nu.edu.eg`. The app verifies the signed-in Microsoft account before storing its encrypted refresh token.
+4. Send a password reset and check the queue count in Settings. Sending starts after enqueue; the daily `/api/cron/mailer` job also drains messages still due. The cron requires `Authorization: Bearer <CRON_SECRET>`.
+
+If Microsoft requires admin approval, ask the Microsoft 365 administrator to grant the app's delegated permissions, then reconnect. If the sign-in expires, Settings shows a disconnected reason; reconnect there. Without `MAILER_TOKEN_KEY`, Graph sending is disabled and queued messages remain available to the fallback.
+
+## Fallback: Power Automate
+
+Set `MAILER_FEED_KEY` to a unique random value of at least 32 characters on the app and in the flow. Use a scheduled cloud flow under the SU Microsoft account. Avoid concurrent flow runs.
+
+1. GET `https://YOUR-APP/api/mailer/feed` with header `Authorization: Bearer <MAILER_FEED_KEY>`. The response is RSS 2.0 with `Cache-Control: no-store`. Each item has a `guid` (outbox ID), `su:lease` (lease ID), `title` (subject), `description` (HTML inside CDATA), and `author` (recipient).
+2. For each item, send an HTML email from `su@nu.edu.eg` to `author`, with the subject and body from the feed item.
+3. After each successful send, POST `https://YOUR-APP/api/mailer/ack` with the same Authorization header and `Content-Type: application/json`:
+
+   ```json
+   {"items":[{"id":"THE-GUID","leaseId":"THE-SU-LEASE","outcome":"sent"}]}
+   ```
+
+   If the send fails, acknowledge with `"outcome":"failed"`. A failed item is due for retry after five minutes. The ack response reports whether each ID and lease was acknowledged.
+
+The feed and Graph sender share the same leases, so a message is claimed by one path at a time. A successful send followed by a lost acknowledgement can still be retried; use the `guid` as an idempotency key if the flow supports one.

@@ -119,6 +119,14 @@ export const emailOutbox = pgTable("email_outbox", {
   createdAt: time("created_at"), sentAt: timestamp("sent_at", { withTimezone: true }), attempts: integer("attempts").notNull().default(0),
   leaseId: uuid("lease_id"), leaseUntil: timestamp("lease_until", { withTimezone: true }), lastError: text("last_error"),
 }, (t) => [index("email_outbox_status_created_idx").on(t.status, t.createdAt)]);
+export const mailerCredentials = pgTable("mailer_credentials", {
+  id: text("id").primaryKey(), accountEmail: text("account_email").notNull(),
+  encryptedRefreshToken: text("encrypted_refresh_token"),
+  status: text("status", { enum: ["connected", "disconnected"] }).notNull().default("disconnected"),
+  lastError: text("last_error"), connectedAt: timestamp("connected_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  connectedBy: text("connected_by").references(() => user.id, { onDelete: "set null" }),
+});
 
 export const vendorLogos = pgTable("vendor_logos", {
   id: uuid("id").primaryKey().defaultRandom(), data: bytea("data").notNull(), mime: text("mime").notNull(), sha256: text("sha256").notNull(), createdAt: time("created_at"),

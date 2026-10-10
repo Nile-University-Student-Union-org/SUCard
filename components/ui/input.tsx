@@ -2,7 +2,7 @@
 
 import React, { forwardRef, useId, useState } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
-import { AlertCircle, X, Eye, EyeOff } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { ValidationBubble, type ValidationBubbleProps } from "./validation-bubble";
@@ -80,6 +80,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     const generatedId = useId();
     const inputId = id || generatedId;
     const [showPassword, setShowPassword] = useState(false);
+    const [hasToggled, setHasToggled] = useState(false);
 
     const isPasswordType = type === "password" && showPasswordToggle;
     const computedType = isPasswordType ? (showPassword ? "text" : "password") : type;
@@ -130,6 +131,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               rightElement ? "pr-24" : rightActionCount === 1 ? "pr-14" : rightActionCount > 1 ? "pr-28" : undefined,
               hasError &&
                 "border-destructive focus:border-destructive focus:ring-destructive/20 text-destructive",
+              // Alternate animation names so each toggle restarts the reveal.
+              isPasswordType && hasToggled && (showPassword ? "motion-safe:animate-[pw-reveal-a_260ms_cubic-bezier(0.16,1,0.3,1)]" : "motion-safe:animate-[pw-reveal-b_260ms_cubic-bezier(0.16,1,0.3,1)]"),
               className
             )}
             {...props}
@@ -151,21 +154,32 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             )}
 
             {isPasswordType && !disabled && (
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowPassword(!showPassword)}
+                // Keep focus and caret in the field while toggling.
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={() => { setShowPassword(!showPassword); setHasToggled(true); }}
                 aria-label={showPassword ? "Hide password" : "Show password"}
                 aria-pressed={showPassword}
-                className="rounded-xl text-ash dark:text-zinc-400 min-h-[44px] min-w-[44px] h-11 w-11"
+                className="group/eye grid place-items-center size-11 rounded-full text-ash dark:text-zinc-400 outline-none transition-[color,transform] duration-200 ease-out hover:text-foreground active:scale-90 focus-visible:text-foreground"
               >
-                {showPassword ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
-              </Button>
+                <span className="grid place-items-center size-8 rounded-full transition-colors duration-200 group-hover/eye:bg-slate-100 dark:group-hover/eye:bg-zinc-800 group-focus-visible/eye:ring-2 group-focus-visible/eye:ring-ring/40">
+                  <svg viewBox="0 0 24 24" className="size-[18px]" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" />
+                    <circle
+                      cx="12" cy="12" r="3"
+                      className={cn("origin-center [transform-box:fill-box] transition-transform duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:transition-none", showPassword ? "scale-100" : "scale-50")}
+                    />
+                    {/* Slash draws in when the password is hidden. */}
+                    <path
+                      d="m3 3 18 18"
+                      pathLength={1}
+                      strokeDasharray="1"
+                      className={cn("transition-[stroke-dashoffset] duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none", showPassword ? "[stroke-dashoffset:1]" : "[stroke-dashoffset:0]")}
+                    />
+                  </svg>
+                </span>
+              </button>
             )}
 
             {rightElement}

@@ -401,7 +401,7 @@ Setting(key, value)   -- issuance_mode (digital|physical), physical_quota_remain
 
 Final stack and system architecture: see [ARCHITECTURE.md](ARCHITECTURE.md).
 
-Summary: **Next.js + TypeScript** (frontend and backend in one app) · **PostgreSQL** with **Drizzle ORM** · **Better Auth** (Microsoft Entra ID for students, password + 2FA for staff) · **Tailwind + shadcn/ui** · hosted on a **VPS with Docker Compose** (Caddy, Postgres, Redis) behind Cloudflare · emails via **Power Automate RSS mailer** from `su@nu.edu.eg`.
+Summary: **Next.js + TypeScript** (frontend and backend in one app) · **PostgreSQL** with **Drizzle ORM** · **Better Auth** (Microsoft Entra ID for students, password + 2FA for staff) · **Tailwind + shadcn/ui** · hosted on a **VPS with Docker Compose** (Caddy, Postgres, Redis) behind Cloudflare · emails via delegated Microsoft Graph from `su@nu.edu.eg`, with Power Automate as fallback.
 
 ## 5. Phasing (launch ASAP)
 
@@ -476,7 +476,7 @@ Prices are approximate (late 2026) — check before paying.
 | Hosting + database + Redis | One **VPS**, 4–8 GB RAM (e.g. Hetzner, Contabo, DigitalOcean) | ~$8–25 / mo |
 | Offsite backups | Cloudflare R2 / Backblaze B2 (a few GB) | ~$0–2 / mo |
 | CDN / DNS | Cloudflare free | Free |
-| Email | Power Automate RSS mailer from `su@nu.edu.eg` (existing M365 license) | Free |
+| Email | Microsoft Graph delegated mail from `su@nu.edu.eg`; Power Automate fallback (existing M365 license) | Free |
 | Error tracking, uptime | Sentry + UptimeRobot free tiers | Free |
 | **Total (software)** | | **≈ $230–420 / yr** |
 | **Card printing** | ~10,000 PVC cards with variable QR — get local quotes (laminated paper is far cheaper) | One-off, per batch |
@@ -488,7 +488,7 @@ Prices are approximate (late 2026) — check before paying.
 | Apple, Google, domain | as above | ~$115 / yr |
 | Hosting | Smallest VPS that runs Docker comfortably (2 vCPU, 4 GB) | ~$5–8 / mo |
 | Backups | Cloudflare R2 free tier (10 GB) | Free |
-| Email | Power Automate RSS mailer | Free |
+| Email | Microsoft Graph delegated mail; Power Automate fallback | Free |
 | **Total** | | **≈ $180–215 / yr** |
 
 **Recommendation:** one 4 GB VPS is plenty for 10,000 students. Upgrade RAM only if monitoring shows pressure.

@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Alert } from "@/components/ui/alert";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { StatusState } from "@/components/ui/status-state";
+import { MailSenderCard } from "./mail-sender-card";
 
 interface SettingsManagerProps {
   role: string;
@@ -267,6 +268,7 @@ export function SettingsManager({ role }: SettingsManagerProps) {
         title="SETTINGS"
         description="Manage card issuance rules, physical quota, office collection details, and access patterns."
       />
+      {isSuperAdmin && <MailSenderCard />}
 
       {/* Primary Status Hierarchy: Mode, Quota, Stock, and Queue */}
       <section aria-label="Issuance Status & Overview" className="space-y-4">

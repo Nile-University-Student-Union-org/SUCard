@@ -120,6 +120,13 @@
       "when": 1791627919227,
       "tag": "0016_giant_vampiro",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791647566065,
+      "tag": "0017_daily_arachne",
+      "breakpoints": true
     }
   ]
 }

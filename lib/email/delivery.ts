@@ -2,13 +2,13 @@ import { and, asc, eq, inArray, lt, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { emailOutbox } from "@/lib/db/schema";
 
-export async function claimEmail() {
+export async function claimEmail(limit = 100) {
   const due = db.select({ id: emailOutbox.id }).from(emailOutbox)
     .where(or(
       eq(emailOutbox.status, "queued"),
       and(inArray(emailOutbox.status, ["failed", "leased"]), lt(emailOutbox.leaseUntil, new Date())),
     ))
-    .orderBy(asc(emailOutbox.createdAt)).limit(100).for("update", { skipLocked: true });
+    .orderBy(asc(emailOutbox.createdAt)).limit(limit).for("update", { skipLocked: true });
 
   return db.update(emailOutbox).set({
     status: "leased",
@@ -20,6 +20,11 @@ export async function claimEmail() {
     id: emailOutbox.id, leaseId: emailOutbox.leaseId, to: emailOutbox.to,
     subject: emailOutbox.subject, html: emailOutbox.html, createdAt: emailOutbox.createdAt,
   });
+}
+export async function releaseEmail(id: string, leaseId: string) {
+  await db.update(emailOutbox).set({ status: "queued", leaseId: null, leaseUntil: null,
+    attempts: sql`greatest(${emailOutbox.attempts} - 1, 0)` })
+    .where(and(eq(emailOutbox.id, id), eq(emailOutbox.leaseId, leaseId), eq(emailOutbox.status, "leased")));
 }
 
 export async function acknowledgeEmail(id: string, leaseId: string, outcome: "sent" | "failed") {

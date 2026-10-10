@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ButtonLink } from "@/components/ui/button";
 import { AuthLayout } from "@/components/ui/auth-layout";
+import { signIn } from "@/lib/auth/client";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -70,6 +71,11 @@ function ForgotPasswordContent() {
           setIsLoading(false);
           return;
         }
+        const body = (await res.json().catch(() => null)) as { code?: string } | null;
+        if (body?.code === "student_email") {
+          await signIn.social({ provider: "microsoft", callbackURL: "/go" });
+          return;
+        }
         // For other errors (like email not found), do not reveal account non-existence
       }
 
@@ -111,8 +117,7 @@ function ForgotPasswordContent() {
               <p className="font-bold text-foreground">Didn&apos;t receive an email?</p>
               <p className="text-[11px] leading-relaxed">
                 Check your spam or junk folder. The reset link is valid for 1 hour.
-              </p>
-            </div>
+              </p>            </div>
 
             <div className="pt-2">
               <ButtonLink
@@ -136,7 +141,7 @@ function ForgotPasswordContent() {
                 FORGOT PASSWORD
               </h1>
               <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium">
-                Enter your university or staff email to receive a password reset link.
+                Enter your email to receive a reset link. If you are a student, sign in using Microsoft.
               </p>
             </div>
 

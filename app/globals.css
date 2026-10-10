@@ -728,3 +728,13 @@ html[data-theme-transition="active"]::view-transition-new(root) {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
 }
+
+/* Password show/hide: text settles in from a soft blur. */
+@keyframes pw-reveal-a {
+  from { filter: blur(3px); opacity: 0.35; letter-spacing: 0.08em; }
+  to { filter: blur(0); opacity: 1; letter-spacing: normal; }
+}
+@keyframes pw-reveal-b {
+  from { filter: blur(3px); opacity: 0.35; letter-spacing: 0.08em; }
+  to { filter: blur(0); opacity: 1; letter-spacing: normal; }
+}

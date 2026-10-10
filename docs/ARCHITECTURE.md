@@ -35,7 +35,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 | Print files | **PDFKit + SVG-to-PDFKit** (vector QR in print-ready CR80 PDFs and test sheets), **@resvg/resvg-js** for PNG exports, CSV export |
 | Apple Wallet | **passkit-generator** + Apple Wallet web service endpoints + APNs push |
 | Google Wallet | **google-auth-library** + Google Wallet REST API (service account) |
-| Email | `sendEmail()` → `email_outbox` table → RSS feed → **Power Automate** → Outlook from `su@nu.edu.eg` |
+| Email | `email_outbox` → delegated Microsoft Graph from `su@nu.edu.eg`; RSS feed and Power Automate remain a fallback. See [EMAIL-SETUP.md](EMAIL-SETUP.md). |
 | Cache & rate limiting | **Redis** (Docker, same VPS) + `rate-limiter-flexible` |
 | Scheduled jobs | **supercronic** container calling `/api/cron/*` with `CRON_SECRET` (nightly stats rollup, wallet update retries, outbox cleanup, backups) |
 | File storage | Docker volume on the VPS (vendor logos, print files), included in backups |
@@ -80,7 +80,7 @@ Companion to [REQUIREMENTS.md](REQUIREMENTS.md). Built and maintained by one dev
 │          /api/scan/*        validate, confirm                      │
 │          /api/wallet/*      Apple .pkpass, Google save link        │
 │          /api/apple/v1/*    Apple Wallet web service               │
-│          /api/mail-feed     RSS outbox for Power Automate          │
+│          /api/mailer/feed   RSS fallback for Power Automate         │
 │          /api/cron/*        scheduled jobs                         │
 │          Server Actions     admin & vendor CRUD                    │
 │  ───────────────────────────────────────────────────────────────── │
@@ -149,9 +149,10 @@ Admin suspends student, corrects name/ID, or student links a replacement card
 
 **Email**
 ```
-sendEmail(to, subject, html) → email_outbox row
-  → GET /api/mail-feed?key=… (RSS, last 24 h)
-  → Power Automate polls → Parse JSON → Send an email (V2) from su@nu.edu.eg
+enqueueEmail(to, name, kind) → email_outbox row
+  → Microsoft Graph delegated send from su@nu.edu.eg after enqueue
+  → fallback: GET /api/mailer/feed (RSS, Bearer MAILER_FEED_KEY)
+  → Power Automate sends and POSTs /api/mailer/ack with the item ID and lease ID
 ```
 
 ### 2.2 Roles & route protection
@@ -164,7 +165,7 @@ sendEmail(to, subject, html) → email_outbox row
 | `/admin` | SU admin, super admin | Staff session + 2FA |
 | `/c/[token]` | Anyone (QR link) | Public landing; signed-in student without a card sees "Link card SU-xxxxxx to your account?" and must confirm |
 | `/api/apple/v1/*` | Apple devices | Apple pass auth token |
-| `/api/mail-feed` | Power Automate | Secret key in URL |
+| `/api/mailer/feed`, `/api/mailer/ack` | Power Automate fallback | `Authorization: Bearer <MAILER_FEED_KEY>` |
 | `/api/cron/*` | Cron container | `CRON_SECRET` header, internal network only |
 
 Enforced in Next.js middleware (coarse) **and** in every server action / route handler (fine-grained, never trust the client).
@@ -216,7 +217,7 @@ su-card/
 │  ├─ (cashier)/scan/        scanner PWA
 │  ├─ (vendor)/vendor/       stats, cashiers
 │  ├─ (admin)/admin/         dashboard, students, vendors, offers, settings
-│  └─ api/                   auth, scan, wallet, apple, mail-feed, cron
+│  └─ api/                   auth, scan, wallet, apple, mailer, cron
 ├─ lib/
 │  ├─ db/                    Drizzle schema, queries
 │  ├─ auth/                  Better Auth config, role guards
@@ -224,7 +225,7 @@ su-card/
 │  ├─ qr-style/              config schema (Zod), SVG renderer, presets, safety checks
 │  ├─ scan/                  token lookup, limit engine
 │  ├─ wallet/                apple.ts, google.ts
-│  ├─ email/                 sendEmail(), templates
+│  ├─ email/                 outbox, Graph sender, templates
 │  └─ analytics/             dashboard SQL
 ├─ components/ui/            SU-branded shared components
 ├─ public/brand/             logos, icons

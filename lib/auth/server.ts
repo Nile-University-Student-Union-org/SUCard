@@ -43,6 +43,12 @@ export const auth = betterAuth({
     const input = ctx as typeof ctx & { path?: string };
     if (input.path === "/update-user" || input.path === "/change-email")
       throw new APIError("FORBIDDEN", { message: "Name and email are managed by SU or Microsoft" });
+    if (input.path === "/request-password-reset") {
+      // Pattern match only (not account lookup), so this reveals nothing about who has an account.
+      const email = z.string().max(320).safeParse((ctx.body as { email?: unknown } | undefined)?.email);
+      if (email.success && matchesStudentEmail(email.data.toLowerCase(), (await getSettings()).studentEmailPattern))
+        throw new APIError("BAD_REQUEST", { code: "student_email", message: "Students sign in with Microsoft." });
+    }
     if (input.path === "/sign-in/email") {
       const email = z.string().max(320).safeParse((ctx.body as { email?: unknown } | undefined)?.email);
       if (email.success && await isPasswordLocked(email.data))
@@ -76,14 +82,20 @@ export const auth = betterAuth({
   }) },
   emailAndPassword: { enabled: true, disableSignUp: true, minPasswordLength: STAFF_PASSWORD_MIN, maxPasswordLength: STAFF_PASSWORD_MAX,
     revokeSessionsOnPasswordReset: true,
-    sendResetPassword: async ({ user, token }) => { await enqueuePasswordReset(user.email, user.name, token); } },
+    // Students sign in with Microsoft only: silently skip so the response stays identical (no enumeration).
+    sendResetPassword: async ({ user, token }) => {
+      if ((user as { role?: string }).role === "student") return;
+      await enqueuePasswordReset(user.email, user.name, token);
+    } },
   rateLimit: { enabled: true, storage: "database", customRules: { "/sign-in/email": { window: 60, max: 5 },
     "/request-password-reset": { window: 60, max: 3 }, "/two-factor/*": { window: 60, max: 5 } } },
   databaseHooks: { session: { create: { before: async (session, context) => {
     const [account] = await db.select({ disabledAt: schema.user.disabledAt, role: schema.user.role }).from(schema.user).where(eq(schema.user.id, session.userId));
     if (account?.disabledAt) throw new APIError("FORBIDDEN", { message: "This account is disabled. Contact an SU super admin." });
-    return { data: { ...session, expiresAt: sessionExpiry(account?.role ?? "student", session.expiresAt),
-      loginMethod: context?.path?.startsWith("/callback/microsoft") ? "microsoft" : "password" } };
+    const loginMethod = context?.path?.startsWith("/callback/microsoft") ? "microsoft" : "password";
+    if ((account?.role ?? "student") === "student" && loginMethod !== "microsoft")
+      throw new APIError("FORBIDDEN", { message: "Students sign in with Microsoft." });
+    return { data: { ...session, expiresAt: sessionExpiry(account?.role ?? "student", session.expiresAt), loginMethod } };
   } } } },
   session: { additionalFields: { loginMethod: { type: "string", input: false, defaultValue: "password" } } },
   user: { additionalFields: { role: { type: "string", input: false, defaultValue: "student" } } },
