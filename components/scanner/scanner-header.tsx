@@ -72,7 +72,7 @@ export function ScannerHeader({
 
   // Mobile Vendor Context card shown in the expanded drawer
   const mobileBrandContext = (
-    <div className="p-2.5 rounded-xl flex items-center justify-between gap-2.5 bg-black/[0.03] dark:bg-white/5 border border-black/[0.06] dark:border-white/10">
+    <div className="p-2.5 rounded-xl flex items-center justify-between gap-2.5 bg-muted/60 border border-border">
       <div className="flex items-center gap-2.5 min-w-0 flex-1">
         {vendorLogoUrl ? (
           <Image
@@ -80,7 +80,7 @@ export function ScannerHeader({
             alt={vendorName}
             width={32}
             height={32}
-            className="size-8 rounded-lg object-contain shrink-0 bg-white/70 dark:bg-slate-900/60 p-1 border border-border/40"
+            className="size-8 rounded-lg object-contain shrink-0 bg-card p-1 border border-border"
             unoptimized
           />
         ) : (
@@ -109,7 +109,7 @@ export function ScannerHeader({
         <span
           role="status"
           aria-label="Device is offline"
-          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 shrink-0"
         >
           <WifiOff className="size-3" />
           <span>Offline</span>
@@ -126,7 +126,7 @@ export function ScannerHeader({
         <span
           role="status"
           aria-label="Device is offline"
-          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 shrink-0"
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 shrink-0"
         >
           <span
             className="size-1.5 rounded-full bg-rose-500 animate-pulse motion-reduce:animate-none shrink-0"
@@ -139,7 +139,7 @@ export function ScannerHeader({
         <span
           role="status"
           aria-label="Scanner is online"
-          className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
+          className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shrink-0"
         >
           <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
           <span>Online</span>
@@ -155,13 +155,13 @@ export function ScannerHeader({
         aria-pressed={!muted}
         className={cn(
           "group/sound relative size-10 rounded-full flex items-center justify-center transition-[transform,background-color,color] duration-200 ease-out cursor-pointer active:scale-90 motion-reduce:transition-none select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40",
-          "hover:bg-white hover:shadow-xs dark:hover:bg-white/15 dark:hover:shadow-none"
+          "hover:bg-muted/80 dark:hover:bg-white/10"
         )}
       >
         <span className="relative size-4 sm:size-4.5 flex items-center justify-center pointer-events-none">
           <Volume2
             className={cn(
-              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-[#0F3056] dark:text-white",
+              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-foreground",
               muted
                 ? "opacity-0 scale-75 rotate-45 absolute"
                 : "opacity-100 scale-100 rotate-0"
@@ -170,7 +170,7 @@ export function ScannerHeader({
           />
           <VolumeX
             className={cn(
-              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-muted-foreground dark:text-white/60",
+              "size-4 sm:size-4.5 transition-all duration-200 ease-out motion-reduce:transition-none text-muted-foreground",
               muted
                 ? "opacity-100 scale-100 rotate-0"
                 : "opacity-0 scale-75 -rotate-45 absolute"

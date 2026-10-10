@@ -58,7 +58,7 @@ export function ScannerViewfinder({
   // 1. Inactive Vendor Blocking State
   if (!vendorActive) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28 bg-background text-foreground">
         <div className="max-w-md w-full">
           <StatusState
             icon={<Store className="size-6" />}
@@ -74,24 +74,24 @@ export function ScannerViewfinder({
   // 2. Camera Permission Denied / Unavailable State
   if (permissionError) {
     return (
-      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28 bg-slate-950 text-white">
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-8 pt-20 sm:pt-24 md:pt-28 bg-background text-foreground">
         <div className="max-w-md w-full space-y-6 text-center">
-          <div className="size-16 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center justify-center mx-auto shadow-lg">
+          <div className="size-16 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto shadow-md">
             <ShieldAlert className="size-8" />
           </div>
 
           <div className="space-y-2">
-            <h2 className="font-sans font-semibold text-xl sm:text-2xl text-white">
+            <h2 className="font-sans font-semibold text-xl sm:text-2xl text-foreground">
               Camera access required
             </h2>
-            <p className="text-sm text-slate-300 leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
+            <p className="text-sm text-muted-foreground leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
               {permissionError}
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 text-left space-y-1.5">
-            <p className="font-bold text-white">To fix this on Android / Chrome / iOS:</p>
-            <ol className="list-decimal pl-4 space-y-1 opacity-90 leading-relaxed">
+          <div className="p-4 rounded-xl bg-card border border-border text-xs text-muted-foreground text-left space-y-1.5 shadow-xs">
+            <p className="font-bold text-foreground">To fix this on Android / Chrome / iOS:</p>
+            <ol className="list-decimal pl-4 space-y-1 opacity-90 leading-relaxed text-muted-foreground">
               <li>Tap the lock / tune icon in the address bar.</li>
               <li>Toggle Camera permission to <strong>Allow</strong>.</li>
               <li>Tap <strong>Try again</strong> below.</li>
@@ -102,7 +102,7 @@ export function ScannerViewfinder({
             variant="primary"
             size="lg"
             onClick={startCamera}
-            className="w-full font-sans font-semibold text-base min-h-[48px] h-13"
+            className="w-full font-sans font-semibold text-base min-h-[48px] h-13 shadow-md"
           >
             <RotateCcw className="size-4 mr-2" />
             <span>Try again</span>

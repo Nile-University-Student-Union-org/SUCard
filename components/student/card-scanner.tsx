@@ -355,7 +355,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       maxWidth="md"
       zIndex="z-[80]"
       showCloseButton={!isSuccess}
-      className="bg-zinc-950 text-white border-zinc-800 p-0 overflow-hidden"
+      className="bg-card text-card-foreground border-border p-0 overflow-hidden"
     >
       <ModalBody className="p-0 overflow-hidden relative">
         <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
@@ -363,14 +363,14 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         {isSuccess ? (
           /* Celebration View */
           <div className="p-8 flex flex-col items-center justify-center text-center space-y-5 min-h-[360px] animate-in fade-in zoom-in-95 duration-300 motion-reduce:animate-none">
-            <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-400 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg animate-bounce motion-reduce:animate-none">
-              <CheckCircle2 className="size-10 text-emerald-400" />
+            <div className="w-20 h-20 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-2 border-emerald-500/40 flex items-center justify-center shadow-lg animate-bounce motion-reduce:animate-none">
+              <CheckCircle2 className="size-10 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="space-y-1.5">
-              <h2 className="font-sans font-semibold text-2xl sm:text-3xl text-white">
+              <h2 className="font-sans font-semibold text-2xl sm:text-3xl text-foreground">
                 Card linked!
               </h2>
-              <p className="text-sm text-zinc-300 font-medium max-w-xs mx-auto">
+              <p className="text-sm text-muted-foreground font-medium max-w-xs mx-auto">
                 Your physical membership card is now active and ready to use.
               </p>
             </div>
@@ -391,14 +391,14 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         ) : permissionError ? (
           /* Permission Error State */
           <div className="p-6 sm:p-8 space-y-6 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
               <ShieldAlert className="size-7" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-sans font-semibold text-xl text-white">
+              <h3 className="font-sans font-semibold text-xl text-foreground">
                 Camera unavailable
               </h3>
-              <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xs mx-auto font-medium">
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto font-medium">
                 {permissionError}
               </p>
             </div>
@@ -418,7 +418,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <Button
                 variant="ghost"
                 onClick={() => { stopCamera(); onClose(); }}
-                className="w-full normal-case font-semibold text-zinc-400 hover:text-white min-h-[44px]"
+                className="w-full normal-case font-semibold text-muted-foreground hover:text-foreground min-h-[44px]"
               >
                 Cancel
               </Button>

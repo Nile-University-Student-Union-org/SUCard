@@ -179,7 +179,7 @@ export function ScanInvalidPanel({
       aria-modal="true"
       aria-labelledby="invalid-title"
       aria-describedby="invalid-description"
-      className="fixed inset-0 z-50 bg-[#881337] dark:bg-rose-950 text-white flex flex-col justify-between overflow-y-auto overscroll-contain motion-safe:animate-in motion-safe:fade-in-0 duration-200"
+      className="fixed inset-0 z-50 bg-background text-foreground flex flex-col justify-between overflow-y-auto overscroll-contain motion-safe:animate-in motion-safe:fade-in-0 duration-200"
     >
       {/* Screen Reader Announcement */}
       <div aria-live="assertive" className="sr-only">
@@ -187,8 +187,8 @@ export function ScanInvalidPanel({
       </div>
 
       {/* Top Bar */}
-      <header className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/20 text-rose-200 border border-rose-400/30 text-xs font-semibold">
+      <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/95 backdrop-blur-md pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/30 text-xs font-semibold">
           {details.icon === "wifi" ? (
             <WifiOff className="size-4" />
           ) : (
@@ -200,35 +200,41 @@ export function ScanInvalidPanel({
         <button
           type="button"
           onClick={onDismiss}
-          aria-label="Close error"
-          className="p-2.5 rounded-full bg-black/40 text-white/90 hover:text-white hover:bg-black/60 transition-[transform,background-color,color] duration-140 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          aria-label="Close error and return to scanner"
+          className="p-2.5 rounded-full bg-muted/80 hover:bg-muted text-muted-foreground hover:text-foreground transition-[transform,background-color,color] duration-140 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-[0.97] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive"
         >
           <X className="size-5" />
         </button>
       </header>
 
       {/* Main Error Body */}
-      <main className="flex-1 px-6 py-8 sm:px-10 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
+      <main className="flex-1 px-4 py-6 sm:px-8 max-w-lg w-full mx-auto flex flex-col items-center justify-center text-center space-y-6">
         {/* Giant Badge */}
-        <div className="size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-950/50 flex items-center justify-center animate-shake-once">
-          {details.icon === "wifi" ? (
-            <WifiOff className="size-12 sm:size-14" />
-          ) : (
-            <X className="size-12 sm:size-14 stroke-[3.5]" />
-          )}
+        <div className="relative">
+          <div
+            aria-hidden="true"
+            className="absolute -inset-2 rounded-[32px] bg-rose-500/20 blur-md animate-ring-pulse motion-reduce:opacity-0"
+          />
+          <div className="relative size-20 sm:size-24 rounded-3xl bg-rose-600 text-white shadow-2xl shadow-rose-600/30 flex items-center justify-center animate-shake-once">
+            {details.icon === "wifi" ? (
+              <WifiOff className="size-12 sm:size-14" />
+            ) : (
+              <X className="size-12 sm:size-14 stroke-[3.5]" />
+            )}
+          </div>
         </div>
 
         {/* Reason Typography */}
         <div className="space-y-2 max-w-sm">
           <h1
             id="invalid-title"
-            className="font-heading text-3xl sm:text-4xl text-white uppercase tracking-tight leading-tight drop-shadow-sm"
+            className="font-heading text-3xl sm:text-4xl text-foreground uppercase tracking-tight leading-tight drop-shadow-xs"
           >
             {details.title}
           </h1>
           <p
             id="invalid-description"
-            className="text-sm sm:text-base text-rose-100 font-medium leading-relaxed"
+            className="text-sm sm:text-base text-muted-foreground font-medium leading-relaxed"
           >
             {details.description}
           </p>
@@ -236,21 +242,21 @@ export function ScanInvalidPanel({
 
         {/* Helpful Store Staff Hint */}
         {details.hint && (
-          <div className="p-3.5 sm:p-4 rounded-2xl bg-black/30 border border-white/15 text-xs sm:text-sm text-rose-200 font-medium max-w-sm text-left w-full">
-            <span className="font-bold text-white block mb-0.5">Note:</span>
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-card border-2 border-border text-xs sm:text-sm text-muted-foreground font-medium max-w-sm text-left w-full shadow-xs">
+            <span className="font-bold text-foreground block mb-0.5">Note:</span>
             {details.hint}
           </div>
         )}
 
         {/* Countdown Badge */}
-        <div className="w-full max-w-xs space-y-1.5 pt-2">
-          <div className="flex justify-between text-[11px] font-semibold text-rose-200/80">
+        <div className="w-full max-w-sm space-y-2 pt-1">
+          <div className="flex justify-between text-xs font-semibold text-muted-foreground">
             <span>Auto-returning to camera</span>
-            <span className="font-mono font-bold text-white">{secondsLeft}s</span>
+            <span className="font-mono font-bold text-foreground">{secondsLeft}s</span>
           </div>
-          <div className="h-1.5 w-full bg-black/30 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-white/80 rounded-full transition-all duration-1000 ease-linear motion-reduce:transition-none"
+              className="h-full bg-rose-500 rounded-full transition-all duration-1000 ease-linear motion-reduce:transition-none"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -258,16 +264,16 @@ export function ScanInvalidPanel({
       </main>
 
       {/* Bottom Action Bar */}
-      <footer className="p-4 sm:p-6 bg-black/40 border-t border-white/15 backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
-        <div className="max-w-lg mx-auto flex flex-col gap-2.5">
+      <footer className="sticky bottom-0 z-10 p-4 sm:p-6 bg-card/95 border-t border-border backdrop-blur-md pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <div className="max-w-lg mx-auto w-full">
           <Button
             ref={dismissBtnRef}
             variant="primary"
             size="lg"
             onClick={onDismiss}
-            className="w-full min-h-[52px] h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider bg-white text-rose-950 hover:bg-rose-50 active:scale-[0.98] shadow-xl shadow-black/30 font-bold border-none cursor-pointer"
+            className="w-full min-h-[52px] h-14 sm:h-16 text-base sm:text-lg font-heading uppercase tracking-wider shadow-xl font-bold cursor-pointer flex items-center justify-center gap-2"
           >
-            <RotateCcw className="size-5 mr-2 stroke-[2.5]" />
+            <RotateCcw className="size-5 mr-1" />
             <span>Scan next card</span>
           </Button>
         </div>
