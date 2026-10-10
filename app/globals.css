@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /* Dark surfaces use the zinc scale everywhere; remap it to the SU navy family so nothing renders
-   neutral black/grey against the navy dark theme (950 = --background, 900 = --card). */
+   neutral black/grey against the navy dark theme (deep navy, a step darker than --card). */
 @theme {
   --color-zinc-50: #F4F7FB;
   --color-zinc-100: #E6EDF5;
@@ -12,11 +12,11 @@
   --color-zinc-300: #A9BCD4;
   --color-zinc-400: #8299B8;
   --color-zinc-500: #5F7A9A;
-  --color-zinc-600: #3F5B7D;
-  --color-zinc-700: #25476F;
-  --color-zinc-800: #1A3A60;
-  --color-zinc-900: #0D223C;
-  --color-zinc-950: #081424;
+  --color-zinc-600: #2A4363;
+  --color-zinc-700: #1A2F4D;
+  --color-zinc-800: #112139;
+  --color-zinc-900: #0A1628;
+  --color-zinc-950: #060E1A;
 }
 
 @theme inline {
