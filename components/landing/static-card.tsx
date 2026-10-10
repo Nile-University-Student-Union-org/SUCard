@@ -32,7 +32,7 @@ export function StaticCard() {
       />
 
       {/* Hanging lanyard assembly */}
-      <div className="relative h-full flex flex-col items-center origin-top will-change-transform motion-safe:animate-[lanyard-sway_5s_ease-in-out_infinite] motion-reduce:animate-none">
+      <div className="relative w-full h-full flex flex-col items-center origin-top will-change-transform motion-safe:animate-[lanyard-sway_5s_ease-in-out_infinite] motion-reduce:animate-none">
         {/* Strap, fading in from the top */}
         <div
           className="w-[11%] max-w-14 min-w-9 flex-1 max-h-[36%] shadow-[inset_0_-6px_8px_-6px_rgb(0_0_0/0.5)] [mask-image:linear-gradient(to_bottom,transparent,#000_72px)]"
