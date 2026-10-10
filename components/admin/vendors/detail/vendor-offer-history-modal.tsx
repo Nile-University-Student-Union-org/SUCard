@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { History, Clock, AlertCircle } from "lucide-react";
+import { History, Clock, AlertCircle, ImageIcon } from "lucide-react";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -161,6 +161,12 @@ export function VendorOfferHistoryModal({
                         >
                           {snap.status}
                         </span>
+                        {snap.imageSha256 && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
+                            <ImageIcon className="size-3" />
+                            <span>Poster attached</span>
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-1 text-xs text-muted-foreground font-mono">

@@ -1,7 +1,18 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Plus, Tag, History, Edit2, Eye, EyeOff, Clock, Calendar, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Tag,
+  History,
+  Edit2,
+  Eye,
+  EyeOff,
+  Clock,
+  Calendar,
+  AlertCircle,
+  ImageIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { StatusState } from "@/components/ui/status-state";
@@ -10,6 +21,7 @@ import { listOffers, updateOffer } from "../api";
 import { formatDiscount } from "@/lib/vendors/types";
 import { VendorOfferModal } from "./vendor-offer-modal";
 import { VendorOfferHistoryModal } from "./vendor-offer-history-modal";
+import { OfferCard } from "@/components/offers/offer-card";
 import { cn } from "cn";
 import type { OfferDto, OfferPeriod } from "@/lib/vendors/types";
 
@@ -157,7 +169,11 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
           title="Could not load offers"
           description={error}
           actions={
-            <Button variant="primary" onClick={fetchOffersList} className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5">
+            <Button
+              variant="primary"
+              onClick={fetchOffersList}
+              className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5"
+            >
               Retry
             </Button>
           }
@@ -169,7 +185,11 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
           title="No offers configured"
           description="Create at least one offer so student cards can be scanned for discounts at this store."
           actions={
-            <Button variant="primary" onClick={() => setIsCreateOpen(true)} className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5">
+            <Button
+              variant="primary"
+              onClick={() => setIsCreateOpen(true)}
+              className="normal-case font-bold mt-2 h-11 min-h-[44px] px-5"
+            >
               Create first offer
             </Button>
           }
@@ -186,85 +206,126 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                 key={offer.id}
                 className="p-5 rounded-2xl border border-border bg-card shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-slate-300 dark:hover:border-zinc-700 transition-all"
               >
-                {/* Left: Offer Details & Badges */}
-                <div className="min-w-0 space-y-2">
-                  <div className="flex items-center gap-2.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shadow-xs">
-                      <Tag className="size-3.5" />
-                      <span>{discountLabel}</span>
-                    </span>
-
-                    <h4 className="font-bold text-base text-foreground truncate">
-                      {offer.title}
-                    </h4>
-
-                    {/* Status Pill */}
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
-                        offer.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
-                          : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
-                      )}
+                {/* Left: Thumbnail & Details */}
+                <div className="flex items-start gap-4 min-w-0 flex-1">
+                  {/* Promo Image Thumbnail or "No image yet" State */}
+                  {offer.imageUrl ? (
+                    <OfferCard
+                      offer={{
+                        id: offer.id,
+                        title: offer.title,
+                        discountLabel,
+                        imageUrl: offer.imageUrl,
+                        terms: offer.terms,
+                      }}
+                      variant="thumbnail"
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setEditingOffer(offer)}
+                      aria-label={`No promo image for ${offer.title}. Click to edit and upload 4:5 poster.`}
+                      className="group relative aspect-[4/5] w-14 sm:w-16 overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800/80 border-2 border-dashed border-slate-300 dark:border-zinc-700 flex flex-col items-center justify-center gap-1 p-1 text-center shrink-0 hover:border-brand/60 hover:bg-brand/5 dark:hover:bg-brand/10 transition-colors cursor-pointer"
                     >
-                      <span
-                        className={cn(
-                          "size-1.5 rounded-full",
-                          offer.status === "active" ? "bg-emerald-500" : "bg-amber-500"
-                        )}
-                      />
-                      <span>{offer.status}</span>
-                    </span>
-
-                    {/* Visibility Badge */}
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border",
-                        offer.visible
-                          ? "bg-muted text-muted-foreground border-border"
-                          : "bg-zinc-500/10 text-zinc-500 border-zinc-400/30"
-                      )}
-                    >
-                      {offer.visible ? (
-                        <>
-                          <Eye className="size-3" />
-                          <span>Visible</span>
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="size-3" />
-                          <span>Hidden</span>
-                        </>
-                      )}
-                    </span>
-                  </div>
-
-                  {offer.description && (
-                    <p className="text-xs text-muted-foreground font-medium">
-                      {offer.description}
-                    </p>
+                      <ImageIcon className="size-4 text-muted-foreground group-hover:text-brand dark:group-hover:text-brand-soft transition-colors" />
+                      <span className="text-[9px] font-bold text-muted-foreground group-hover:text-brand dark:group-hover:text-brand-soft uppercase leading-tight">
+                        No image
+                      </span>
+                    </button>
                   )}
 
-                  {/* Limits and Schedule Row */}
-                  <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                    <div className="flex items-center gap-1 font-semibold text-foreground">
-                      <span>Limit:</span>
-                      <span className="text-brand dark:text-brand-soft">{limitSummary}</span>
+                  {/* Offer Details & Badges */}
+                  <div className="min-w-0 space-y-2 flex-1">
+                    <div className="flex items-center gap-2.5 flex-wrap">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shadow-xs">
+                        <Tag className="size-3.5" />
+                        <span>{discountLabel}</span>
+                      </span>
+
+                      <h4 className="font-bold text-base text-foreground truncate">
+                        {offer.title}
+                      </h4>
+
+                      {/* Status Pill */}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                          offer.status === "active"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
+                            : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "size-1.5 rounded-full",
+                            offer.status === "active" ? "bg-emerald-500" : "bg-amber-500"
+                          )}
+                        />
+                        <span>{offer.status}</span>
+                      </span>
+
+                      {/* Visibility Badge */}
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold border",
+                          offer.visible
+                            ? "bg-muted text-muted-foreground border-border"
+                            : "bg-zinc-500/10 text-zinc-500 border-zinc-400/30"
+                        )}
+                      >
+                        {offer.visible ? (
+                          <>
+                            <Eye className="size-3" />
+                            <span>Visible</span>
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="size-3" />
+                            <span>Hidden</span>
+                          </>
+                        )}
+                      </span>
+
+                      {/* No Image Nudge Pill */}
+                      {!offer.imageUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setEditingOffer(offer)}
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 cursor-pointer transition-colors"
+                        >
+                          <ImageIcon className="size-3" />
+                          <span>No promo image &bull; Add poster</span>
+                        </button>
+                      )}
                     </div>
 
-                    <div className="flex items-center gap-1">
-                      <Clock className="size-3" />
-                      <span>{scheduleSummary}</span>
-                    </div>
-
-                    {(offer.startsAt || offer.endsAt) && (
-                      <div className="flex items-center gap-1 font-mono text-[11px]">
-                        <Calendar className="size-3" />
-                        <span>
-                          {offer.startsAt || "Always"} &rarr; {offer.endsAt || "Ongoing"}
-                        </span>
-                      </div>
+                    {offer.description && (
+                      <p className="text-xs text-muted-foreground font-medium">
+                        {offer.description}
+                      </p>
                     )}
+
+                    {/* Limits and Schedule Row */}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
+                      <div className="flex items-center gap-1 font-semibold text-foreground">
+                        <span>Limit:</span>
+                        <span className="text-brand dark:text-brand-soft">{limitSummary}</span>
+                      </div>
+
+                      <div className="flex items-center gap-1">
+                        <Clock className="size-3" />
+                        <span>{scheduleSummary}</span>
+                      </div>
+
+                      {(offer.startsAt || offer.endsAt) && (
+                        <div className="flex items-center gap-1 font-mono text-[11px]">
+                          <Calendar className="size-3" />
+                          <span>
+                            {offer.startsAt || "Always"} &rarr; {offer.endsAt || "Ongoing"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

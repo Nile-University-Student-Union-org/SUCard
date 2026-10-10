@@ -3,7 +3,7 @@
  *
  * The strap is a chain of light particles hanging from a fixed anchor. The card is a rigid triangle of three
  * heavy particles (the hang point at the crimp and the two bottom corners), so it swings, tilts and spins
- * like a real card. Everything is solved with many small substeps, which keeps the strap inextensible and the
+ * like a real card. Everything is solved with many small substeps, which keeps the strap bounded and the
  * card rigid without jitter, and keeps momentum when a drag is released (you can fling it).
  *
  * Plain arrays and math only (no three.js), so it is cheap and unit-testable.
@@ -26,6 +26,14 @@ const GRAVITY = -72;
 /** Fixed simulation tick and substeps per tick. */
 export const TICK = 1 / 120;
 const SUBSTEPS = 10;
+/** Extra length allowed under a pull, as a fraction of each strap segment. */
+export const stretchMax = 0.16;
+/** Extension compliance at the start of a pull (lower is firmer). */
+export const stiffness = 2e-6;
+/** Added recoil speed per unit of strap extension on release. */
+export const releaseBoost = 7;
+/** Damping applied to the recoil impulse as it settles, per second. */
+export const damping = 2.8;
 /** Air drag, per second. */
 const STRAP_DRAG = 3;
 /** Fabric's internal damping: evens out velocity between neighbouring strap points (kills fast wobble, keeps swing). Per second. */
@@ -49,7 +57,7 @@ const FACING_OMEGA = 2.2;
 const FLIP_SPIN = 5; // rad/s
 const FLICK_SPIN = 0.9; // rad/s per unit/s of hand speed
 const MAX_FLICK_SPIN = 16; // rad/s
-const HOLD_COMPLIANCE = 0; // the hand holds firmly; softness comes from the hand spring (a soft hold here rings)
+const HOLD_COMPLIANCE = 2e-8; // slight give lets strap tension pull against the hand
 /** Held card: pointer smoothing, how fast it rights itself, and how much it leans when moved sideways. */
 const HOLD_RESPONSE = 20; // rad/s: the hand is a critically damped spring toward the pointer, so uneven pointer events don't show
 const HOLD_UPRIGHT = 0.3; // s
@@ -81,6 +89,7 @@ export class LanyardSim {
   /** True while a flip is under way, so the twist spring pulls toward the new face instead of the nearest one. */
   private flipping = false;
   private pendingSpin = 0;
+  private recoil = 0;
   /** Ticks in a row with (almost) no motion; past a second the sim sleeps until touched. */
   private stillTicks = 0;
 
@@ -133,6 +142,7 @@ export class LanyardSim {
     this.prev.set(this.pos);
     this.tickStart.set(this.pos);
     this.grab = null;
+    this.recoil = 0;
     this.stillTicks = 0;
   }
 
@@ -156,6 +166,7 @@ export class LanyardSim {
   /** Pinch the card at card-space point (x, y): it then follows the hand, keeping its grip. */
   startDrag(x: number, y: number) {
     const at = this.cardPoint(this.cardWeights(x, y));
+    this.recoil = 0;
     const { cardW: w, cardH: h, hangY } = this.dims;
     this.grab = {
       local: [
@@ -179,6 +190,18 @@ export class LanyardSim {
   /** Release; a sideways flick sets the card spinning. */
   endDrag() {
     if (!this.grab) return;
+    const [ax, ay, az] = this.dims.anchor;
+    const h = this.hang * 3;
+    const away: Vec = [this.pos[h] - ax, this.pos[h + 1] - ay, this.pos[h + 2] - az];
+    const extension = Math.max(0, Math.hypot(...away) - this.dims.strapLength);
+    if (extension > 0) {
+      const speed = Math.min(MAX_SPEED * 0.5, extension * releaseBoost);
+      const direction = normalize(away);
+      for (const i of [this.hang, this.bl, this.br]) {
+        for (let c = 0; c < 3; c++) this.prev[i * 3 + c] += direction[c] * speed * (TICK / SUBSTEPS);
+      }
+      this.recoil = speed;
+    }
     this.pendingSpin += Math.max(-MAX_FLICK_SPIN, Math.min(MAX_FLICK_SPIN, this.grab.vel[0] * FLICK_SPIN));
     this.faceGoal = this.grab.face;
     this.flipping = false;
@@ -238,10 +261,10 @@ export class LanyardSim {
     g.q = nlerp(g.q, upright, 1 - Math.exp(-TICK / HOLD_UPRIGHT));
 
     g.targets = g.local.map((l) => add(g.hand, rotate(g.q, l)));
-    // Never ask for more than the strap allows; otherwise hand and strap fight and the card shakes.
+    // Keep the hand within the hard elastic reach so the grip and strap cannot fight indefinitely.
     const [ax, ay, az] = this.dims.anchor;
     const toHang = sub(g.targets[0], [ax, ay, az]);
-    const over = Math.hypot(...toHang) - this.dims.strapLength * 0.995;
+    const over = Math.hypot(...toHang) - this.dims.strapLength * (1 + stretchMax) * 0.995;
     if (over > 0) {
       const shift = scale(normalize(toHang), -over);
       g.targets = g.targets.map((t) => add(t, shift));
@@ -268,6 +291,10 @@ export class LanyardSim {
     if (this.grab) this.updateHold(this.grab);
     const dt = TICK / SUBSTEPS;
     for (let s = 0; s < SUBSTEPS; s++) this.substep(dt);
+    if (this.recoil > 0) {
+      this.recoil *= Math.exp(-damping * TICK);
+      if (this.recoil < 0.05) this.recoil = 0;
+    }
     if (!this.healthy()) this.reset("hanging");
     let moved = 0;
     for (let i = 0; i < this.pos.length; i++) moved = Math.max(moved, Math.abs(this.pos[i] - this.tickStart[i]));
@@ -285,7 +312,7 @@ export class LanyardSim {
     const maxStep = MAX_SPEED * dt;
     for (let i = 0; i < this.count; i++) {
       if (invMass[i] === 0) continue;
-      const damp = Math.exp(-this.drag[i] * dt);
+      const damp = Math.exp(-(this.drag[i] + (i >= this.hang && this.recoil > 0 ? damping : 0)) * dt);
       const o = i * 3;
       let vx = (pos[o] - prev[o]) * damp;
       let vy = (pos[o + 1] - prev[o + 1]) * damp;
@@ -317,13 +344,23 @@ export class LanyardSim {
       const ids = [this.hang, this.bl, this.br];
       for (let k = 0; k < 3; k++) this.solveTarget(ids[k], this.grab.targets[k], HOLD_COMPLIANCE * a);
     }
-    // Strap: inextensible links, then a soft bend so it curves instead of kinking.
-    for (let i = 0; i < this.hang; i++) this.solveDistance(i, i + 1, this.seg, 0);
-    for (let i = 0; i < this.hang - 1; i++) this.solveDistance(i, i + 2, this.seg * 2, STRAP_BEND_COMPLIANCE * a, true);
+    // The weave yields at first, firms up with extension, and has an absolute length limit.
+    for (let i = 0; i < this.hang; i++) {
+      const len = Math.hypot(
+        pos[(i + 1) * 3] - pos[i * 3],
+        pos[(i + 1) * 3 + 1] - pos[i * 3 + 1],
+        pos[(i + 1) * 3 + 2] - pos[i * 3 + 2],
+      );
+      const strain = Math.max(0, (len / this.seg - 1) / stretchMax);
+      const compliance = strain > 0 ? stiffness * (1 - Math.min(1, strain)) ** 2 : 0;
+      this.solveDistance(i, i + 1, this.seg, compliance * a);
+    }
+    for (let i = 0; i < this.hang - 1; i++) this.solveDistance(i, i + 2, this.seg * 2, STRAP_BEND_COMPLIANCE * a, "short");
     // Card: rigid triangle.
     for (const [i, j, len] of this.cardEdges) this.solveDistance(i, j, len, 0);
     // The crimp clamps the strap end, so the strap leaves the card along the card's "up".
     this.solveClamp(CLAMP_COMPLIANCE * a);
+    this.capStrapLength();
     this.collideStrapWithCard();
     if (!this.grab) this.solveFacing(dt);
   }
@@ -332,6 +369,26 @@ export class LanyardSim {
     const w = this.invMass[i];
     const k = w / (w + alpha);
     for (let c = 0; c < 3; c++) this.pos[i * 3 + c] += (target[c] - this.pos[i * 3 + c]) * k;
+  }
+
+  /** Move the remaining chain together so no later solve can reopen an overlong link. */
+  private capStrapLength() {
+    const max = this.seg * (1 + stretchMax);
+    for (let i = 0; i < this.hang; i++) {
+      const a = i * 3;
+      const b = a + 3;
+      const dx = this.pos[b] - this.pos[a];
+      const dy = this.pos[b + 1] - this.pos[a + 1];
+      const dz = this.pos[b + 2] - this.pos[a + 2];
+      const len = Math.hypot(dx, dy, dz);
+      if (len <= max) continue;
+      const k = 1 - max / len;
+      for (let j = i + 1; j < this.count; j++) {
+        this.pos[j * 3] -= dx * k;
+        this.pos[j * 3 + 1] -= dy * k;
+        this.pos[j * 3 + 2] -= dz * k;
+      }
+    }
   }
 
   /** Moves each strap point's velocity toward the average of its neighbours'. */
@@ -372,7 +429,7 @@ export class LanyardSim {
     }
   }
 
-  private solveDistance(i: number, j: number, rest: number, alpha: number, onlyWhenShorter = false) {
+  private solveDistance(i: number, j: number, rest: number, alpha: number, limit?: "short") {
     const { pos, invMass } = this;
     const wi = invMass[i];
     const wj = invMass[j];
@@ -386,7 +443,7 @@ export class LanyardSim {
     const len = Math.hypot(dx, dy, dz);
     if (len < 1e-9) return;
     const c = len - rest;
-    if (onlyWhenShorter && c >= 0) return;
+    if (limit === "short" && c >= 0) return;
     const lambda = -c / (w + alpha);
     const nx = dx / len;
     const ny = dy / len;

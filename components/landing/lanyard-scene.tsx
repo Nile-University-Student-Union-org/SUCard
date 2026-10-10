@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { useFrame, useThree, type ThreeEvent } from "@react-three/fiber";
 import { Environment, Lightformer, RoundedBox, useCursor } from "@react-three/drei";
-import { LanyardSim, TICK } from "./lanyard-sim";
+import { LanyardSim, TICK, stretchMax } from "./lanyard-sim";
 import { CARD_TEX_H, CARD_TEX_W, SLOT, STRAP_TEX_H, STRAP_TEX_W, createCardTextures } from "./card-textures";
 
 // Card in world units, in the artwork's proportions.
@@ -390,12 +390,15 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     const pos = geo.attributes.position as THREE.BufferAttribute;
     const nor = geo.attributes.normal as THREE.BufferAttribute;
     const uv = geo.attributes.uv as THREE.BufferAttribute;
-    const half = STRAP_W / 2;
+    let pathLength = 0;
     for (let i = 0; i < RIBBON_SAMPLES; i++) {
       const u = i / (RIBBON_SAMPLES - 1);
       curve.getPoint(u, samples[i]);
       curve.getTangent(u, tangents[i]);
+      if (i > 0) pathLength += samples[i].distanceTo(samples[i - 1]);
     }
+    const strain = Math.max(0, Math.min(1, (pathLength / STRAP_LENGTH - 1) / stretchMax));
+    const half = STRAP_W * (1 - strain * 0.06) / 2;
     side.copy(ax); // card's X at the crimp
     let along = 0;
     for (let i = RIBBON_SAMPLES - 1; i >= 0; i--) {

@@ -3,11 +3,12 @@ import { createHash } from "node:crypto";
 import { and, asc, desc, eq, lt, max, or, sql } from "drizzle-orm";
 import { auth } from "@/lib/auth/server";
 import { db } from "@/lib/db";
-import { account, auditLog, offerRevisions, offers, scanEvents, session, user, vendorLogos, vendors } from "@/lib/db/schema";
+import { account, auditLog, offerImages, offerRevisions, offers, scanEvents, session, user, vendorLogos, vendors } from "@/lib/db/schema";
 import { sendAccountWelcome } from "@/lib/email/welcome";
 import { randomBytes } from "node:crypto";
 import type { z } from "zod";
 import { offerBody, vendorBody, type accountBody, type accountPatch, type offerPatch, type vendorPatch } from "./validation";
+import { offerImageUrl } from "./offer-image";
 export class VendorError extends Error {
   constructor(public status: number, message: string, public code?: string) {
     super(message);
@@ -33,11 +34,15 @@ export const vendorDto = (v: typeof vendors.$inferSelect) => ({
   createdAt: v.createdAt.toISOString(),
   updatedAt: v.updatedAt.toISOString()
 });
-export const offerDto = (v: typeof offers.$inferSelect) => ({
+export const offerDto = (v: typeof offers.$inferSelect, imageSha: string | null = null) => ({
   ...v,
+  imageUrl: offerImageUrl(v.id, imageSha),
   createdAt: v.createdAt.toISOString(),
   updatedAt: v.updatedAt.toISOString()
 });
+export function offerRevisionSnapshot(offer: typeof offers.$inferSelect, imageSha: string | null) {
+  return { ...offerDto(offer, imageSha), imageUrl: undefined, imageSha256: imageSha };
+}
 export async function listVendors() {
   return (await db.select().from(vendors).orderBy(asc(vendors.name))).map(vendorDto);
 }
@@ -90,11 +95,11 @@ export async function setLogo(id: string, bytes: Buffer, mime: string, actorId: 
 }
 export async function listOffers(vendorId: string) {
   await getVendor(vendorId);
-  return (await db.select().from(offers).where(eq(offers.vendorId, vendorId)).orderBy(asc(offers.title))).map(offerDto);
+  return (await db.select({ offer: offers, imageSha: offerImages.sha256 }).from(offers).leftJoin(offerImages, eq(offers.id, offerImages.offerId)).where(eq(offers.vendorId, vendorId)).orderBy(asc(offers.title))).map(row => offerDto(row.offer, row.imageSha));
 }
 export async function getOffer(id: string) {
-  const [offer] = await db.select().from(offers).where(eq(offers.id, id));
-  return offer ? offerDto(offer) : missing("Offer");
+  const [row] = await db.select({ offer: offers, imageSha: offerImages.sha256 }).from(offers).leftJoin(offerImages, eq(offers.id, offerImages.offerId)).where(eq(offers.id, id));
+  return row ? offerDto(row.offer, row.imageSha) : missing("Offer");
 }
 export async function createOffer(vendorId: string, input: z.infer<typeof offerBody>, actorId: string) {
   return db.transaction(async tx => {
@@ -111,7 +116,7 @@ export async function createOffer(vendorId: string, input: z.infer<typeof offerB
     await tx.insert(offerRevisions).values({
       offerId: row.id,
       version: 1,
-      snapshot: dto,
+      snapshot: offerRevisionSnapshot(row, null),
       changedBy: actorId
     });
     await audit(tx, actorId, "offers.created", "offer", row.id, null, dto);
@@ -131,14 +136,15 @@ export async function updateOffer(id: string, patch: z.infer<typeof offerPatch>,
     const [last] = await tx.select({
       version: max(offerRevisions.version)
     }).from(offerRevisions).where(eq(offerRevisions.offerId, id));
-    const dto = offerDto(after);
+    const [image] = await tx.select({ sha256: offerImages.sha256 }).from(offerImages).where(eq(offerImages.offerId, id));
+    const dto = offerDto(after, image?.sha256 ?? null);
     await tx.insert(offerRevisions).values({
       offerId: id,
       version: (last.version ?? 0) + 1,
-      snapshot: dto,
+      snapshot: offerRevisionSnapshot(after, image?.sha256 ?? null),
       changedBy: actorId
     });
-    await audit(tx, actorId, "offers.updated", "offer", id, offerDto(before), dto);
+    await audit(tx, actorId, "offers.updated", "offer", id, offerDto(before, image?.sha256 ?? null), dto);
     return dto;
   });
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { LanyardSim, TICK, type LanyardDims } from "./lanyard-sim";
+import { LanyardSim, TICK, stretchMax, type LanyardDims } from "./lanyard-sim";
 
 const dims: LanyardDims = { anchor: [0, 4, 0], strapLength: 2.88, segments: 12, cardW: 3.2, cardH: 2.02, hangY: 1.4 };
 
@@ -24,13 +24,51 @@ describe("LanyardSim", () => {
     expect(br[0]).toBeGreaterThan(bl[0]);
   });
 
-  it("keeps the strap inextensible and the card rigid while being yanked", () => {
+  it("bounds elastic stretch and keeps the card rigid under a large pull", () => {
     const sim = new LanyardSim(dims);
     sim.startDrag(0, 0);
     sim.moveDrag(9, -9, 3);
     run(sim, 2);
-    for (let i = 0; i < sim.hang; i++) expect(dist(at(sim, i), at(sim, i + 1))).toBeLessThan(sim.seg * 1.03);
+    const lengths = Array.from({ length: sim.hang }, (_, i) => dist(at(sim, i), at(sim, i + 1)));
+    expect(lengths.reduce((sum, len) => sum + len, 0)).toBeGreaterThan(dims.strapLength * 1.04);
+    for (const length of lengths) expect(length).toBeLessThanOrEqual(sim.seg * (1 + stretchMax) + 0.0005);
     expect(dist(at(sim, sim.bl), at(sim, sim.br))).toBeCloseTo(dims.cardW, 1);
+  });
+
+  it("releases more quickly toward the anchor after a stronger pull", () => {
+    const recoil = (pull: number) => {
+      const sim = new LanyardSim(dims);
+      sim.startDrag(0, 0);
+      sim.moveDrag(0, pull, 0);
+      run(sim, 1);
+      const before = at(sim, sim.hang)[1];
+      sim.endDrag();
+      sim.tick();
+      return (at(sim, sim.hang)[1] - before) / TICK;
+    };
+    expect(recoil(-8)).toBeGreaterThan(0);
+    expect(recoil(-8)).toBeGreaterThan(recoil(-0.3) + 0.5);
+  });
+
+  it("damps the stretched strap and card back to rest", () => {
+    const sim = new LanyardSim(dims);
+    sim.startDrag(0, 0);
+    sim.moveDrag(0, -8, 0);
+    run(sim, 1);
+    sim.endDrag();
+    run(sim, 10);
+    expect(dist(at(sim, sim.hang), [0, dims.anchor[1] - dims.strapLength, 0])).toBeLessThan(0.05);
+    expect(sim.sleeping).toBe(true);
+  });
+
+  it("remains finite after an extreme pointer jump and release", () => {
+    const sim = new LanyardSim(dims);
+    sim.startDrag(0, 0);
+    sim.moveDrag(1e8, -1e8, 1e8);
+    run(sim, 0.5);
+    sim.endDrag();
+    run(sim, 2);
+    expect([...sim.pos].every(Number.isFinite)).toBe(true);
   });
 
   it("follows the pointer and keeps momentum on release", () => {

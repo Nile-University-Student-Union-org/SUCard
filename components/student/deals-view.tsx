@@ -32,6 +32,7 @@ import { StatusState } from "@/components/ui/status-state";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { formatCairoDate } from "@/components/ui/analytics-format";
+import { OfferCard } from "@/components/offers/offer-card";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -254,6 +255,27 @@ export function DealsView() {
                 )}
               >
                 <div className="space-y-4">
+                  {/* Promo Poster Image (4:5 Uncropped with Lightbox on Tap) */}
+                  {deal.imageUrl && (
+                    <div className="w-full flex justify-center pb-1">
+                      <div className="w-full max-w-[260px] sm:max-w-[280px]">
+                        <OfferCard
+                          offer={{
+                            offerId: deal.offerId,
+                            vendorName: deal.vendorName,
+                            discountLabel: deal.discountLabel,
+                            title: deal.title,
+                            imageUrl: deal.imageUrl,
+                            category: deal.category,
+                            terms: deal.terms,
+                          }}
+                          sizes="(max-width: 640px) 80vw, (max-width: 1024px) 340px, 380px"
+                          lazy
+                        />
+                      </div>
+                    </div>
+                  )}
+
                   {/* 1. Leading Discount & Category Header */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">

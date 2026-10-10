@@ -1,26 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import QRCode from "qrcode";
-import { Check, CreditCard, QrCode, ScanLine, Smartphone, Store } from "lucide-react";
+import { Check, CreditCard, QrCode, ScanLine, ShieldCheck, Smartphone, Store } from "lucide-react";
 import { cn } from "cn";
 import { GoogleWalletLogo } from "@/components/student/student-card-view";
 import { CARD_ART } from "./card-art";
 
 type IssuanceFlow = "digital" | "physical";
-
-function useIsDesktop() {
-  return useSyncExternalStore(
-    (callback) => {
-      const query = window.matchMedia("(min-width: 768px)");
-      query.addEventListener("change", callback);
-      return () => query.removeEventListener("change", callback);
-    },
-    () => window.matchMedia("(min-width: 768px)").matches,
-    () => false
-  );
-}
 
 const FLOW_CONFIG: Record<
   IssuanceFlow,
@@ -80,29 +68,25 @@ const FLOW_CONFIG: Record<
 
 /**
  * "How it works":
- * - On desktop: A sticky, scroll-driven walkthrough across viewport scrolling with smooth or reduced-motion navigation.
- * - On mobile: A compact, normally scrolling layout with clear tap controls (no sticky trapping or 300vh scroll-jack).
+ * - A sticky, scroll-driven walkthrough across all screen sizes (mobile through desktop).
+ * - Compact and responsive on phones (360-430px) without overflow or URL bar jumps (svh).
+ * - Interactive step labels allowing one-tap scrolling jump.
  * - Accurately presents both Digital Pass and Physical Card issuance modes.
  */
 export function HowItWorks() {
   const [flow, setFlow] = useState<IssuanceFlow>("digital");
-  const isDesktop = useIsDesktop();
   const sectionRef = useRef<HTMLElement>(null);
   const listRef = useRef<HTMLOListElement>(null);
   const badgeRefs = useRef<(HTMLSpanElement | null)[]>([]);
   const [progress, setProgress] = useState(0);
-  const [mobileActive, setMobileActive] = useState(0);
 
-  /** Connector through the step badges (px from the top of the list): its ends, and how far it is filled. */
+  /** Connector through desktop step badges: endpoints and fill distance */
   const [rail, setRail] = useState({ first: 0, last: 0, fill: 0 });
 
   const activeFlow = FLOW_CONFIG[flow];
   const steps = activeFlow.steps;
 
-
   useEffect(() => {
-    if (!isDesktop) return;
-
     let raf = 0;
     const update = () => {
       raf = 0;
@@ -122,7 +106,7 @@ export function HowItWorks() {
       });
       // Glide from one badge to the next, arriving as that step becomes active.
       const f = Math.min(steps.length - 1, Math.max(0, p * steps.length - 0.5));
-      const i = Math.min(steps.length - 2, Math.floor(f));
+      const i = Math.min(steps.length - 2, Math.max(0, Math.floor(f)));
       const at = centres[i] + (centres[i + 1] - centres[i]) * (f - i);
       const first = centres[0] ?? 0;
       const last = centres[steps.length - 1] ?? 0;
@@ -138,6 +122,7 @@ export function HowItWorks() {
     window.addEventListener("resize", schedule);
     const observer = new ResizeObserver(schedule);
     if (listRef.current) observer.observe(listRef.current);
+    if (sectionRef.current) observer.observe(sectionRef.current);
 
     return () => {
       observer.disconnect();
@@ -145,24 +130,21 @@ export function HowItWorks() {
       window.removeEventListener("scroll", schedule);
       window.removeEventListener("resize", schedule);
     };
-  }, [isDesktop, steps.length]);
+  }, [steps.length]);
 
-  const desktopActive = Math.min(steps.length - 1, Math.floor(progress * steps.length));
-  const active = isDesktop ? desktopActive : mobileActive;
+  const active = Math.min(steps.length - 1, Math.floor(progress * steps.length));
 
   /** Scrolls so step `i` sits in the middle of its slice of the section, respecting reduced motion. */
   const goTo = (i: number) => {
-    if (!isDesktop) {
-      setMobileActive(i);
-      return;
-    }
     const el = sectionRef.current;
     if (!el) return;
     const top = el.getBoundingClientRect().top + window.scrollY;
     const total = el.offsetHeight - window.innerHeight;
-    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (total <= 0) {
-      setMobileActive(i);
+      setProgress(i / Math.max(1, steps.length - 1));
       return;
     }
     window.scrollTo({
@@ -176,201 +158,238 @@ export function HowItWorks() {
       ref={sectionRef}
       id="how-it-works"
       aria-labelledby="how-it-works-title"
-      className="relative border-t border-border/80 py-12 sm:py-16 md:py-0 md:h-[160vh]"
+      className="relative border-t border-border/80 h-[240svh] md:h-[220svh]"
     >
-      <div className="md:sticky md:top-0 md:h-svh md:flex md:items-center md:overflow-hidden">
+      <div className="sticky top-0 h-svh max-h-svh flex items-center justify-center overflow-hidden">
         {/* Dot-grid texture, fading out toward the edges */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-0 [background-image:radial-gradient(rgb(15_48_86/0.13)_1px,transparent_1px)] dark:[background-image:radial-gradient(rgb(255_255_255/0.07)_1px,transparent_1px)] [background-size:22px_22px] [mask-image:radial-gradient(ellipse_70%_60%_at_60%_50%,#000_20%,transparent_75%)]"
         />
 
-        <div className="relative mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-8 px-4 sm:px-8 md:grid-cols-[minmax(0,32rem)_auto] md:justify-center md:gap-16 lg:gap-24">
-          {/* Copy & Step Selection */}
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="inline-flex items-center gap-2.5 text-xs font-semibold tracking-[0.22em] uppercase text-macaw-blue">
-                <span aria-hidden="true" className="h-px w-6 bg-current" />
-                How it works
-              </p>
+        <div className="relative mx-auto w-full max-w-6xl px-4 sm:px-8 py-3 sm:py-6 md:py-0">
+          <div className="grid w-full grid-cols-1 items-center gap-3 xs:gap-4 sm:gap-6 md:grid-cols-[minmax(0,32rem)_auto] md:justify-center md:gap-16 lg:gap-24">
+            {/* Copy & Step Selection */}
+            <div>
+              <div className="flex flex-wrap items-center justify-between gap-2.5">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold tracking-[0.22em] uppercase text-macaw-blue">
+                  <span aria-hidden="true" className="h-px w-5 sm:w-6 bg-current" />
+                  How it works
+                </p>
 
-              {/* Mode Toggle: Digital Pass vs Physical Card */}
-              <div
-                role="tablist"
-                aria-label="Issuance mode"
-                className="inline-flex items-center rounded-full bg-slate-100/90 dark:bg-white/[0.06] p-1 border border-slate-200/80 dark:border-white/10 shadow-xs"
-              >
-                {(["digital", "physical"] as const).map((mode) => {
-                  const isSelected = flow === mode;
-                  const Icon = FLOW_CONFIG[mode].icon;
-                  return (
-                    <button
-                      key={mode}
-                      role="tab"
-                      aria-selected={isSelected}
-                      onClick={() => setFlow(mode)}
-                      className={cn(
-                        "inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-3.5 sm:px-4 text-xs font-bold transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
-                        isSelected
-                          ? "bg-brand text-white shadow-xs dark:bg-brand-soft dark:text-midnight"
-                          : "text-ash hover:text-charcoal dark:text-zinc-400 dark:hover:text-white",
-                      )}
-                    >
-                      <Icon className="size-3.5" />
-                      <span>{mode === "digital" ? "Digital Pass" : "Physical Card"}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <h2
-              id="how-it-works-title"
-              className="mt-4 font-heading uppercase tracking-wide leading-[0.95] text-charcoal dark:text-white text-[clamp(1.75rem,4.6vw,3.25rem)]"
-            >
-              Three steps
-              <br /> to{" "}
-              <span className="text-brand dark:text-brand-soft">
-                student savings
-              </span>
-            </h2>
-
-            <p className="mt-3 max-w-md text-sm sm:text-base leading-relaxed text-ash dark:text-zinc-400">
-              {flow === "digital"
-                ? "Sign in, get your digital card on your phone, and save at partners."
-                : "Sign in, collect your card at the SU office, scan to link, and save."}
-            </p>
-
-            {/* Desktop: steps as cards on a connector; the active one lifts and opens */}
-            <ol ref={listRef} className="relative mt-8 hidden space-y-2 md:block">
-              <li
-                aria-hidden="true"
-                className="absolute z-[1] left-[2.375rem] w-px -translate-x-1/2 bg-border"
-                style={{ top: rail.first, height: Math.max(0, rail.last - rail.first) }}
-              >
-                <span
-                  className="absolute inset-x-0 top-0 bg-brand dark:bg-brand-soft transition-all duration-300 motion-reduce:transition-none"
-                  style={{ height: Math.max(0, rail.fill) }}
-                />
-              </li>
-              {steps.map((step, i) => {
-                const on = i === active;
-                const done = i < active;
-                return (
-                  <li key={step.title}>
-                    <button
-                      type="button"
-                      onClick={() => goTo(i)}
-                      aria-current={on ? "step" : undefined}
-                      className={cn(
-                        "group relative flex min-h-[44px] w-full items-start gap-4 rounded-2xl px-5 py-3.5 text-left transition-[background-color,box-shadow] duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
-                        on
-                          ? "bg-white/85 shadow-[0_14px_36px_-16px_rgb(15_48_86/0.35)] ring-1 ring-slate-200/90 dark:bg-white/[0.05] dark:ring-white/10 dark:shadow-none"
-                          : "hover:bg-white/40 dark:hover:bg-white/[0.02]",
-                      )}
-                    >
-                      <span
-                        ref={(node) => {
-                          badgeRefs.current[i] = node;
-                        }}
+                {/* Mode Toggle: Digital Pass vs Physical Card */}
+                <div
+                  role="tablist"
+                  aria-label="Issuance mode"
+                  className="inline-flex items-center rounded-full bg-slate-100/90 dark:bg-white/[0.06] p-0.5 sm:p-1 border border-slate-200/80 dark:border-white/10 shadow-xs"
+                >
+                  {(["digital", "physical"] as const).map((mode) => {
+                    const isSelected = flow === mode;
+                    const Icon = FLOW_CONFIG[mode].icon;
+                    return (
+                      <button
+                        key={mode}
+                        role="tab"
+                        aria-selected={isSelected}
+                        onClick={() => setFlow(mode)}
                         className={cn(
-                          "relative z-10 mt-0.5 grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm tabular-nums transition-all duration-300 motion-reduce:transition-none",
-                          on && "bg-brand text-white shadow-[0_0_0_6px_rgb(15_84_141/0.12)] dark:bg-brand-soft dark:text-midnight",
-                          done && "bg-background text-brand ring-1 ring-brand/30 dark:text-brand-soft dark:ring-brand-soft/30",
-                          !on && !done && "bg-background text-ash/70 ring-1 ring-border dark:text-zinc-500",
+                          "inline-flex min-h-[38px] sm:min-h-[44px] items-center gap-1.5 rounded-full px-3 sm:px-4 text-xs font-bold transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                          isSelected
+                            ? "bg-brand text-white shadow-xs dark:bg-brand-soft dark:text-midnight"
+                            : "text-ash hover:text-charcoal dark:text-zinc-400 dark:hover:text-white",
                         )}
                       >
-                        {done ? <Check className="size-4" strokeWidth={3} /> : `0${i + 1}`}
-                      </span>
-                      <span className="min-w-0 flex-1 pt-1">
+                        <Icon className="size-3.5" />
+                        <span>{mode === "digital" ? "Digital Pass" : "Physical Card"}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <h2
+                id="how-it-works-title"
+                className="mt-2 sm:mt-4 font-heading uppercase tracking-wide leading-[0.95] text-charcoal dark:text-white text-[clamp(1.5rem,4.2vw,3.25rem)]"
+              >
+                Three steps
+                <br /> to{" "}
+                <span className="text-brand dark:text-brand-soft">
+                  student savings
+                </span>
+              </h2>
+
+              <p className="mt-2 sm:mt-3 hidden md:block max-w-md text-sm sm:text-base leading-relaxed text-ash dark:text-zinc-400">
+                {flow === "digital"
+                  ? "Sign in, get your digital card on your phone, and save at partners."
+                  : "Sign in, collect your card at the SU office, scan to link, and save."}
+              </p>
+
+              {/* Desktop: steps as cards on a vertical connector; the active one lifts and opens */}
+              <ol ref={listRef} className="relative mt-6 sm:mt-8 hidden space-y-2 md:block">
+                <li
+                  aria-hidden="true"
+                  className="absolute z-[1] left-[2.375rem] w-px -translate-x-1/2 bg-border"
+                  style={{ top: rail.first, height: Math.max(0, rail.last - rail.first) }}
+                >
+                  <span
+                    className="absolute inset-x-0 top-0 bg-brand dark:bg-brand-soft transition-all duration-300 motion-reduce:transition-none"
+                    style={{ height: Math.max(0, rail.fill) }}
+                  />
+                </li>
+                {steps.map((step, i) => {
+                  const on = i === active;
+                  const done = i < active;
+                  return (
+                    <li key={step.title}>
+                      <button
+                        type="button"
+                        onClick={() => goTo(i)}
+                        aria-current={on ? "step" : undefined}
+                        className={cn(
+                          "group relative flex min-h-[44px] w-full items-start gap-4 rounded-2xl px-5 py-3.5 text-left transition-[background-color,box-shadow] duration-300 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                          on
+                            ? "bg-white/85 shadow-[0_14px_36px_-16px_rgb(15_48_86/0.35)] ring-1 ring-slate-200/90 dark:bg-white/[0.05] dark:ring-white/10 dark:shadow-none"
+                            : "hover:bg-white/40 dark:hover:bg-white/[0.02]",
+                        )}
+                      >
                         <span
+                          ref={(node) => {
+                            badgeRefs.current[i] = node;
+                          }}
                           className={cn(
-                            "block font-heading uppercase tracking-wide text-xl leading-none transition-colors duration-200",
-                            on
-                              ? "text-charcoal dark:text-white"
-                              : "text-ash/60 dark:text-zinc-600 group-hover:text-ash dark:group-hover:text-zinc-400",
+                            "relative z-10 mt-0.5 grid size-9 shrink-0 place-items-center rounded-full font-heading text-sm tabular-nums transition-all duration-300 motion-reduce:transition-none",
+                            on && "bg-brand text-white shadow-[0_0_0_6px_rgb(15_84_141/0.12)] dark:bg-brand-soft dark:text-midnight",
+                            done && "bg-background text-brand ring-1 ring-brand/30 dark:text-brand-soft dark:ring-brand-soft/30",
+                            !on && !done && "bg-background text-ash/70 ring-1 ring-border dark:text-zinc-500",
                           )}
                         >
-                          {step.title}
+                          {done ? <Check className="size-4" strokeWidth={3} /> : `0${i + 1}`}
                         </span>
-                        <span
-                          className={cn(
-                            "grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
-                            on ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
-                          )}
-                        >
-                          <span className="overflow-hidden">
-                            <span className="block pt-1.5 max-w-[42ch] text-[0.875rem] leading-relaxed text-ash dark:text-zinc-400">
-                              {step.body}
+                        <span className="min-w-0 flex-1 pt-1">
+                          <span
+                            className={cn(
+                              "block font-heading uppercase tracking-wide text-xl leading-none transition-colors duration-200",
+                              on
+                                ? "text-charcoal dark:text-white"
+                                : "text-ash/60 dark:text-zinc-600 group-hover:text-ash dark:group-hover:text-zinc-400",
+                            )}
+                          >
+                            {step.title}
+                          </span>
+                          <span
+                            className={cn(
+                              "grid transition-[grid-template-rows,opacity] duration-300 ease-out motion-reduce:transition-none",
+                              on ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+                            )}
+                          >
+                            <span className="overflow-hidden">
+                              <span className="block pt-1.5 max-w-[42ch] text-[0.875rem] leading-relaxed text-ash dark:text-zinc-400">
+                                {step.body}
+                              </span>
                             </span>
                           </span>
                         </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ol>
-
-            {/* Mobile: Compact step selector pills and text card */}
-            <div className="md:hidden mt-6">
-              {/* Step tabs (44px min-height tap targets) */}
-              <div className="flex gap-2" role="tablist" aria-label="Walkthrough steps">
-                {steps.map((step, i) => {
-                  const on = i === active;
-                  return (
-                    <button
-                      key={step.title}
-                      type="button"
-                      role="tab"
-                      aria-selected={on}
-                      onClick={() => setMobileActive(i)}
-                      className={cn(
-                        "flex-1 min-h-[44px] flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold transition-all duration-200 cursor-pointer select-none",
-                        on
-                          ? "bg-brand text-white shadow-sm dark:bg-brand-soft dark:text-midnight"
-                          : "bg-slate-100 text-ash hover:text-charcoal dark:bg-white/[0.04] dark:text-zinc-400",
-                      )}
-                    >
-                      <span className="font-heading text-sm">0{i + 1}</span>
-                      <span className="truncate">{step.title}</span>
-                    </button>
+                      </button>
+                    </li>
                   );
                 })}
-              </div>
+              </ol>
 
-              {/* Active Step Content */}
-              <div className="mt-4 rounded-2xl bg-white/70 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 p-4 shadow-xs">
-                <p className="font-heading uppercase tracking-wide text-base text-charcoal dark:text-white">
-                  <span className="text-macaw-blue mr-2">0{active + 1}</span>
-                  {steps[active].title}
-                  <span className="ml-2 text-xs font-normal normal-case text-ash dark:text-zinc-400 font-body">
-                    • {steps[active].subtitle}
-                  </span>
-                </p>
-                <p className="mt-2 text-sm leading-relaxed text-ash dark:text-zinc-300">
-                  {steps[active].body}
-                </p>
+              {/* Mobile: Horizontal step rail + active step card */}
+              <div className="md:hidden mt-3 xs:mt-4 space-y-2">
+                {/* Step selector pills with connected progress line */}
+                <div className="relative" role="tablist" aria-label="Walkthrough steps">
+                  {/* Background connecting track */}
+                  <div
+                    aria-hidden="true"
+                    className="absolute top-1/2 left-[16.67%] right-[16.67%] h-0.5 -translate-y-1/2 bg-border"
+                  >
+                    <div
+                      className="h-full bg-brand dark:bg-brand-soft transition-all duration-300 motion-reduce:transition-none"
+                      style={{
+                        width: `${Math.min(100, Math.max(0, progress * 100))}%`,
+                      }}
+                    />
+                  </div>
+
+                  {/* 3 Step Buttons */}
+                  <div className="relative z-10 grid grid-cols-3 gap-1.5 xs:gap-2">
+                    {steps.map((step, i) => {
+                      const on = i === active;
+                      const done = i < active;
+                      return (
+                        <button
+                          key={step.title}
+                          type="button"
+                          role="tab"
+                          aria-selected={on}
+                          onClick={() => goTo(i)}
+                          className={cn(
+                            "group flex min-h-[44px] flex-col items-center justify-center rounded-xl p-1.5 text-center transition-all duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand",
+                            on
+                              ? "bg-white/90 dark:bg-white/[0.08] shadow-xs ring-1 ring-slate-200/90 dark:ring-white/15"
+                              : "bg-slate-100/70 hover:bg-white/60 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]",
+                          )}
+                        >
+                          <span
+                            className={cn(
+                              "grid size-6 xs:size-7 place-items-center rounded-full font-heading text-xs tabular-nums transition-all duration-300 motion-reduce:transition-none",
+                              on && "bg-brand text-white shadow-xs dark:bg-brand-soft dark:text-midnight",
+                              done && "bg-background text-brand ring-1 ring-brand/30 dark:text-brand-soft dark:ring-brand-soft/30",
+                              !on && !done && "bg-background text-ash/70 ring-1 ring-border dark:text-zinc-500",
+                            )}
+                          >
+                            {done ? <Check className="size-3.5" strokeWidth={3} /> : `0${i + 1}`}
+                          </span>
+                          <span
+                            className={cn(
+                              "mt-1 block max-w-full truncate font-heading text-[11px] xs:text-xs uppercase tracking-wide transition-colors duration-200",
+                              on
+                                ? "text-charcoal dark:text-white"
+                                : "text-ash/70 dark:text-zinc-500 group-hover:text-charcoal dark:group-hover:text-zinc-300",
+                            )}
+                          >
+                            {step.title}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Active Step Content Card */}
+                <div className="rounded-xl bg-white/80 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 px-3 py-2 text-left shadow-2xs">
+                  <p className="font-heading uppercase tracking-wide text-xs xs:text-sm text-charcoal dark:text-white">
+                    <span className="text-macaw-blue mr-1.5">0{active + 1}</span>
+                    {steps[active].title}
+                    <span className="ml-1.5 text-[11px] font-normal normal-case text-ash dark:text-zinc-400 font-body">
+                      • {steps[active].subtitle}
+                    </span>
+                  </p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-ash dark:text-zinc-300 line-clamp-2">
+                    {steps[active].body}
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Phone Demonstration */}
-          <div className="relative flex justify-center mt-4 md:mt-0">
-            <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
-              <div className="absolute h-[78%] aspect-square rounded-full bg-gradient-to-br from-brand/30 via-macaw-blue/25 to-transparent blur-3xl dark:from-brand-soft/25" />
-              <div className="absolute h-[104%] aspect-square rounded-full border border-brand/10 dark:border-white/[0.06]" />
-              <div className="absolute h-[132%] aspect-square rounded-full border border-brand/[0.07] dark:border-white/[0.04]" />
-            </div>
-            <div className="relative">
-              <div className="motion-safe:animate-[phone-float_7s_ease-in-out_infinite] motion-reduce:animate-none">
-                <Phone active={active} flow={flow} />
+            {/* Phone Demonstration */}
+            <div className="relative flex justify-center mt-1 xs:mt-2 md:mt-0">
+              <div aria-hidden="true" className="pointer-events-none absolute inset-0 flex items-center justify-center">
+                <div className="absolute h-[78%] aspect-square rounded-full bg-gradient-to-br from-brand/30 via-macaw-blue/25 to-transparent blur-2xl md:blur-3xl dark:from-brand-soft/25" />
+                <div className="absolute h-[104%] aspect-square rounded-full border border-brand/10 dark:border-white/[0.06]" />
+                <div className="absolute h-[132%] aspect-square rounded-full border border-brand/[0.07] dark:border-white/[0.04]" />
               </div>
-              {/* Contact shadow */}
-              <div
-                aria-hidden="true"
-                className="absolute -bottom-6 left-1/2 h-5 w-[70%] -translate-x-1/2 rounded-[50%] bg-[rgb(15_48_86/0.28)] blur-xl dark:bg-black/60"
-              />
+              <div className="relative">
+                <div className="motion-safe:animate-[phone-float_7s_ease-in-out_infinite] motion-reduce:animate-none">
+                  <Phone active={active} flow={flow} />
+                </div>
+                {/* Contact shadow */}
+                <div
+                  aria-hidden="true"
+                  className="absolute -bottom-4 md:-bottom-6 left-1/2 h-4 md:h-5 w-[70%] -translate-x-1/2 rounded-[50%] bg-[rgb(15_48_86/0.28)] blur-lg md:blur-xl dark:bg-black/60"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -383,7 +402,7 @@ function Phone({ active, flow }: { active: number; flow: IssuanceFlow }) {
   return (
     <div
       aria-hidden="true"
-      className="relative h-[min(480px,50svh)] sm:h-[min(540px,52svh)] md:h-[min(620px,75svh)] aspect-[9/19.2]"
+      className="relative h-[min(340px,36svh)] xs:h-[min(390px,40svh)] sm:h-[min(460px,46svh)] md:h-[min(580px,70svh)] lg:h-[min(620px,74svh)] aspect-[9/19.2]"
     >
       {/* Side buttons */}
       <span className="absolute -left-[3px] top-[18%] h-[7%] w-[3px] rounded-l bg-zinc-500 dark:bg-zinc-700" />
@@ -665,74 +684,162 @@ function PhysicalCardScreen({ on }: { on: boolean }) {
 
 function ScanScreen({ on }: { on: boolean }) {
   const head = rise(on, 0);
-  const store = rise(on, 120);
-  const qr = rise(on, 220);
+  const card = rise(on, 120);
   return (
-    <div className="relative flex h-full flex-col items-center px-[6cqw] pt-[5cqw]">
-      <div className={cn("self-start", head.className)} style={head.style}>
-        <p className="font-heading text-[6.4cqw] uppercase tracking-wide">Checkout</p>
-        <p className="mt-[1cqw] text-[3.2cqw] text-white/60">Show your card or wallet QR</p>
-      </div>
-
-      <div
-        className={cn(
-          "mt-[5cqw] flex w-full items-center gap-[3cqw] rounded-[4cqw] bg-white/[0.06] p-[3cqw] ring-1 ring-inset ring-white/10",
-          store.className,
-        )}
-        style={store.style}
-      >
-        <span className="flex size-[10cqw] shrink-0 items-center justify-center rounded-[3cqw] bg-macaw-blue/20 text-macaw-blue">
-          <Store className="size-[5cqw]" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[3.6cqw] font-semibold leading-tight">Partner store</p>
-          <p className="text-[3cqw] text-white/50">Student offer active</p>
+    <div className="relative flex h-full flex-col px-[5cqw] pt-[4cqw]">
+      {/* Top Bar: Show & Save Header + Breadfast Partner Chip */}
+      <div className={cn("flex items-center justify-between w-full", head.className)} style={head.style}>
+        <div>
+          <p className="font-heading text-[5.4cqw] uppercase tracking-wide leading-none text-white">
+            Show &amp; Save
+          </p>
+          <p className="mt-[0.8cqw] text-[2.7cqw] text-white/60 font-body">
+            Present QR at checkout
+          </p>
         </div>
-        <span className="rounded-full bg-macaw-blue px-[2.6cqw] py-[1cqw] text-[2.6cqw] font-bold tracking-wider">NUSU</span>
+        <div className="inline-flex items-center gap-[1.4cqw] rounded-full bg-[#018BCE]/20 border border-[#018BCE]/40 px-[2.6cqw] py-[0.8cqw] text-[#38BDF8] shadow-2xs">
+          <Store className="size-[3cqw] shrink-0" />
+          <span className="text-[2.5cqw] font-bold tracking-wide">Breadfast · 15% off</span>
+        </div>
       </div>
 
-      <div className={cn("flex w-full flex-1 flex-col items-center justify-center pb-[24cqw]", qr.className)} style={qr.style}>
-        <div className="relative rounded-[5cqw] bg-white p-[4cqw] shadow-[0_0_0_1.6cqw_rgb(1_139_206/0.25),0_6cqw_14cqw_-6cqw_rgb(0_0_0/0.7)]">
-          <DemoQr className="block w-[54cqw]" />
-          <div className="absolute inset-[4cqw] overflow-hidden">
-            <div
-              className={cn(
-                "absolute inset-x-0 h-[14cqw] bg-gradient-to-b from-transparent via-macaw-blue/35 to-macaw-blue/0 border-b-2 border-macaw-blue",
-                on ? "motion-safe:animate-[scan-beam_1.6s_ease-in-out_infinite]" : "opacity-0",
-              )}
-            />
+      {/* Beat 1 & 2: Student's SU Card with QR, Scan Brackets & Laser */}
+      <div className={cn("relative mt-[3.5cqw] w-full", card.className)} style={card.style}>
+        <div className="relative w-full rounded-[4cqw] bg-[#0F3056] border-2 border-[#0F548D]/70 ring-1 ring-inset ring-white/15 p-[3.6cqw] shadow-[0_4cqw_16cqw_-2cqw_rgba(0,0,0,0.7)] text-white overflow-hidden select-none">
+          {/* Subtle Ambient Brand Glows & Arcs */}
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+            <div className="absolute -top-[12cqw] -right-[12cqw] size-[32cqw] rounded-full bg-[#018BCE]/30 blur-[10cqw]" />
+            <div className="absolute -bottom-[12cqw] -left-[12cqw] size-[32cqw] rounded-full bg-[#0F548D]/40 blur-[10cqw]" />
+            <svg
+              className="absolute inset-0 size-full opacity-15"
+              viewBox="0 0 360 420"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="320" cy="70" r="130" stroke="#018BCE" strokeWidth="1.5" strokeDasharray="6 6" />
+              <circle cx="320" cy="70" r="170" stroke="#FFFFFF" strokeWidth="1" strokeOpacity="0.3" />
+              <circle cx="40" cy="370" r="110" stroke="#018BCE" strokeWidth="1.5" strokeDasharray="4 4" />
+            </svg>
           </div>
-          {["left-0 top-0 border-l-2 border-t-2 rounded-tl-[3cqw]", "right-0 top-0 border-r-2 border-t-2 rounded-tr-[3cqw]", "left-0 bottom-0 border-l-2 border-b-2 rounded-bl-[3cqw]", "right-0 bottom-0 border-r-2 border-b-2 rounded-br-[3cqw]"].map((c) => (
-            <span key={c} className={cn("absolute -m-[3cqw] size-[8cqw] border-macaw-blue", c)} />
-          ))}
+
+          {/* Card Top Branding Header: NUSU Logo + "SU CARD" Wordmark + Active Badge */}
+          <div className="relative z-10 flex items-center justify-between gap-[2cqw] mb-[2.5cqw]">
+            <div className="flex items-center gap-[2cqw]">
+              <Image
+                src="/brand/su-logo-white@hd.png"
+                alt="NUSU"
+                width={80}
+                height={22}
+                className="h-[3.6cqw] w-auto object-contain"
+              />
+              <div className="w-[1px] h-[3.2cqw] bg-white/25" aria-hidden="true" />
+              <span className="font-heading text-[3.2cqw] uppercase tracking-[0.08em] text-white leading-none">
+                SU CARD
+              </span>
+            </div>
+            <span className="inline-flex items-center gap-[1cqw] rounded-full bg-emerald-500/20 border border-emerald-500/35 px-[2cqw] py-[0.4cqw] text-[2.1cqw] font-bold text-emerald-300">
+              <span className="size-[1.2cqw] rounded-full bg-emerald-400 animate-pulse" />
+              ACTIVE
+            </span>
+          </div>
+
+          {/* Centered High-Contrast QR Code Box with Crisp Scan Brackets & Laser */}
+          <div className="relative z-10 mx-auto my-[1cqw] flex flex-col items-center justify-center">
+            <div className="relative rounded-[3.2cqw] bg-white p-[2.6cqw] shadow-2xl ring-2 ring-black/10 flex items-center justify-center w-[40cqw] aspect-square">
+              <DemoQr className="w-full h-full object-contain" />
+
+              {/* Scan Frame: Crisp corner brackets in macaw-blue (#018BCE) */}
+              <span className="absolute -left-[1.2cqw] -top-[1.2cqw] size-[3.8cqw] border-l-[2.5px] border-t-[2.5px] border-[#018BCE] rounded-tl-[1.8cqw]" />
+              <span className="absolute -right-[1.2cqw] -top-[1.2cqw] size-[3.8cqw] border-r-[2.5px] border-t-[2.5px] border-[#018BCE] rounded-tr-[1.8cqw]" />
+              <span className="absolute -left-[1.2cqw] -bottom-[1.2cqw] size-[3.8cqw] border-l-[2.5px] border-b-[2.5px] border-[#018BCE] rounded-bl-[1.8cqw]" />
+              <span className="absolute -right-[1.2cqw] -bottom-[1.2cqw] size-[3.8cqw] border-r-[2.5px] border-b-[2.5px] border-[#018BCE] rounded-br-[1.8cqw]" />
+
+              {/* Laser scan beam - sweeps across the QR code */}
+              <div className="absolute inset-[2.6cqw] overflow-hidden rounded-[1.8cqw] pointer-events-none">
+                <div
+                  className={cn(
+                    "absolute inset-x-0 h-[8cqw] bg-gradient-to-b from-[#018BCE]/35 via-[#018BCE]/15 to-transparent border-t-[2px] border-[#018BCE] shadow-[0_0_8px_#018BCE] transition-opacity duration-300",
+                    on ? "motion-safe:animate-[scan-beam_1.6s_ease-in-out_infinite]" : "opacity-0",
+                  )}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Card Bottom: Student Identity */}
+          <div className="relative z-10 pt-[2cqw] mt-[1.5cqw] border-t border-white/15 flex items-end justify-between gap-[2cqw]">
+            <div className="min-w-0 flex-1">
+              <p className="font-heading text-[3.8cqw] uppercase tracking-wide text-white leading-none truncate">
+                AHMED HASSAN
+              </p>
+              <p className="text-[2.5cqw] font-mono font-bold text-sky-200 tracking-wider mt-[0.8cqw]">
+                ID 202201489
+              </p>
+            </div>
+            <span className="text-[2.2cqw] font-mono text-white/50 pb-[0.2cqw]">
+              2026/2027
+            </span>
+          </div>
         </div>
-        <p
+
+        {/* Scan Status Prompt (visible during scanning beat, fades when verified) */}
+        <div
           className={cn(
-            "mt-[5cqw] flex items-center gap-[1.6cqw] text-[3.4cqw] text-white/60 transition-opacity duration-300",
-            on && "opacity-0 delay-[1000ms]",
+            "mt-[3cqw] flex items-center justify-center gap-[1.8cqw] text-[2.9cqw] text-sky-200/80 transition-all duration-300",
+            on ? "opacity-0 scale-95 delay-[850ms] motion-reduce:opacity-0 motion-reduce:delay-0" : "opacity-100 scale-100",
           )}
         >
-          <ScanLine className="size-[4cqw]" /> Scanning…
-        </p>
+          <ScanLine className="size-[3.6cqw] text-[#018BCE] animate-pulse" />
+          <span>Cashier scanning QR…</span>
+        </div>
       </div>
 
+      {/* Beat 3: Result — Confident Cashier Verification Success Panel */}
       <div
         className={cn(
-          "absolute inset-x-[4cqw] bottom-[7cqw] rounded-[6cqw] bg-white p-[5cqw] text-[#0F3056] shadow-[0_-4cqw_16cqw_-4cqw_rgb(0_0_0/0.6)] transition-[opacity,transform] duration-400 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
-          on ? "opacity-100 translate-y-0 delay-[1000ms]" : "opacity-0 translate-y-[10cqw] delay-0",
+          "absolute inset-x-[4cqw] bottom-[4cqw] z-30 rounded-[4.5cqw] bg-[#0A2240] border-2 border-emerald-500/60 p-[3.8cqw] text-white shadow-[0_12cqw_36cqw_rgba(0,0,0,0.95)] ring-1 ring-white/15 transition-[opacity,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none",
+          on
+            ? "opacity-100 translate-y-0 delay-[850ms] motion-reduce:delay-0"
+            : "opacity-0 translate-y-[12cqw] pointer-events-none delay-0",
         )}
       >
-        <div className="flex items-center gap-[3.5cqw]">
-          <span className="flex size-[10cqw] shrink-0 items-center justify-center rounded-full bg-emerald-500 text-white">
-            <Check className="size-[5.5cqw]" strokeWidth={3} />
+        {/* Top Row: Emerald Badge + Offer Applied Tag */}
+        <div className="flex items-center gap-[3cqw]">
+          <div className="relative shrink-0">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-[0.8cqw] rounded-full bg-emerald-500/30 blur-[1.5cqw] animate-ring-pulse motion-reduce:opacity-0"
+            />
+            <div className="relative size-[9.2cqw] rounded-[2.8cqw] bg-emerald-500 text-white flex items-center justify-center shadow-lg shadow-emerald-500/40">
+              <Check className="size-[5.6cqw] stroke-[3.5]" />
+            </div>
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="inline-flex items-center gap-[1.2cqw] text-[2.2cqw] font-bold uppercase tracking-wider text-emerald-400">
+              <ShieldCheck className="size-[2.8cqw]" />
+              <span>Discount Applied</span>
+            </div>
+            <p className="font-heading text-[5cqw] uppercase tracking-wide leading-none text-white mt-[0.5cqw]">
+              15% OFF
+            </p>
+          </div>
+          <span className="rounded-full bg-emerald-500/15 border border-emerald-500/30 px-[2.2cqw] py-[0.6cqw] text-[2.2cqw] font-bold font-mono text-emerald-300 shrink-0">
+            -24.00 EGP
           </span>
-          <div className="min-w-0">
-            <p className="font-heading text-[5.2cqw] uppercase leading-none tracking-wide">Verified</p>
-            <p className="mt-[1.2cqw] text-[3.2cqw] text-[#0F3056]/70">Student discount applied</p>
+        </div>
+
+        {/* Details Receipt Card */}
+        <div className="mt-[2.8cqw] rounded-[2.6cqw] bg-black/40 border border-white/10 p-[2.5cqw] text-[2.4cqw] space-y-[1.2cqw]">
+          <div className="flex items-center justify-between text-white/70">
+            <span className="font-medium">Store</span>
+            <span className="font-bold text-white">Breadfast · Campus Branch</span>
+          </div>
+          <div className="flex items-center justify-between pt-[1cqw] border-t border-white/10">
+            <span className="text-white/60 font-mono">Bill 160.00 EGP</span>
+            <span className="font-mono font-bold text-emerald-400">Paid 136.00 EGP</span>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

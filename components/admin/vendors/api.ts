@@ -157,6 +157,34 @@ export async function updateOffer(
   return data;
 }
 
+export async function uploadOfferImage(
+  offerId: string,
+  file: File
+): Promise<{ imageUrl: string | null; sha256: string | null }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`/api/admin/offers/${offerId}/image`, {
+    method: "PUT",
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.error || "Failed to upload offer image");
+  }
+  return data;
+}
+
+export async function deleteOfferImage(offerId: string): Promise<void> {
+  const res = await fetch(`/api/admin/offers/${offerId}/image`, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "Failed to delete offer image");
+  }
+}
+
 export async function listOfferRevisions(
   offerId: string
 ): Promise<OfferRevisionsResponse> {

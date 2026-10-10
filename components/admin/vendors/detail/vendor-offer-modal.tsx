@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +11,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { createOffer, updateOffer } from "../api";
+import {
+  Upload,
+  Trash2,
+  RefreshCw,
+  AlertCircle,
+  Check,
+} from "lucide-react";
+import { createOffer, updateOffer, uploadOfferImage, deleteOfferImage } from "../api";
 import { formatDiscount } from "@/lib/vendors/types";
 import { cn } from "cn";
 import type {
@@ -47,6 +55,65 @@ const PERIOD_LABELS: { value: OfferPeriod; label: string }[] = [
   { value: "unlimited", label: "Unlimited (No limit)" },
 ];
 
+/** Client-side validation against promo image specification */
+async function validateOfferImageFile(
+  file: File
+): Promise<{ width: number; height: number }> {
+  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+    throw new Error("Image must be a PNG, JPG, or WebP file.");
+  }
+  if (file.size > 2_500_000) {
+    const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
+    throw new Error(`Image size is ${sizeMb} MB. Maximum allowed size is 2.5 MB.`);
+  }
+
+  return new Promise((resolve, reject) => {
+    const objectUrl = URL.createObjectURL(file);
+    const img = new window.Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      const { naturalWidth: width, naturalHeight: height } = img;
+      if (width < 1080 || height < 1350) {
+        reject(
+          new Error(
+            `Image is too small (${width} × ${height} px). Minimum dimensions are 1080 × 1350 px.`
+          )
+        );
+        return;
+      }
+      if (width > 2160 || height > 2700) {
+        reject(
+          new Error(
+            `Image is too large (${width} × ${height} px). Maximum dimensions are 2160 × 2700 px.`
+          )
+        );
+        return;
+      }
+      // Aspect ratio 4:5 check with ±1% tolerance
+      const ratio = width / height;
+      const targetRatio = 0.8;
+      if (Math.abs(ratio / targetRatio - 1) > 0.01) {
+        reject(
+          new Error(
+            `Image must have a 4:5 portrait aspect ratio (±1%). Current image is ${width} × ${height} px (${ratio.toFixed(2)}:1).`
+          )
+        );
+        return;
+      }
+      resolve({ width, height });
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      reject(
+        new Error(
+          "Unable to decode image. Please choose a valid PNG, JPG, or WebP file."
+        )
+      );
+    };
+    img.src = objectUrl;
+  });
+}
+
 export function VendorOfferModal({
   isOpen,
   onClose,
@@ -82,23 +149,52 @@ function VendorOfferForm({
 }: Omit<VendorOfferModalProps, "isOpen">) {
   const [title, setTitle] = useState(editingOffer?.title ?? "");
   const [description, setDescription] = useState(editingOffer?.description ?? "");
-  const [discountType, setDiscountType] = useState<"percent" | "fixed" | "free_item" | "custom">(
-    editingOffer?.discountType ?? "percent"
+  const [discountType, setDiscountType] = useState<
+    "percent" | "fixed" | "free_item" | "custom"
+  >(editingOffer?.discountType ?? "percent");
+  const [discountValue, setDiscountValue] = useState(
+    editingOffer?.discountValue ?? (editingOffer ? "" : "15")
   );
-  const [discountValue, setDiscountValue] = useState(editingOffer?.discountValue ?? (editingOffer ? "" : "15"));
-  const [discountText, setDiscountText] = useState(editingOffer?.discountText ?? "");
-  const [limitPeriod, setLimitPeriod] = useState<OfferPeriod>(editingOffer?.limitPeriod ?? "day");
+  const [discountText, setDiscountText] = useState(
+    editingOffer?.discountText ?? ""
+  );
+  const [limitPeriod, setLimitPeriod] = useState<OfferPeriod>(
+    editingOffer?.limitPeriod ?? "day"
+  );
   const [limitCount, setLimitCount] = useState<string>(
-    editingOffer ? (editingOffer.limitCount !== null ? String(editingOffer.limitCount) : "") : "1"
+    editingOffer
+      ? editingOffer.limitCount !== null
+        ? String(editingOffer.limitCount)
+        : ""
+      : "1"
   );
   const [startsAt, setStartsAt] = useState(editingOffer?.startsAt ?? "");
   const [endsAt, setEndsAt] = useState(editingOffer?.endsAt ?? "");
-  const [activeDays, setActiveDays] = useState<number[]>(editingOffer?.activeDays ?? []);
-  const [activeFrom, setActiveFrom] = useState(editingOffer?.activeFrom ? editingOffer.activeFrom.slice(0, 5) : "");
-  const [activeTo, setActiveTo] = useState(editingOffer?.activeTo ? editingOffer.activeTo.slice(0, 5) : "");
+  const [activeDays, setActiveDays] = useState<number[]>(
+    editingOffer?.activeDays ?? []
+  );
+  const [activeFrom, setActiveFrom] = useState(
+    editingOffer?.activeFrom ? editingOffer.activeFrom.slice(0, 5) : ""
+  );
+  const [activeTo, setActiveTo] = useState(
+    editingOffer?.activeTo ? editingOffer.activeTo.slice(0, 5) : ""
+  );
   const [visible, setVisible] = useState(editingOffer?.visible ?? true);
-  const [status, setStatus] = useState<"active" | "paused">(editingOffer?.status ?? "active");
+  const [status, setStatus] = useState<"active" | "paused">(
+    editingOffer?.status ?? "active"
+  );
   const [terms, setTerms] = useState(editingOffer?.terms ?? "");
+
+  // Promo Image States
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [pendingImageFile, setPendingImageFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(
+    editingOffer?.imageUrl ?? null
+  );
+  const [isImageRemoved, setIsImageRemoved] = useState(false);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isValidatingImage, setIsValidatingImage] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{
@@ -112,6 +208,15 @@ function VendorOfferForm({
     general?: string;
   }>({});
 
+  // Cleanup object URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
+
   const toggleDay = (day: number) => {
     setActiveDays((prev) =>
       prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()
@@ -121,6 +226,69 @@ function VendorOfferForm({
   const handleSelectAllDays = () => {
     if (activeDays.length === 7) setActiveDays([]);
     else setActiveDays([0, 1, 2, 3, 4, 5, 6]);
+  };
+
+  const handleFileSelect = async (file: File) => {
+    setImageError(null);
+    setIsValidatingImage(true);
+    try {
+      await validateOfferImageFile(file);
+      if (previewUrl && previewUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPendingImageFile(file);
+      setPreviewUrl(URL.createObjectURL(file));
+      setIsImageRemoved(false);
+    } catch (err) {
+      setImageError(err instanceof Error ? err.message : "Invalid image file");
+    } finally {
+      setIsValidatingImage(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      void handleFileSelect(file);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) {
+      void handleFileSelect(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    if (previewUrl && previewUrl.startsWith("blob:")) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPendingImageFile(null);
+    setPreviewUrl(null);
+    setIsImageRemoved(true);
+    setImageError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const validate = () => {
@@ -212,15 +380,44 @@ function VendorOfferForm({
     };
 
     try {
+      let savedOffer: OfferDto;
       if (editingOffer) {
         const res = await updateOffer(editingOffer.id, payload as UpdateOfferRequest);
-        onOfferSaved(res.offer);
-        toast.success("Offer updated successfully!");
+        savedOffer = res.offer;
       } else {
         const res = await createOffer(vendorId, payload);
-        onOfferSaved(res.offer);
-        toast.success("Offer created successfully!");
+        savedOffer = res.offer;
       }
+
+      // Handle image upload / removal via PUT/DELETE
+      if (pendingImageFile) {
+        try {
+          const imgRes = await uploadOfferImage(savedOffer.id, pendingImageFile);
+          savedOffer = { ...savedOffer, imageUrl: imgRes.imageUrl };
+        } catch (imgErr) {
+          toast.error(
+            `Offer saved, but promo image upload failed: ${
+              imgErr instanceof Error ? imgErr.message : "Upload error"
+            }`
+          );
+        }
+      } else if (isImageRemoved && editingOffer?.imageUrl) {
+        try {
+          await deleteOfferImage(savedOffer.id);
+          savedOffer = { ...savedOffer, imageUrl: null };
+        } catch (imgErr) {
+          toast.error(
+            `Offer saved, but promo image deletion failed: ${
+              imgErr instanceof Error ? imgErr.message : "Delete error"
+            }`
+          );
+        }
+      }
+
+      onOfferSaved(savedOffer);
+      toast.success(
+        editingOffer ? "Offer updated successfully!" : "Offer created successfully!"
+      );
       onClose();
     } catch (err) {
       setFieldErrors({
@@ -239,7 +436,11 @@ function VendorOfferForm({
   });
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col flex-1 min-h-0 overflow-hidden">
+    <form
+      onSubmit={handleSubmit}
+      noValidate
+      className="flex flex-col flex-1 min-h-0 overflow-hidden"
+    >
       <ModalBody className="space-y-6 flex-1 min-h-0 overflow-y-auto pr-1">
         {fieldErrors.general && (
           <Alert variant="destructive" title="Error">
@@ -277,7 +478,8 @@ function VendorOfferForm({
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
-                if (fieldErrors.title) setFieldErrors((prev) => ({ ...prev, title: undefined }));
+                if (fieldErrors.title)
+                  setFieldErrors((prev) => ({ ...prev, title: undefined }));
               }}
               error={fieldErrors.title}
               className="h-11 rounded-xl font-medium"
@@ -296,15 +498,138 @@ function VendorOfferForm({
           </div>
         </div>
 
-        {/* Section 2: Discount Type & Value */}
+        {/* Section 2: Promo Poster Image (4:5 Portrait) */}
+        <div className="pt-3 border-t border-border space-y-4">
+          <div className="flex items-center justify-between">
+            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              2. Promo Poster Image (4:5)
+            </h4>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              Optional — can be added later
+            </span>
+          </div>
+
+          {/* Hidden native file input for camera roll & desktop picker */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={handleFileInputChange}
+            className="sr-only"
+            tabIndex={-1}
+            aria-hidden="true"
+          />
+
+          {imageError && (
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-start gap-2">
+              <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
+              <span>{imageError}</span>
+            </div>
+          )}
+
+          {previewUrl ? (
+            /* Live 4:5 Preview Card with Replace & Remove */
+            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl border border-border bg-slate-50 dark:bg-zinc-900/60">
+              <div className="relative w-36 sm:w-44 aspect-[4/5] rounded-xl overflow-hidden bg-slate-950 border border-border shadow-md shrink-0">
+                <Image
+                  src={previewUrl}
+                  alt="Offer promo preview"
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
+
+              <div className="space-y-3 flex-1 min-w-0 text-center sm:text-left">
+                <div className="space-y-1">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-500/20">
+                    <Check className="size-3.5 stroke-[2.5]" />
+                    <span>Promo image staged</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    4:5 portrait poster ready. Tap replace to choose another file or remove to use the gradient card.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isValidatingImage}
+                    className="min-h-[44px] text-xs font-bold rounded-xl"
+                  >
+                    <RefreshCw className="size-3.5 mr-1.5" />
+                    <span>Replace image</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleRemoveImage}
+                    className="min-h-[44px] text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                  >
+                    <Trash2 className="size-3.5 mr-1.5" />
+                    <span>Remove image</span>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Drag-and-Drop & Tap-to-Pick Dropzone */
+            <div
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => fileInputRef.current?.click()}
+              className={cn(
+                "group relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2.5 min-h-[140px]",
+                isDragging
+                  ? "border-brand bg-brand/5 dark:bg-brand/10 scale-[0.99]"
+                  : "border-border hover:border-brand/50 hover:bg-muted/30 bg-card"
+              )}
+            >
+              <div className="size-11 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                {isValidatingImage ? (
+                  <RefreshCw className="size-5 animate-spin" />
+                ) : (
+                  <Upload className="size-5" />
+                )}
+              </div>
+
+              <div className="space-y-0.5">
+                <p className="text-xs sm:text-sm font-bold text-foreground">
+                  {isValidatingImage
+                    ? "Validating image dimensions…"
+                    : "Drop 4:5 promo poster here or click to browse"}
+                </p>
+                <p className="text-[11px] text-muted-foreground font-medium">
+                  Tap to choose from photo library or camera roll
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Required Spec Text Under Field */}
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            1080 × 1350 px (4:5), WebP/JPG/PNG, up to 2.5 MB. Include partner logo, the offer, and terms in fine print.
+          </p>
+        </div>
+
+        {/* Section 3: Discount Details */}
         <div className="pt-3 border-t border-border space-y-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            2. Discount Details
+            3. Discount Details
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="discount-type" className="text-xs font-bold uppercase tracking-wider">
+              <Label
+                htmlFor="discount-type"
+                className="text-xs font-bold uppercase tracking-wider"
+              >
                 Discount Type *
               </Label>
               <select
@@ -313,7 +638,11 @@ function VendorOfferForm({
                 onChange={(e) => {
                   setDiscountType(e.target.value as typeof discountType);
                   if (fieldErrors.discountValue || fieldErrors.discountText) {
-                    setFieldErrors((prev) => ({ ...prev, discountValue: undefined, discountText: undefined }));
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      discountValue: undefined,
+                      discountText: undefined,
+                    }));
                   }
                 }}
                 className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
@@ -327,47 +656,51 @@ function VendorOfferForm({
 
             {discountType === "percent" && (
               <div className="space-y-1.5">
-                <div className="relative">
-                  <Input
-                    id="discount-val-percent"
-                    label="Discount Percentage (%) *"
-                    type="number"
-                    min="1"
-                    max="100"
-                    required
-                    placeholder="15"
-                    value={discountValue}
-                    onChange={(e) => {
-                      setDiscountValue(e.target.value);
-                      if (fieldErrors.discountValue) setFieldErrors((prev) => ({ ...prev, discountValue: undefined }));
-                    }}
-                    error={fieldErrors.discountValue}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
+                <Input
+                  id="discount-val-percent"
+                  label="Discount Percentage (%) *"
+                  type="number"
+                  min="1"
+                  max="100"
+                  required
+                  placeholder="15"
+                  value={discountValue}
+                  onChange={(e) => {
+                    setDiscountValue(e.target.value);
+                    if (fieldErrors.discountValue)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        discountValue: undefined,
+                      }));
+                  }}
+                  error={fieldErrors.discountValue}
+                  className="h-11 rounded-xl"
+                />
               </div>
             )}
 
             {discountType === "fixed" && (
               <div className="space-y-1.5">
-                <div className="relative">
-                  <Input
-                    id="discount-val-fixed"
-                    label="Amount Off (EGP) *"
-                    type="number"
-                    min="1"
-                    step="0.5"
-                    required
-                    placeholder="20"
-                    value={discountValue}
-                    onChange={(e) => {
-                      setDiscountValue(e.target.value);
-                      if (fieldErrors.discountValue) setFieldErrors((prev) => ({ ...prev, discountValue: undefined }));
-                    }}
-                    error={fieldErrors.discountValue}
-                    className="h-11 rounded-xl"
-                  />
-                </div>
+                <Input
+                  id="discount-val-fixed"
+                  label="Amount Off (EGP) *"
+                  type="number"
+                  min="1"
+                  step="0.5"
+                  required
+                  placeholder="20"
+                  value={discountValue}
+                  onChange={(e) => {
+                    setDiscountValue(e.target.value);
+                    if (fieldErrors.discountValue)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        discountValue: undefined,
+                      }));
+                  }}
+                  error={fieldErrors.discountValue}
+                  className="h-11 rounded-xl"
+                />
               </div>
             )}
 
@@ -377,11 +710,19 @@ function VendorOfferForm({
                   id="discount-text"
                   label="Discount Label Text *"
                   required
-                  placeholder={discountType === "free_item" ? "e.g. Free Cookie" : "e.g. Buy 1 Get 1"}
+                  placeholder={
+                    discountType === "free_item"
+                      ? "e.g. Free Cookie"
+                      : "e.g. Buy 1 Get 1"
+                  }
                   value={discountText}
                   onChange={(e) => {
                     setDiscountText(e.target.value);
-                    if (fieldErrors.discountText) setFieldErrors((prev) => ({ ...prev, discountText: undefined }));
+                    if (fieldErrors.discountText)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        discountText: undefined,
+                      }));
                   }}
                   error={fieldErrors.discountText}
                   className="h-11 rounded-xl"
@@ -391,15 +732,18 @@ function VendorOfferForm({
           </div>
         </div>
 
-        {/* Section 3: Usage Limits */}
+        {/* Section 4: Usage Limits */}
         <div className="pt-3 border-t border-border space-y-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            3. Usage Limits (Per Student)
+            4. Usage Limits (Per Student)
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="limit-period" className="text-xs font-bold uppercase tracking-wider">
+              <Label
+                htmlFor="limit-period"
+                className="text-xs font-bold uppercase tracking-wider"
+              >
                 Limit Frequency *
               </Label>
               <select
@@ -429,7 +773,11 @@ function VendorOfferForm({
                   value={limitCount}
                   onChange={(e) => {
                     setLimitCount(e.target.value);
-                    if (fieldErrors.limitCount) setFieldErrors((prev) => ({ ...prev, limitCount: undefined }));
+                    if (fieldErrors.limitCount)
+                      setFieldErrors((prev) => ({
+                        ...prev,
+                        limitCount: undefined,
+                      }));
                   }}
                   error={fieldErrors.limitCount}
                   className="h-11 rounded-xl"
@@ -439,17 +787,21 @@ function VendorOfferForm({
           </div>
         </div>
 
-        {/* Section 4: Schedule & Timing */}
+        {/* Section 5: Schedule & Timing */}
         <div className="pt-3 border-t border-border space-y-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            4. Schedule & Active Days/Hours
+            5. Schedule & Active Days/Hours
           </h4>
 
           {/* Active Days Chips */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold">
-                Active Days ({activeDays.length === 0 ? "Every day" : `${activeDays.length} days selected`})
+                Active Days (
+                {activeDays.length === 0
+                  ? "Every day"
+                  : `${activeDays.length} days selected`}
+                )
               </Label>
               <button
                 type="button"
@@ -493,7 +845,11 @@ function VendorOfferForm({
                 value={activeFrom}
                 onChange={(e) => {
                   setActiveFrom(e.target.value);
-                  if (fieldErrors.activeFrom) setFieldErrors((prev) => ({ ...prev, activeFrom: undefined }));
+                  if (fieldErrors.activeFrom)
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      activeFrom: undefined,
+                    }));
                 }}
                 error={fieldErrors.activeFrom}
                 className="h-11 rounded-xl"
@@ -509,7 +865,11 @@ function VendorOfferForm({
                 value={activeTo}
                 onChange={(e) => {
                   setActiveTo(e.target.value);
-                  if (fieldErrors.activeTo) setFieldErrors((prev) => ({ ...prev, activeTo: undefined }));
+                  if (fieldErrors.activeTo)
+                    setFieldErrors((prev) => ({
+                      ...prev,
+                      activeTo: undefined,
+                    }));
                 }}
                 error={fieldErrors.activeTo}
                 className="h-11 rounded-xl"
@@ -535,7 +895,11 @@ function VendorOfferForm({
               minDate={startsAt || undefined}
               onChange={(date) => {
                 setEndsAt(date);
-                if (fieldErrors.endsAt) setFieldErrors((prev) => ({ ...prev, endsAt: undefined }));
+                if (fieldErrors.endsAt)
+                  setFieldErrors((prev) => ({
+                    ...prev,
+                    endsAt: undefined,
+                  }));
               }}
               error={fieldErrors.endsAt}
               clearable
@@ -543,10 +907,10 @@ function VendorOfferForm({
           </div>
         </div>
 
-        {/* Section 5: Visibility & Status Toggles */}
+        {/* Section 6: Visibility & Status Toggles */}
         <div className="pt-3 border-t border-border space-y-4">
           <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            5. Visibility & Terms
+            6. Visibility & Terms
           </h4>
 
           <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
@@ -558,10 +922,7 @@ function VendorOfferForm({
                 Show this deal in student app browsable offers
               </p>
             </div>
-            <Switch
-              checked={visible}
-              onCheckedChange={setVisible}
-            />
+            <Switch checked={visible} onCheckedChange={setVisible} />
           </div>
 
           <div className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-card">
@@ -570,12 +931,16 @@ function VendorOfferForm({
                 Offer Status
               </Label>
               <p className="text-xs text-muted-foreground">
-                {status === "active" ? "Active (Can be scanned)" : "Paused (Scans paused)"}
+                {status === "active"
+                  ? "Active (Can be scanned)"
+                  : "Paused (Scans paused)"}
               </p>
             </div>
             <Switch
               checked={status === "active"}
-              onCheckedChange={(checked) => setStatus(checked ? "active" : "paused")}
+              onCheckedChange={(checked) =>
+                setStatus(checked ? "active" : "paused")
+              }
             />
           </div>
 

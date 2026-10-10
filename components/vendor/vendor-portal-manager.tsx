@@ -42,11 +42,12 @@ import {
   formatCurrency,
   formatChangePercent,
 } from "@/components/ui/analytics-format";
-import type {
+import {
   VendorOverviewResponse,
   VendorOffersResponse,
   CashiersResponse,
 } from "@/lib/analytics/types";
+import { OfferCard } from "@/components/offers/offer-card";
 import { cn } from "cn";
 import { STAFF_PASSWORD_MIN, STAFF_PASSWORD_MAX } from "@/lib/staff/types";
 
@@ -690,62 +691,83 @@ export function VendorPortalManager() {
               {offers.map((offer) => (
                 <Card
                   key={offer.id}
-                  className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs"
+                  className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col justify-between"
                 >
-                  <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <CardTitle className="text-base sm:text-lg text-foreground">
-                        {offer.title}
-                      </CardTitle>
-                      <Badge variant="brand" className="text-xs font-bold font-mono">
-                        {offer.discountLabel}
-                      </Badge>
-                    </div>
-
-                    <span
-                      className={cn(
-                        "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 border",
-                        offer.status === "active"
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
-                          : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
-                      )}
-                    >
-                      {offer.status}
-                    </span>
-                  </CardHeader>
-
-                  <CardContent className="p-4 sm:p-5 space-y-3 text-xs">
-                    {offer.terms && (
-                      <div className="text-muted-foreground italic bg-muted/40 p-2.5 rounded-xl border border-border">
-                        &ldquo;{offer.terms}&rdquo;
+                  <div className="space-y-4">
+                    {/* Optional 4:5 Promo Poster */}
+                    {offer.imageUrl && (
+                      <div className="p-4 sm:p-5 pb-0 flex justify-center">
+                        <div className="w-full max-w-[240px]">
+                          <OfferCard
+                            offer={{
+                              id: offer.id,
+                              title: offer.title,
+                              discountLabel: offer.discountLabel,
+                              imageUrl: offer.imageUrl,
+                              terms: offer.terms,
+                            }}
+                            sizes="(max-width: 640px) 80vw, 240px"
+                            lazy
+                          />
+                        </div>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-2 gap-2 text-muted-foreground pt-1">
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
-                          Per-Student Limit
-                        </span>
-                        <span className="font-bold text-foreground font-mono">
-                          {offer.limitPeriod === "unlimited"
-                            ? "Unlimited"
-                            : `${offer.limitCount} per ${offer.limitPeriod}`}
-                        </span>
+                    <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800 flex flex-row items-start justify-between gap-3">
+                      <div className="space-y-1">
+                        <CardTitle className="text-base sm:text-lg text-foreground">
+                          {offer.title}
+                        </CardTitle>
+                        <Badge variant="brand" className="text-xs font-bold font-mono">
+                          {offer.discountLabel}
+                        </Badge>
                       </div>
 
-                      <div>
-                        <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
-                          Schedule
-                        </span>
-                        <span className="text-foreground">
-                          {offer.activeDays?.length
-                            ? `Days: ${offer.activeDays.join(", ")}`
-                            : "Every day"}
-                          {offer.activeFrom ? ` (${offer.activeFrom}–${offer.activeTo || "close"})` : ""}
-                        </span>
+                      <span
+                        className={cn(
+                          "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 border",
+                          offer.status === "active"
+                            ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
+                            : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
+                        )}
+                      >
+                        {offer.status}
+                      </span>
+                    </CardHeader>
+
+                    <CardContent className="p-4 sm:p-5 pt-0 space-y-3 text-xs">
+                      {offer.terms && (
+                        <div className="text-muted-foreground italic bg-muted/40 p-2.5 rounded-xl border border-border">
+                          &ldquo;{offer.terms}&rdquo;
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2 text-muted-foreground pt-1">
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
+                            Per-Student Limit
+                          </span>
+                          <span className="font-bold text-foreground font-mono">
+                            {offer.limitPeriod === "unlimited"
+                              ? "Unlimited"
+                              : `${offer.limitCount} per ${offer.limitPeriod}`}
+                          </span>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
+                            Schedule
+                          </span>
+                          <span className="text-foreground">
+                            {offer.activeDays?.length
+                              ? `Days: ${offer.activeDays.join(", ")}`
+                              : "Every day"}
+                            {offer.activeFrom ? ` (${offer.activeFrom}–${offer.activeTo || "close"})` : ""}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </CardContent>
+                    </CardContent>
+                  </div>
                 </Card>
               ))}
             </div>

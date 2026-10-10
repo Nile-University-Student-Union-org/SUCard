@@ -136,6 +136,13 @@ export const offers = pgTable("offers", {
   visible: boolean("visible").notNull().default(true), limitCount: integer("limit_count"), limitPeriod: text("limit_period", { enum: ["day", "week", "month", "semester", "total", "unlimited"] }).notNull().default("unlimited"),
   status: text("status", { enum: ["active", "paused"] }).notNull().default("active"), createdAt: time("created_at"), updatedAt: time("updated_at"),
 });
+export const offerImages = pgTable("offer_images", {
+  offerId: uuid("offer_id").primaryKey().references(() => offers.id, { onDelete: "cascade" }),
+  bytes: bytea("bytes").notNull(), mime: text("mime").notNull(),
+  width: integer("width").notNull(), height: integer("height").notNull(),
+  size: integer("size").notNull(), sha256: text("sha256").notNull(),
+  updatedAt: time("updated_at"),
+});
 export const offerRevisions = pgTable("offer_revisions", {
   id: uuid("id").primaryKey().defaultRandom(), offerId: uuid("offer_id").notNull().references(() => offers.id), version: integer("version").notNull(), snapshot: jsonb("snapshot").notNull(),
   changedBy: text("changed_by").references(() => user.id, { onDelete: "set null" }), changedAt: time("changed_at"),

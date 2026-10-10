@@ -2,10 +2,12 @@ import "server-only";
 import { ZodError, type ZodType } from "zod";
 import { getAdminFromRequest, getCurrentUser } from "@/lib/auth/guards";
 import { VendorError } from "./service";
+import { OfferImageError } from "./offer-image";
 import { logError } from "@/lib/log";
 export const json = (data: unknown, status = 200) => Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 export function errorResponse(error: unknown) {
   if (error instanceof VendorError) return json({ error: error.message, code: error.code }, error.status);
+  if (error instanceof OfferImageError) return json({ error: error.message }, 400);
   if (error instanceof ZodError) return json({ error: error.issues[0]?.message ?? "Invalid input" }, 400);
   if (error instanceof SyntaxError) return json({ error: "Invalid JSON" }, 400);
   if (error instanceof Error && error.message === "Invalid date range") return json({ error: error.message }, 400);

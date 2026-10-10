@@ -115,11 +115,11 @@ export default function HomePage() {
               <div className="h-4 w-28 rounded-full bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-3" />
               <div className="h-9 w-64 rounded-xl bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-3" />
               <div className="h-4 w-72 max-w-full rounded-md bg-slate-200/80 dark:bg-zinc-800/80 animate-pulse mb-8" />
-              <div className="flex gap-4 overflow-hidden">
-                {[1, 2, 3].map((k) => (
+              <div className="flex gap-4 overflow-hidden pt-2 pb-8">
+                {[1, 2, 3, 4].map((k) => (
                   <div
                     key={k}
-                    className="h-48 w-64 shrink-0 rounded-2xl bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse"
+                    className="aspect-[4/5] w-[76%] max-w-[17rem] sm:w-[17rem] shrink-0 rounded-2xl sm:rounded-[1.25rem] bg-slate-200/60 dark:bg-zinc-800/60 animate-pulse"
                   />
                 ))}
               </div>

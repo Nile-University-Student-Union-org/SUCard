@@ -33,10 +33,10 @@ export type DeleteStudentRequest = { confirmEmail: string };
 export type BulkStudentRequest = { action: "suspend" | "reactivate"; ids: string[]; reason?: string };
 export type StudentActionResponse = { count: number };
 export type DeleteStudentResponse = { deleted: true; emailHash: string };
-export type StudentDeal = { vendorId: string; vendorName: string; logoUrl: string | null; category: string; location: string | null; offerId: string; title: string; discountLabel: string; terms: string | null; limitText: string; scheduleText: string; remainingUses: number | null; resetsAt: string | null };
+export type StudentDeal = { vendorId: string; vendorName: string; logoUrl: string | null; imageUrl?: string | null; category: string; location: string | null; offerId: string; title: string; discountLabel: string; terms: string | null; limitText: string; scheduleText: string; remainingUses: number | null; resetsAt: string | null };
 export type StudentDealsResponse = { deals: StudentDeal[] };
 export type StudentHistoryResponse = { redemptions: { id: string; vendorName: string; offerTitle: string | null; confirmedAt: string; billAmount: string | null }[]; nextCursor: string | null };
-export type VendorOffersResponse = { offers: { id: string; title: string; discountLabel: string; terms: string | null; limitCount: number | null; limitPeriod: string; startsAt: string | null; endsAt: string | null; activeDays: number[]; activeFrom: string | null; activeTo: string | null; status: string }[] };
+export type VendorOffersResponse = { offers: { id: string; title: string; discountLabel: string; terms: string | null; limitCount: number | null; limitPeriod: string; startsAt: string | null; endsAt: string | null; activeDays: number[]; activeFrom: string | null; activeTo: string | null; status: string; imageUrl?: string | null }[] };
 export type CashiersResponse = { cashiers: { id: string; email: string; name: string; status: "active" | "disabled" }[] };
 /** POST /api/vendor/cashiers; PATCH /api/vendor/cashiers/[id]; POST its password route. */
 export type CreateCashierRequest = { email: string; name: string; password: string; };
