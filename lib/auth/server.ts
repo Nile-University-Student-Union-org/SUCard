@@ -113,8 +113,11 @@ export const auth = betterAuth({
   databaseHooks: { session: { create: { before: async (session, context) => {
     const [account] = await db.select({ disabledAt: schema.user.disabledAt, role: schema.user.role }).from(schema.user).where(eq(schema.user.id, session.userId));
     if (account?.disabledAt) throw new APIError("FORBIDDEN", { message: "This account is disabled. Contact an SU super admin." });
-    const loginMethod = context?.path?.startsWith("/callback/microsoft") ? "microsoft" : "password";
-    if ((account?.role ?? "student") === "student" && loginMethod !== "microsoft")
+    const path = context?.path ?? "";
+    // Microsoft is the only social provider; the route may be reported as "/callback/:id".
+    const loginMethod = path.startsWith("/callback/") ? "microsoft" : "password";
+    // Block only the password routes, so an unexpected path can never lock students out.
+    if ((account?.role ?? "student") === "student" && (path === "/sign-in/email" || path.startsWith("/two-factor/")))
       throw new APIError("FORBIDDEN", { message: "Students sign in with Microsoft." });
     return { data: { ...session, expiresAt: sessionExpiry(account?.role ?? "student", session.expiresAt), loginMethod } };
   } } } },
