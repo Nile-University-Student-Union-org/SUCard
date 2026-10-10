@@ -135,16 +135,7 @@ export function ScannerHeader({
           <WifiOff className="size-3 shrink-0" aria-hidden="true" />
           <span>Offline</span>
         </span>
-      ) : (
-        <span
-          role="status"
-          aria-label="Scanner is online"
-          className="hidden xl:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 shrink-0"
-        >
-          <span className="size-1.5 rounded-full bg-emerald-500 shrink-0" aria-hidden="true" />
-          <span>Online</span>
-        </span>
-      )}
+      ) : null}
 
       {/* Sound Toggle Icon Button */}
       <button
