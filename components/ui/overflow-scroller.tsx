@@ -100,81 +100,64 @@ export const OverflowScroller = forwardRef<HTMLDivElement, OverflowScrollerProps
 
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       el.scrollBy({ left: offset, behavior: reducedMotion ? "instant" : "smooth" });
-      setTimeout(checkScrollBounds, 350);
     };
 
+    // Arrows and fades overlay the edges instead of sitting in the flex row: mounting them in-flow
+    // changed the scroller width mid-scroll, which re-triggered the bounds check and made the row jump.
+    const arrowClass =
+      "absolute top-1/2 -translate-y-1/2 z-20 flex size-11 rounded-[12px] border-2 border-slate-200 dark:border-zinc-800 text-charcoal dark:text-zinc-200 bg-white dark:bg-zinc-900 hover:border-brand/60 dark:hover:border-brand-soft/60 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-brand dark:hover:text-white shadow-xs items-center justify-center cursor-pointer select-none transition-[opacity,transform,background-color,border-color,color] duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft active:scale-95 motion-reduce:transition-none";
+    const fadeClass =
+      "pointer-events-none absolute top-0 bottom-0 w-16 sm:w-20 z-10 transition-opacity duration-200 motion-reduce:transition-none";
+    const showLeft = hasOverflow && canScrollLeft;
+    const showRight = hasOverflow && canScrollRight;
+
     return (
-      <div
-        className={cn("relative flex items-center gap-2 sm:gap-2.5", className)}
-      >
-        {/* Left Scroll Button */}
-        {hasOverflow && canScrollLeft && (
-          <button
-            onClick={() => handleScroll("left")}
-            type="button"
-            aria-label={leftArrowLabel}
-            className="flex w-11 h-11 min-h-[44px] min-w-[44px] rounded-[12px] 
-                       border-2 border-slate-200 dark:border-zinc-800 
-                       text-charcoal dark:text-zinc-200 bg-white dark:bg-zinc-900 
-                       hover:border-brand/60 dark:hover:border-brand-soft/60 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-brand dark:hover:text-white 
-                       shadow-xs items-center justify-center transition-all shrink-0 cursor-pointer select-none
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2
-                       active:scale-95 animate-in fade-in-0 duration-200
-                       motion-reduce:animate-none motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
-          >
-            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
-          </button>
-        )}
-
-        {/* Scroll Container with Gradients */}
-        <div className="relative flex-1 min-w-0">
-          {/* Left Gradient Cue */}
-          {showGradients && hasOverflow && canScrollLeft && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-r from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200 motion-reduce:transition-none"
-            />
-          )}
-
+      <div className={cn("relative", className)}>
+        {showGradients && (
           <div
-            ref={internalRef}
-            role={role}
-            aria-label={ariaLabel}
-            className={cn(
-              "flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-2.5 px-1 scroll-smooth motion-reduce:scroll-auto touch-pan-x",
-              scrollerClassName,
-            )}
-          >
-            {children}
-          </div>
+            aria-hidden="true"
+            className={cn(fadeClass, "left-0 bg-gradient-to-r from-slate-50 dark:from-zinc-950 via-slate-50/70 dark:via-zinc-950/70 to-transparent", showLeft ? "opacity-100" : "opacity-0")}
+          />
+        )}
+        <button
+          onClick={() => handleScroll("left")}
+          type="button"
+          aria-label={leftArrowLabel}
+          tabIndex={showLeft ? 0 : -1}
+          aria-hidden={!showLeft}
+          className={cn(arrowClass, "left-0", showLeft ? "opacity-100" : "opacity-0 pointer-events-none")}
+        >
+          <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
+        </button>
 
-          {/* Right Gradient Cue */}
-          {showGradients && hasOverflow && canScrollRight && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute right-0 top-0 bottom-0 w-8 sm:w-12 bg-gradient-to-l from-slate-50/95 dark:from-zinc-950/95 via-slate-50/50 dark:via-zinc-950/50 to-transparent z-10 transition-opacity duration-200 motion-reduce:transition-none"
-            />
+        <div
+          ref={internalRef}
+          role={role}
+          aria-label={ariaLabel}
+          className={cn(
+            "flex items-center gap-2 sm:gap-3 overflow-x-auto no-scrollbar py-2.5 px-1 touch-pan-x",
+            scrollerClassName,
           )}
+        >
+          {children}
         </div>
 
-        {/* Right Scroll Button */}
-        {hasOverflow && canScrollRight && (
-          <button
-            onClick={() => handleScroll("right")}
-            type="button"
-            aria-label={rightArrowLabel}
-            className="flex w-11 h-11 min-h-[44px] min-w-[44px] rounded-[12px] 
-                       border-2 border-slate-200 dark:border-zinc-800 
-                       text-charcoal dark:text-zinc-200 bg-white dark:bg-zinc-900 
-                       hover:border-brand/60 dark:hover:border-brand-soft/60 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-brand dark:hover:text-white 
-                       shadow-xs items-center justify-center transition-all shrink-0 cursor-pointer select-none
-                       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2
-                       active:scale-95 animate-in fade-in-0 duration-200
-                       motion-reduce:animate-none motion-reduce:transition-none motion-reduce:transform-none motion-reduce:active:scale-100"
-          >
-            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
-          </button>
+        {showGradients && (
+          <div
+            aria-hidden="true"
+            className={cn(fadeClass, "right-0 bg-gradient-to-l from-slate-50 dark:from-zinc-950 via-slate-50/70 dark:via-zinc-950/70 to-transparent", showRight ? "opacity-100" : "opacity-0")}
+          />
         )}
+        <button
+          onClick={() => handleScroll("right")}
+          type="button"
+          aria-label={rightArrowLabel}
+          tabIndex={showRight ? 0 : -1}
+          aria-hidden={!showRight}
+          className={cn(arrowClass, "right-0", showRight ? "opacity-100" : "opacity-0 pointer-events-none")}
+        >
+          <ChevronRight className="w-5 h-5 stroke-[2.5]" />
+        </button>
       </div>
     );
   },
