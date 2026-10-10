@@ -2,6 +2,7 @@
 
 import React, { useState, useSyncExternalStore } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   CreditCard,
   QrCode,
@@ -11,6 +12,7 @@ import {
   RotateCcw,
   ShieldAlert,
   Loader2,
+  Package,
 } from "lucide-react";
 import type { StudentHomeResponse } from "@/lib/student/types";
 import { cairoDate, officeStatus, upcomingExceptions, weekSummary } from "@/lib/settings/office-hours";
@@ -21,11 +23,17 @@ import { StatusState } from "@/components/ui/status-state";
 import { cn } from "@/lib/utils";
 import { CardScanner } from "./card-scanner";
 import { WalletQrModal } from "./wallet-qr-modal";
+import { SwitchToPhysicalModal } from "./switch-to-physical-modal";
 
 const emptySubscribe = () => () => {};
 
 function exceptionLabel(exception: StudentHomeResponse["office"]["schedule"]["exceptions"][number]): string {
-  const day = new Date(`${exception.date}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  const day = new Date(`${exception.date}T12:00:00Z`).toLocaleDateString("en-GB", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+    timeZone: "UTC",
+  });
   const hours = exception.closed ? "Closed" : `${exception.open}–${exception.close}`;
   return `${hours} ${day}${exception.note ? `: ${exception.note}` : ""}`;
 }
@@ -58,8 +66,11 @@ interface StudentCardViewProps {
   qrSvg: string | null;
 }
 
-export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
+export function StudentCardView({ home: initialHome, qrSvg }: StudentCardViewProps) {
+  const router = useRouter();
+  const [currentHome, setCurrentHome] = useState(initialHome);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isSwitchModalOpen, setIsSwitchModalOpen] = useState(false);
   const [walletLoading, setWalletLoading] = useState(false);
   const [walletQrUrl, setWalletQrUrl] = useState<string | null>(null);
   const [walletNotice, setWalletNotice] = useState<{
@@ -68,7 +79,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   } | null>(null);
 
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
-  const officeSchedule = home.office.schedule;
+  const officeSchedule = currentHome.office.schedule;
   const officeNow = mounted ? new Date() : null;
   const status = officeNow ? officeStatus(officeSchedule, officeNow) : null;
   const nextException = officeNow ? upcomingExceptions(officeSchedule, officeNow, 1)[0] : undefined;
@@ -161,7 +172,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   };
 
   // 1. Profile Suspended State
-  if (home.profile.status === "suspended") {
+  if (currentHome.profile.status === "suspended") {
     return (
       <div className="w-full my-auto py-6 max-w-md mx-auto">
         <StatusState
@@ -170,59 +181,59 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           icon={<ShieldAlert className="size-8 text-rose-600 dark:text-rose-400" />}
           title="Card suspended"
           description={
-            home.profile.suspendReason ||
+            currentHome.profile.suspendReason ||
             "Your SU Card has been suspended. Please contact the Nile University Student Union office."
           }
         >
-            {/* Office Info Card */}
-            <div className="w-full max-w-sm mx-auto p-4 rounded-2xl bg-muted/60 border border-border text-left space-y-3 mt-4">
-              <div className="flex items-start gap-2.5 text-xs font-bold text-foreground">
-                <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
-                <span className="leading-snug">{home.office.location}</span>
-              </div>
+          {/* Office Info Card */}
+          <div className="w-full max-w-sm mx-auto p-4 rounded-2xl bg-muted/60 border border-border text-left space-y-3 mt-4">
+            <div className="flex items-start gap-2.5 text-xs font-bold text-foreground">
+              <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
+              <span className="leading-snug">{currentHome.office.location}</span>
+            </div>
 
-              {/* Today Status with subtle dot */}
-              <div className="flex items-center gap-2 text-xs font-medium">
-                <span
-                  className={cn(
-                    "size-2 rounded-full shrink-0",
-                    status?.openNow
-                      ? "bg-emerald-500 ring-2 ring-emerald-500/20"
-                      : "bg-slate-400 dark:bg-zinc-500 ring-2 ring-slate-400/20"
-                  )}
-                  aria-hidden="true"
-                />
-                <span className={status?.openNow ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-muted-foreground"}>
-                  {status?.todayLabel ?? weekSummary(officeSchedule)}
-                </span>
-                {status?.nextOpen && !status.openNow && (
-                  <span className="text-muted-foreground/80 text-[11px]">
-                    · {status.nextOpen}
-                  </span>
+            {/* Today Status with subtle dot */}
+            <div className="flex items-center gap-2 text-xs font-medium">
+              <span
+                className={cn(
+                  "size-2 rounded-full shrink-0",
+                  status?.openNow
+                    ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                    : "bg-slate-400 dark:bg-zinc-500 ring-2 ring-slate-400/20"
                 )}
-              </div>
-
-              {/* Week summary */}
-              <div className="flex items-start gap-2 text-xs text-muted-foreground">
-                <Clock className="size-3.5 text-ash dark:text-zinc-400 shrink-0 mt-0.5" />
-                <span className="leading-tight">{weekSummary(officeSchedule)}</span>
-              </div>
-
-              {/* Next upcoming exception within 14 days */}
-              {upcomingExceptionLabel && (
-                <div className="flex items-start gap-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
-                  <Calendar className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                  <span className="font-medium leading-tight">{upcomingExceptionLabel}</span>
-                </div>
+                aria-hidden="true"
+              />
+              <span className={status?.openNow ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-muted-foreground"}>
+                {status?.todayLabel ?? weekSummary(officeSchedule)}
+              </span>
+              {status?.nextOpen && !status.openNow && (
+                <span className="text-muted-foreground/80 text-[11px]">
+                  · {status.nextOpen}
+                </span>
               )}
             </div>
+
+            {/* Week summary */}
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <Clock className="size-3.5 text-ash dark:text-zinc-400 shrink-0 mt-0.5" />
+              <span className="leading-tight">{weekSummary(officeSchedule)}</span>
+            </div>
+
+            {/* Next upcoming exception within 14 days */}
+            {upcomingExceptionLabel && (
+              <div className="flex items-start gap-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+                <Calendar className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                <span className="font-medium leading-tight">{upcomingExceptionLabel}</span>
+              </div>
+            )}
+          </div>
         </StatusState>
       </div>
     );
   }
 
-  // 2. Physical Flow with No Card yet ("GET YOUR SU CARD")
-  if (home.flow === "physical" && !home.card) {
+  // 2. Physical Flow with No Card yet ("Head to the SU room to collect your card")
+  if (currentHome.flow === "physical" && !currentHome.card) {
     return (
       <div className="w-full my-auto py-4 space-y-6 max-w-md mx-auto">
         <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xl rounded-3xl overflow-hidden">
@@ -230,13 +241,13 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             {/* Header */}
             <div className="space-y-2 text-center sm:text-left">
               <div className="w-12 h-12 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto sm:mx-0 shadow-xs">
-                <CreditCard className="size-6" />
+                <Package className="size-6" />
               </div>
-              <h1 className="font-heading text-3xl sm:text-4xl uppercase tracking-wider text-charcoal dark:text-white leading-tight">
-                GET YOUR SU CARD
+              <h1 className="font-heading text-2xl sm:text-3xl uppercase tracking-wider text-charcoal dark:text-white leading-tight">
+                Head to the SU room to collect your card
               </h1>
               <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-medium">
-                Collect your physical Nile University Student Union membership card from the SU office.
+                Your membership is set to physical. Visit the Nile University Student Union desk to collect your printed SU Card.
               </p>
             </div>
 
@@ -249,10 +260,10 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
               <div className="space-y-2.5 text-xs sm:text-sm">
                 <div className="flex items-start gap-2.5 text-foreground font-bold">
                   <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
-                  <span className="leading-snug">{home.office.location}</span>
+                  <span className="leading-snug">{currentHome.office.location}</span>
                 </div>
 
-                {/* Today status with subtle indicator dot */}
+                {/* Today status with indicator dot */}
                 <div className="flex items-center gap-2 font-medium">
                   <span
                     className={cn(
@@ -298,10 +309,10 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
                 className="w-full text-sm font-bold min-h-[48px] normal-case shadow-xs"
               >
                 <QrCode className="size-4 mr-2" />
-                I have my card — scan it
+                I have my card
               </Button>
               <p className="text-center text-[11px] font-medium text-ash dark:text-zinc-500">
-                Once received, scan the QR code on the back to activate it instantly.
+                Once received from the desk, scan the QR code on the back to link and activate it.
               </p>
             </div>
           </div>
@@ -312,6 +323,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           onClose={() => setIsScannerOpen(false)}
           onSuccess={() => {
             setIsScannerOpen(false);
+            router.refresh();
             window.location.reload();
           }}
         />
@@ -320,7 +332,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   }
 
   // 3. Digital Flow with No Card (fallback edge case)
-  if (!home.card) {
+  if (!currentHome.card) {
     return (
       <div className="w-full my-auto py-6 max-w-md mx-auto">
         <StatusState
@@ -344,7 +356,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   }
 
   // 4. Active Card State -> THE WEB CARD
-  const linkedDate = formatLinkedDate(home.card.linkedAt);
+  const linkedDate = formatLinkedDate(currentHome.card.linkedAt);
 
   return (
     <div className="w-full my-auto py-4 space-y-6 max-w-[360px] sm:max-w-[400px] mx-auto">
@@ -410,10 +422,10 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
         <div className="relative z-10 pt-4 mt-3 border-t border-white/15 flex items-end justify-between gap-2">
           <div className="min-w-0 flex-1">
             <h2 className="font-heading text-lg sm:text-xl uppercase tracking-wide text-white leading-tight break-words line-clamp-2">
-              {home.name}
+              {currentHome.name}
             </h2>
             <p className="text-xs sm:text-sm font-mono font-bold text-sky-200 tracking-wider mt-1">
-              ID {home.profile.universityId}
+              ID {currentHome.profile.universityId}
             </p>
           </div>
         </div>
@@ -431,50 +443,54 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           />
         )}
 
-        {/* Google Wallet / Apple Wallet CTA */}
-        {isIos ? (
-          /* Apple Wallet Coming Soon Info Notice with direct Show Web Card action */
-          <div className="p-4 rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-center space-y-2.5 shadow-2xs">
-            <p className="text-xs font-semibold text-muted-foreground leading-relaxed">
-              Apple Wallet is in development. Your active SU Card above is ready for scanning at all partner spots.
-            </p>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                window.scrollTo({
-                  top: 0,
-                  behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-                });
-              }}
-              className="text-xs font-bold min-h-[44px] normal-case border-slate-300 dark:border-zinc-700"
-            >
-              <CreditCard className="size-4 mr-1.5" />
-              Show web card
-            </Button>
-          </div>
-        ) : (
-          /* Google Wallet Official Button Guideline Pill */
-          <button
-            type="button"
-            onClick={handleAddToGoogleWallet}
-            disabled={walletLoading}
-            aria-label="Add to Google Wallet"
-            className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-[transform,background-color,box-shadow] duration-140 active:scale-[0.97] hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
-          >
-            {walletLoading ? (
-              <>
-                <Loader2 className="size-4 animate-spin text-white motion-reduce:animate-none" />
-                <span>Connecting to Google Wallet…</span>
-              </>
+        {/* Digital Card: Google Wallet / Apple Wallet CTA */}
+        {currentHome.card.type === "digital" && (
+          <>
+            {isIos ? (
+              /* Apple Wallet Coming Soon Info Notice with direct Show Web Card action */
+              <div className="p-4 rounded-2xl bg-slate-100 dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 text-center space-y-2.5 shadow-2xs">
+                <p className="text-xs font-semibold text-muted-foreground leading-relaxed">
+                  Apple Wallet is in development. Your active SU Card above is ready for scanning at all partner spots.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    window.scrollTo({
+                      top: 0,
+                      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+                    });
+                  }}
+                  className="text-xs font-bold min-h-[44px] normal-case border-slate-300 dark:border-zinc-700"
+                >
+                  <CreditCard className="size-4 mr-1.5" />
+                  Show web card
+                </Button>
+              </div>
             ) : (
-              <>
-                <GoogleWalletLogo />
-                <span>Add to Google Wallet</span>
-              </>
+              /* Google Wallet Official Button Guideline Pill */
+              <button
+                type="button"
+                onClick={handleAddToGoogleWallet}
+                disabled={walletLoading}
+                aria-label="Add to Google Wallet"
+                className="w-full min-h-[48px] px-5 py-3 rounded-full bg-black text-white hover:bg-[#1f1f1f] active:bg-[#2b2b2b] border border-white/20 dark:border-white/25 shadow-md flex items-center justify-center gap-3 font-medium text-sm sm:text-base cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed select-none transition-[transform,background-color,box-shadow] duration-140 active:scale-[0.97] hover-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+              >
+                {walletLoading ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin text-white motion-reduce:animate-none" />
+                    <span>Connecting to Google Wallet…</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleWalletLogo />
+                    <span>Add to Google Wallet</span>
+                  </>
+                )}
+              </button>
             )}
-          </button>
+          </>
         )}
 
         <WalletQrModal saveUrl={walletQrUrl} onClose={() => setWalletQrUrl(null)} />
@@ -484,7 +500,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           <div className="flex items-center gap-1.5">
             <CreditCard className="size-3.5 text-ash dark:text-zinc-400 shrink-0" />
             <span>
-              {home.card.type === "digital" ? "Digital card" : "Physical card"}
+              {currentHome.card.type === "digital" ? "Digital card" : "Physical card"}
             </span>
           </div>
           {linkedDate && (
@@ -495,27 +511,41 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           )}
         </div>
 
-        {/* Secondary: Link Physical Card Option (for digital cards upgrade) */}
-        {home.card.type === "digital" && (
+        {/* Quiet Secondary Action: Switch to Physical Card (for digital cards) */}
+        {currentHome.card.type === "digital" && (
           <div className="text-center pt-1">
             <Button
-              variant="outline"
+              type="button"
+              variant="ghost"
               size="sm"
-              onClick={() => setIsScannerOpen(true)}
-              className="text-xs font-bold text-brand dark:text-brand-soft border-slate-200 dark:border-zinc-700 min-h-[44px] normal-case"
+              onClick={() => setIsSwitchModalOpen(true)}
+              className="text-xs font-semibold text-muted-foreground hover:text-foreground min-h-[44px] normal-case"
             >
-              <QrCode className="size-3.5 mr-1.5" />
-              Upgrade to physical card
+              <CreditCard className="size-3.5 mr-1.5" />
+              Switch to physical card
             </Button>
           </div>
         )}
       </div>
 
+      {/* Switch to Physical Modal */}
+      <SwitchToPhysicalModal
+        isOpen={isSwitchModalOpen}
+        onClose={() => setIsSwitchModalOpen(false)}
+        office={currentHome.office}
+        onSuccess={(updatedHome) => {
+          setCurrentHome(updatedHome);
+          router.refresh();
+        }}
+      />
+
+      {/* Card Scanner Modal */}
       <CardScanner
         isOpen={isScannerOpen}
         onClose={() => setIsScannerOpen(false)}
         onSuccess={() => {
           setIsScannerOpen(false);
+          router.refresh();
           window.location.reload();
         }}
       />

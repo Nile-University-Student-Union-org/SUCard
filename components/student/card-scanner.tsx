@@ -10,13 +10,19 @@ import {
   RotateCcw,
   CheckCircle2,
   ShieldAlert,
+  Keyboard,
+  Camera,
+  Loader2,
+  Building2,
+  QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Modal, ModalBody } from "@/components/ui/modal";
-import { cn } from "cn";
+import { cn } from "@/lib/utils";
 import type { ClaimErrorCode } from "@/lib/student/types";
 
-interface CardScannerProps {
+export interface CardScannerProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
@@ -29,6 +35,7 @@ const ERROR_MESSAGES: Record<ClaimErrorCode | string, string> = {
   already_has_card: "You already have an SU Card",
   rate_limited: "Too many attempts. Try again in an hour.",
   invalid_qr: "That QR code isn't an SU Card",
+  suspended: "Your account is suspended. Please contact the SU office.",
 };
 
 export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
@@ -51,6 +58,10 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
   const [claimError, setClaimError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  // Manual code entry mode toggle
+  const [showManualEntry, setShowManualEntry] = useState(false);
+  const [manualCode, setManualCode] = useState("");
+
   // Stop camera media tracks
   const stopCamera = useCallback(() => {
     cameraGenerationRef.current++;
@@ -71,74 +82,86 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
     setTorchAvailable(false);
   }, []);
 
-  const handleClaim = useCallback(async (qrString: string) => {
-    if (isProcessingRef.current) return;
-    const generation = cameraGenerationRef.current;
-    isProcessingRef.current = true;
-    setIsSubmitting(true);
-    setClaimError(null);
+  const handleClaim = useCallback(
+    async (qrString: string, isManual = false) => {
+      if (isProcessingRef.current) return;
+      const generation = cameraGenerationRef.current;
+      isProcessingRef.current = true;
+      setIsSubmitting(true);
+      setClaimError(null);
 
-    try {
-      const res = await fetch("/api/student/card/claim", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ qr: qrString }),
-      });
+      try {
+        const res = await fetch("/api/student/card/claim", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ qr: qrString.trim() }),
+        });
 
-      const data = await res.json().catch(() => ({}));
-      if (generation !== cameraGenerationRef.current) return;
+        const data = await res.json().catch(() => ({}));
+        if (!isManual && generation !== cameraGenerationRef.current) return;
 
-      if (!res.ok) {
-        const code = (data.code as ClaimErrorCode) || "";
-        const message =
-          ERROR_MESSAGES[code] ||
-          data.error ||
-          "Failed to link card. Please try again.";
-        setClaimError(message);
-        setIsSubmitting(false);
-        // Allow scanning again after 2 seconds
-        retryTimerRef.current = setTimeout(() => {
-          if (generation === cameraGenerationRef.current) {
+        if (!res.ok) {
+          const code = (data.code as ClaimErrorCode) || "";
+          const message =
+            ERROR_MESSAGES[code] ||
+            data.error ||
+            "Failed to link card. Please try again.";
+          setClaimError(message);
+          setIsSubmitting(false);
+
+          if (!isManual) {
+            // Allow scanning again after 2 seconds
+            retryTimerRef.current = setTimeout(() => {
+              if (generation === cameraGenerationRef.current) {
+                isProcessingRef.current = false;
+                scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
+              }
+              retryTimerRef.current = null;
+            }, 2000);
+          } else {
             isProcessingRef.current = false;
-            scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
           }
-          retryTimerRef.current = null;
-        }, 2000);
-        return;
-      }
+          return;
+        }
 
-      // Success
-      isSuccessRef.current = true;
-      setIsSuccess(true);
-      stopCamera();
-      const successGeneration = cameraGenerationRef.current;
+        // Success
+        isSuccessRef.current = true;
+        setIsSuccess(true);
+        stopCamera();
+        const successGeneration = cameraGenerationRef.current;
 
-      // Delay to show celebration
-      successTimerRef.current = setTimeout(() => {
-        if (successGeneration !== cameraGenerationRef.current) return;
-        successTimerRef.current = null;
-        if (onSuccess) {
-          onSuccess();
+        // Delay to show celebration
+        successTimerRef.current = setTimeout(() => {
+          if (!isManual && successGeneration !== cameraGenerationRef.current) return;
+          successTimerRef.current = null;
+          if (onSuccess) {
+            onSuccess();
+          } else {
+            router.push("/card");
+          }
+        }, 1800);
+      } catch {
+        if (!isManual && generation !== cameraGenerationRef.current) return;
+        setClaimError("Network error. Please check your connection and try again.");
+        setIsSubmitting(false);
+        if (!isManual) {
+          retryTimerRef.current = setTimeout(() => {
+            if (generation === cameraGenerationRef.current) {
+              isProcessingRef.current = false;
+              scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
+            }
+            retryTimerRef.current = null;
+          }, 2000);
         } else {
-          router.push("/card");
-        }
-      }, 1800);
-    } catch {
-      if (generation !== cameraGenerationRef.current) return;
-      setClaimError("Network error. Please check your connection and try again.");
-      setIsSubmitting(false);
-      retryTimerRef.current = setTimeout(() => {
-        if (generation === cameraGenerationRef.current) {
           isProcessingRef.current = false;
-          scanLoopRef.current = requestAnimationFrame(() => processFrameRef.current());
         }
-        retryTimerRef.current = null;
-      }, 2000);
-    }
-  }, [stopCamera, onSuccess, router]);
+      }
+    },
+    [stopCamera, onSuccess, router]
+  );
 
   const processFrame = useCallback(() => {
     const generation = cameraGenerationRef.current;
@@ -245,7 +268,7 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       !navigator.mediaDevices.getUserMedia
     ) {
       setPermissionError(
-        "Camera access is not supported on this browser or requires an HTTPS connection. Ask an SU admin to link your card at the desk."
+        "Camera access is not supported on this browser or requires an HTTPS connection."
       );
       return;
     }
@@ -296,18 +319,16 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
         error.name === "PermissionDeniedError"
       ) {
         setPermissionError(
-          "Camera permission was denied. Please enable camera access in your browser settings, or ask an SU admin to link your card at the desk."
+          "Camera permission was denied. Please enable camera access in your browser settings, or enter the card code manually."
         );
       } else if (
         error.name === "NotFoundError" ||
         error.name === "DevicesNotFoundError"
       ) {
-        setPermissionError(
-          "No camera was found on your device. Ask an SU admin to link your card at the desk."
-        );
+        setPermissionError("No camera was found on your device.");
       } else {
         setPermissionError(
-          "Could not access camera. Make sure you are on HTTPS, or ask an SU admin to link your card at the desk."
+          "Could not access camera. Make sure you are on HTTPS, or enter the card code manually."
         );
       }
     }
@@ -331,8 +352,17 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
     }
   };
 
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualCode.trim()) {
+      setClaimError("Please enter a card code or link.");
+      return;
+    }
+    handleClaim(manualCode.trim(), true);
+  };
+
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || showManualEntry) return;
 
     const timer = setTimeout(() => {
       startCamera();
@@ -342,15 +372,21 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
       clearTimeout(timer);
       stopCamera();
     };
-  }, [isOpen, startCamera, stopCamera]);
+  }, [isOpen, showManualEntry, startCamera, stopCamera]);
+
+  const handleClose = () => {
+    stopCamera();
+    setShowManualEntry(false);
+    setManualCode("");
+    setClaimError(null);
+    setPermissionError(null);
+    onClose();
+  };
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={() => {
-        stopCamera();
-        onClose();
-      }}
+      onClose={handleClose}
       title="Link Physical Card"
       maxWidth="md"
       zIndex="z-[80]"
@@ -388,44 +424,126 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               </Button>
             </div>
           </div>
-        ) : permissionError ? (
-          /* Permission Error State */
-          <div className="p-6 sm:p-8 space-y-6 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
-              <ShieldAlert className="size-7" />
-            </div>
-            <div className="space-y-2">
+        ) : showManualEntry || permissionError ? (
+          /* Manual Code Entry & Camera Error / Fallback State */
+          <div className="p-6 sm:p-8 space-y-5">
+            <div className="space-y-2 text-center sm:text-left">
+              <div className="w-12 h-12 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center mx-auto sm:mx-0 shadow-xs">
+                {permissionError ? (
+                  <ShieldAlert className="size-6 text-amber-600 dark:text-amber-400" />
+                ) : (
+                  <Keyboard className="size-6" />
+                )}
+              </div>
               <h3 className="font-sans font-semibold text-xl text-foreground">
-                Camera unavailable
+                {permissionError ? "Camera unavailable" : "Enter card code manually"}
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed max-w-xs mx-auto font-medium">
-                {permissionError}
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed font-medium">
+                {permissionError
+                  ? permissionError
+                  : "Enter the code or link from the QR code on the back of your card."}
               </p>
             </div>
 
-            <div className="flex flex-col gap-3 pt-2">
+            {/* Manual input form */}
+            <form onSubmit={handleManualSubmit} className="space-y-3">
+              <div className="space-y-1.5">
+                <label
+                  htmlFor="manual-qr-input"
+                  className="text-xs font-semibold text-foreground"
+                >
+                  Card QR code or link
+                </label>
+                <Input
+                  id="manual-qr-input"
+                  type="text"
+                  placeholder="e.g. NUSU1:ABC123XYZ or https://..."
+                  value={manualCode}
+                  onChange={(e) => {
+                    setManualCode(e.target.value);
+                    if (claimError) setClaimError(null);
+                  }}
+                  disabled={isSubmitting}
+                  className="min-h-[44px] text-sm font-mono"
+                  autoFocus
+                />
+              </div>
+
+              {claimError && (
+                <div className="p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-semibold">
+                  {claimError}
+                </div>
+              )}
+
               <Button
-                variant="secondary"
-                onClick={() => {
-                  setPermissionError(null);
-                  startCamera();
-                }}
-                className="w-full normal-case font-bold min-h-[44px]"
+                type="submit"
+                variant="primary"
+                disabled={isSubmitting || !manualCode.trim()}
+                className="w-full font-bold normal-case min-h-[44px]"
               >
-                <RotateCcw className="size-4 mr-2" />
-                Try again
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin mr-2 motion-reduce:animate-none" />
+                    <span>Linking card…</span>
+                  </>
+                ) : (
+                  "Link Card"
+                )}
               </Button>
+            </form>
+
+            {/* Desk Linking Explanation */}
+            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80 flex items-start gap-2.5 text-xs text-muted-foreground leading-relaxed">
+              <Building2 className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
+              <span>
+                <strong className="text-foreground font-semibold">Need desk help? </strong>
+                An SU admin can link your card directly at the desk using your Student ID or Card Serial.
+              </span>
+            </div>
+
+            {/* Navigation actions */}
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-1">
+              {!permissionError && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setShowManualEntry(false);
+                    setClaimError(null);
+                  }}
+                  className="w-full sm:flex-1 normal-case font-bold min-h-[44px]"
+                >
+                  <Camera className="size-4 mr-1.5" />
+                  Use camera scanner
+                </Button>
+              )}
+              {permissionError && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setPermissionError(null);
+                    setShowManualEntry(false);
+                    startCamera();
+                  }}
+                  className="w-full sm:flex-1 normal-case font-bold min-h-[44px]"
+                >
+                  <RotateCcw className="size-4 mr-1.5" />
+                  Retry camera
+                </Button>
+              )}
               <Button
+                type="button"
                 variant="ghost"
-                onClick={() => { stopCamera(); onClose(); }}
-                className="w-full normal-case font-semibold text-muted-foreground hover:text-foreground min-h-[44px]"
+                onClick={handleClose}
+                className="w-full sm:w-auto normal-case font-semibold text-muted-foreground hover:text-foreground min-h-[44px]"
               >
                 Cancel
               </Button>
             </div>
           </div>
         ) : (
-          /* Camera Viewfinder */
+          /* Live Camera Viewfinder */
           <div className="relative w-full aspect-square max-h-[400px] sm:max-h-[450px] bg-black overflow-hidden flex items-center justify-center">
             {/* Live Video Feed */}
             <video
@@ -450,33 +568,46 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <div className="absolute left-2 right-2 h-0.5 bg-gradient-to-r from-transparent via-[#018BCE] to-transparent shadow-[0_0_12px_#018BCE] animate-pulse motion-reduce:animate-none" />
             </div>
 
-            {/* Top Toolbar: Torch & Close */}
+            {/* Top Toolbar: Torch, Manual Entry Toggle & Close */}
             <div className="absolute top-3 inset-x-3 flex items-center justify-between z-20">
-              {torchAvailable ? (
+              <div className="flex items-center gap-2">
+                {torchAvailable && (
+                  <button
+                    type="button"
+                    onClick={toggleTorch}
+                    aria-label={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
+                    className={cn(
+                      "p-2.5 rounded-full backdrop-blur-md transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center",
+                      torchOn
+                        ? "bg-amber-400 text-black shadow-lg"
+                        : "bg-black/60 text-white hover:bg-black/80"
+                    )}
+                  >
+                    {torchOn ? (
+                      <Flashlight className="size-5 fill-current" />
+                    ) : (
+                      <FlashlightOff className="size-5" />
+                    )}
+                  </button>
+                )}
+
                 <button
                   type="button"
-                  onClick={toggleTorch}
-                  aria-label={torchOn ? "Turn off flashlight" : "Turn on flashlight"}
-                  className={cn(
-                    "p-2.5 rounded-full backdrop-blur-md transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center",
-                    torchOn
-                      ? "bg-amber-400 text-black shadow-lg"
-                      : "bg-black/60 text-white hover:bg-black/80"
-                  )}
+                  onClick={() => {
+                    stopCamera();
+                    setShowManualEntry(true);
+                  }}
+                  aria-label="Enter code manually"
+                  className="px-3 py-2 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-md transition-all cursor-pointer min-h-[44px] flex items-center gap-1.5 text-xs font-semibold"
                 >
-                  {torchOn ? (
-                    <Flashlight className="size-5 fill-current" />
-                  ) : (
-                    <FlashlightOff className="size-5" />
-                  )}
+                  <Keyboard className="size-4" />
+                  <span className="hidden sm:inline">Enter code</span>
                 </button>
-              ) : (
-                <div />
-              )}
+              </div>
 
               <button
                 type="button"
-                onClick={() => { stopCamera(); onClose(); }}
+                onClick={handleClose}
                 aria-label="Close scanner"
                 className="p-2.5 rounded-full bg-black/60 text-white hover:bg-black/80 backdrop-blur-md transition-all cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
@@ -486,14 +617,17 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
 
             {/* Instructions & Status */}
             <div className="absolute bottom-4 inset-x-4 z-20 text-center space-y-2">
-              <div className="inline-block px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-xs font-semibold text-white/90 border border-white/10 shadow-lg">
-                {isSubmitting
-                  ? "Linking card…"
-                  : "Align the QR code on the back of your card inside the frame"}
+              <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/80 backdrop-blur-md text-xs font-semibold text-white/90 border border-white/10 shadow-lg">
+                <QrCode className="size-3.5 shrink-0" />
+                <span>
+                  {isSubmitting
+                    ? "Linking card…"
+                    : "Align the QR code on the back of your card inside the frame"}
+                </span>
               </div>
 
               {claimError && (
-                <div className="p-2 rounded-xl bg-rose-500/90 text-white text-xs font-bold shadow-lg animate-in fade-in duration-200">
+                <div className="p-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold shadow-lg animate-in fade-in duration-200">
                   {claimError}
                 </div>
               )}

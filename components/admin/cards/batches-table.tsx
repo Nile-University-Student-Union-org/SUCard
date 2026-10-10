@@ -124,7 +124,7 @@ export function BatchesTable({
       .catch((err) => console.warn("Failed to load styles for restyle:", err));
   }, []);
 
-  const handleVoidUnassigned = async (e: React.FormEvent) => {
+  const handleVoidBatch = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!voidingBatch) return;
 
@@ -134,18 +134,18 @@ export function BatchesTable({
     try {
       await voidBatch(
         voidingBatch.id,
-        voidReason.trim() || "Batch unassigned cards voided"
+        voidReason.trim() || "Batch voided by SU"
       );
 
       toast.success(
-        `Voided unassigned cards in ${formatBatchNumber(voidingBatch.number)}`
+        `Voided cards in ${formatBatchNumber(voidingBatch.number)}`
       );
       setVoidingBatch(null);
       setVoidReason("");
       onRetry();
     } catch (err: unknown) {
       const errorObj = err as { message?: string };
-      setVoidError(errorObj.message || "Failed to void unassigned cards");
+      setVoidError(errorObj.message || "Failed to void batch cards");
     } finally {
       setIsVoiding(false);
     }
@@ -428,8 +428,8 @@ export function BatchesTable({
                               ZIP
                             </Button>
 
-                            {/* Void unassigned */}
-                            {stats.unassigned > 0 && (
+                            {/* Void remaining cards */}
+                            {stats.unassigned + stats.active > 0 && (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -439,7 +439,7 @@ export function BatchesTable({
                                   setVoidError(null);
                                 }}
                                 className="min-h-[40px] px-2.5 text-xs font-bold normal-case text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 hover:bg-rose-500/10"
-                                title="Void remaining unassigned cards"
+                                title="Void remaining cards"
                               >
                                 <Ban className="size-3.5 mr-1" />
                                 Void
@@ -534,7 +534,7 @@ export function BatchesTable({
                           Export ZIP
                         </Button>
 
-                        {stats.unassigned > 0 && (
+                        {stats.unassigned + stats.active > 0 && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -689,18 +689,18 @@ export function BatchesTable({
         </form>
       </Modal>
 
-      {/* MODAL 3: VOID UNASSIGNED CARDS */}
+      {/* MODAL 3: VOID BATCH CARDS */}
       <Modal
         isOpen={voidingBatch !== null}
         onClose={() => {
           if (!isVoiding) setVoidingBatch(null);
         }}
-        title="Void Unassigned Cards"
+        title="Void Batch Cards"
         icon={<Ban className="size-5 text-rose-600" />}
         maxWidth="md"
         role="alertdialog"
       >
-        <form onSubmit={handleVoidUnassigned}>
+        <form onSubmit={handleVoidBatch}>
           <ModalBody className="space-y-4">
             {voidingBatch && (
               <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs space-y-1.5">
@@ -708,13 +708,13 @@ export function BatchesTable({
                   Target Batch: {formatBatchNumber(voidingBatch.number)} — {voidingBatch.label}
                 </p>
                 <p className="text-muted-foreground">
-                  Unassigned cards to void:{" "}
+                  Active and unassigned cards to void:{" "}
                   <strong>
-                    {formatNumber(voidingBatch.stats?.unassigned ?? voidingBatch.count)} cards
+                    {formatNumber((voidingBatch.stats?.unassigned ?? voidingBatch.count) + (voidingBatch.stats?.active ?? 0))} cards
                   </strong>
                 </p>
                 <p className="text-rose-600 dark:text-rose-400 text-[11px] pt-1 leading-relaxed">
-                  <strong>Consequence:</strong> Only unassigned cards in this batch will be permanently destroyed. Any cards from this batch already linked to active students will remain completely unaffected and valid.
+                  <strong>Consequence:</strong> All active and unassigned cards in this batch will be voided. Linked students will receive an email and their passes will stop working.
                 </p>
               </div>
             )}

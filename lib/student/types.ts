@@ -19,11 +19,13 @@ export type MeResponse = { name: string; email: string; areas: Area[]; studentSt
 export type SetAreaRequest = { key: Area["key"] };
 export type SetAreaResponse = { href: string };
 
-// POST /api/student/profile; GET /api/student/home; POST /api/student/card/claim.
+// POST /api/student/profile; GET /api/student/home; POST /api/student/card/claim; POST /api/student/flow.
 export type CompleteProfileRequest = { universityId: string };
 export type StudentProfile = { userId: string; universityId: string; cardFlow: CardFlow; status: StudentStatus; suspendReason: string | null; registeredAt: string };
 export type StudentHomeResponse = { profile: StudentProfile; name: string; email: string; card: CardSummary | null; office: OfficeSetting; flow: CardFlow };
 export type ClaimCardRequest = { qr: string };
+export type SwitchToPhysicalRequest = { cardFlow: "physical" };
+export type SwitchToPhysicalResponse = StudentHomeResponse;
 export type ClaimCardResponse = { card: CardSummary };
 
 // GET/PATCH /api/admin/settings.
@@ -44,10 +46,6 @@ export type SetStudentFlowResponse = { student: StudentSearchItem };
 export type AdminLinkRequest = { qr: string; serial?: never } | { serial: string | number; qr?: never };
 export type AdminLinkResponse = ClaimCardResponse;
 export type BulkSwitchResponse = { count: number };
-// POST /api/admin/staff/promote; POST /api/admin/staff/{id}/revoke.
-export type PromoteStudentRequest = { email: string };
-export type StaffRoleResponse = { id: string; role: string };
-
 // GET /api/student/wallet/google — "Save to Google Wallet" link for the student's active card.
 // Errors: 401 not signed in; 404 no student profile; 409 { code: "no_card" } no active card;
 // 403 { code: "suspended" }; 503 { code: "wallet_unavailable" } Google Wallet not configured.

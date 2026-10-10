@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminStudentsPage() {
   await connection();
-  const user = await requireAdminPage();
+  await requireAdminPage();
 
-  return <StudentsManager role={user.role} />;
+  return <StudentsManager />;
 }

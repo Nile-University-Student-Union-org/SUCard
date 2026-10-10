@@ -23,6 +23,18 @@ describe("email delivery", () => {
     expect(validFeedKey(key.slice(0, -1) + "x", key)).toBe(false);
     expect(validFeedKey("short", key)).toBe(false);
   });
+  it("explains a voided card and the next step", () => {
+    const digital = emailTemplate("card_voided", "Student", undefined, { cardType: "digital", reason: "Damaged <pass>" });
+    expect(digital.subject).toBe("Your SU Card has been voided");
+    expect(digital.text).toContain("Reason: Damaged <pass>");
+    expect(digital.text).toContain("sign in to get a new pass");
+    expect(digital.html).toContain("Damaged &lt;pass&gt;");
+    const physical = emailTemplate("card_voided", "Student", undefined, { cardType: "physical", officeLocation: "Building A" });
+    expect(physical.text).toContain("visit Building A");
+    const switched = emailTemplate("card_voided", "Student", undefined, { cardType: "digital", reason: "switched_to_physical", officeLocation: "SU room, Building B" });
+    expect(switched.text).toContain("collect your physical card at SU room, Building B");
+    expect(switched.text).not.toContain("Reason: switched_to_physical");
+  });
   it("requires bearer authorization in the header", async () => {
     const { authorizedMailer } = await import("./feed");
     const prior = process.env.MAILER_FEED_KEY;

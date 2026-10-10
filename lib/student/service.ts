@@ -1,9 +1,12 @@
 import "server-only";
 import { and, count, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
+import { after } from "next/server";
 import { account, auditLog, cardClaimAttempts, cards, studentProfiles, user, settings } from "@/lib/db/schema";
-import { buildQrPayload, formatSerial, generateToken } from "@/lib/cards/token";
+import { buildQrPayload, formatSerial, generateToken, parseSerial } from "@/lib/cards/token";
 import { getSettings } from "@/lib/settings/service";
+import { enqueueCardVoided } from "@/lib/email/card-voided";
+import { drainOutbox } from "@/lib/email/drain";
 import { claimDecision, computeAreas, decideFlow, matchesStudentEmail, parseClaimQr } from "./rules";
 import { UNIVERSITY_ID_REGEX, type Area, type CardSummary, type ClaimErrorCode, type StudentProfile } from "./types";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
@@ -14,6 +17,17 @@ export class StudentError extends Error {
 }
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type Card = typeof cards.$inferSelect;
+export async function voidDigitalCardsForPhysicalFlow(tx: Tx, userId: string, actorId: string) {
+  const active = await tx.select({ id: cards.id, type: cards.type }).from(cards)
+    .where(and(eq(cards.studentId, userId), eq(cards.status, "active"))).for("update");
+  if (active.some((card) => card.type === "physical")) throw new StudentError(409, "Student already has a physical card");
+  if (!active.length) return false;
+  await tx.update(cards).set({ status: "void", voidReason: "switched_to_physical", voidedAt: new Date(), voidedBy: actorId })
+    .where(and(eq(cards.studentId, userId), eq(cards.status, "active"), eq(cards.type, "digital")));
+  for (const card of active) await tx.insert(auditLog).values({ actorId, action: "cards.voided", entity: "card", entityId: card.id,
+    data: { reason: "switched_to_physical", before: "active", studentId: userId } });
+  return enqueueCardVoided(tx, userId, "digital", "switched_to_physical");
+}
 function cardSummary(row: Card): CardSummary {
   return { id: row.id, type: row.type, serial: formatSerial(row.serialNumber), status: row.status,
     qr: buildQrPayload(row.token), linkedAt: row.linkedAt?.toISOString() ?? null };
@@ -69,6 +83,32 @@ export async function getStudentHome(userId: string) {
   return { profile: profileJson(row.profile), name: row.name, email: row.email, card: card ? cardSummary(card) : null,
     office: (await getSettings()).office, flow: row.profile.cardFlow };
 }
+export async function switchToPhysical(userId: string) {
+  const result = await db.transaction(async (tx) => {
+    await tx.execute(sql`select pg_advisory_xact_lock(7238103)`);
+    const [profile] = await tx.select().from(studentProfiles).where(eq(studentProfiles.userId, userId)).for("update");
+    if (!profile) throw new StudentError(404, "Student profile not found");
+    if (profile.status !== "active") throw new StudentError(403, "Student is suspended");
+    if (profile.cardFlow === "physical") return { changed: false, notified: false };
+    const current = (await getSettings(tx as unknown as typeof db)).issuance;
+    const decision = decideFlow(current);
+    if (decision.flow !== "physical") throw new StudentError(409, "Physical cards are not currently available", "physical_unavailable");
+    const notified = await voidDigitalCardsForPhysicalFlow(tx, userId, userId);
+    await tx.update(studentProfiles).set({ cardFlow: "physical" }).where(eq(studentProfiles.userId, userId));
+    if (JSON.stringify(current) !== JSON.stringify(decision.next)) {
+      await tx.insert(settings).values({ key: "issuance", value: decision.next, updatedBy: userId }).onConflictDoUpdate({ target: settings.key,
+        set: { value: decision.next, updatedBy: userId, updatedAt: new Date() } });
+      await tx.insert(auditLog).values({ actorId: userId, action: decision.switched ? "settings.issuance_auto_switched" : "settings.physical_quota_decremented",
+        entity: "settings", entityId: "issuance", data: { before: current, after: decision.next } });
+    }
+    await tx.insert(auditLog).values({ actorId: userId, action: "students.flow_changed", entity: "student", entityId: userId,
+      data: { before: "digital", after: "physical" } });
+    return { changed: true, notified };
+  });
+  if (result.notified) after(async () => { await drainOutbox(20); });
+  if (result.changed) await syncGoogleWalletForStudent(userId);
+  return getStudentHome(userId);
+}
 export async function getAreas(person: { id: string; role: string; email: string; disabledAt: Date | null }): Promise<Area[]> {
   const [profile] = await db.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, person.id));
   const [microsoft] = await db.select({ id: account.id }).from(account).where(and(eq(account.userId, person.id), eq(account.providerId, "microsoft")));
@@ -100,7 +140,7 @@ export async function claimCard(userId: string, rawQr: string, actorId?: string,
       await logAttempt("invalid_qr");
       return { error: "invalid_qr" as ClaimErrorCode };
     }
-    const serialNumber = typeof serial === "number" ? serial : serial ? Number(/^SU-(\d+)$/i.exec(serial)?.[1] ?? NaN) : null;
+    const serialNumber = serial === undefined ? null : parseSerial(serial);
     const [card] = await tx.select().from(cards).where(token ? eq(cards.token, token) : eq(cards.serialNumber, serialNumber ?? -1)).for("update");
     const [active] = await tx.select().from(cards).where(and(eq(cards.studentId, userId), eq(cards.status, "active"))).for("update");
     // Re-scanning the card you already own is not an error: just return it.

@@ -17,6 +17,12 @@ export function generateToken(): string {
   return result;
 }
 export function formatSerial(n: number): string { return `SU-${String(n).padStart(6, "0")}`; }
+export function parseSerial(input: string | number | undefined): number | null {
+  if (input === undefined) return null;
+  const digits = typeof input === "number" ? String(input) : /^(?:SU-)?(\d+)$/i.exec(input.trim())?.[1];
+  const serial = Number(digits);
+  return digits && Number.isSafeInteger(serial) && serial > 0 ? serial : null;
+}
 export function buildQrPayload(token: string): string { return `NUSU1:${token}`; }
 export function parseQrPayload(text: string): string | null {
   const input = text.trim();

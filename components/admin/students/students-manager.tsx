@@ -7,8 +7,6 @@ import {
   GraduationCap,
   Link as LinkIcon,
   Ban,
-  ShieldCheck,
-  ShieldAlert,
   RotateCcw,
   AlertTriangle,
   ArrowRightLeft,
@@ -48,12 +46,7 @@ import {
 } from "@/components/ui/analytics-format";
 import { cn } from "cn";
 
-interface StudentsManagerProps {
-  role: string;
-}
-
-export function StudentsManager({ role }: StudentsManagerProps) {
-  const isSuperAdmin = role === "super_admin";
+export function StudentsManager() {
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -95,10 +88,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
   const [isChangingFlow, setIsChangingFlow] = useState(false);
   const [flowError, setFlowError] = useState<string | null>(null);
 
-  const [promotingStudent, setPromotingStudent] = useState<StudentSearchItem | null>(null);
-  const [revokingStudent, setRevokingStudent] = useState<StudentSearchItem | null>(null);
-  const [isRoleChanging, setIsRoleChanging] = useState(false);
-  const [roleError, setRoleError] = useState<string | null>(null);
 
   const fetchStudents = useCallback(
     async (q: string, status: string, fromDate?: string, toDate?: string, cursor?: string) => {
@@ -398,67 +387,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
       setFlowError("Network error. Please try again.");
     } finally {
       setIsChangingFlow(false);
-    }
-  };
-
-  // Staff promotion / revocation
-  const handlePromoteAdmin = async () => {
-    if (!promotingStudent) return;
-    const student = promotingStudent;
-    setIsRoleChanging(true);
-    setRoleError(null);
-
-    try {
-      const res = await fetch("/api/admin/staff/promote", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({ email: student.email }),
-      });
-
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setRoleError(resData.error || "Failed to promote student");
-        setIsRoleChanging(false);
-        return;
-      }
-
-      setPromotingStudent(null);
-      toast.success(`Promoted ${student.name} to SU Admin`);
-    } catch {
-      setRoleError("Network error. Please try again.");
-    } finally {
-      setIsRoleChanging(false);
-    }
-  };
-
-  const handleRevokeAdmin = async () => {
-    if (!revokingStudent) return;
-    const student = revokingStudent;
-    setIsRoleChanging(true);
-    setRoleError(null);
-
-    try {
-      const res = await fetch(`/api/admin/staff/${student.profile.userId}/revoke`, {
-        method: "POST",
-        headers: { Accept: "application/json" },
-      });
-
-      const resData = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        setRoleError(resData.error || "Failed to revoke admin role");
-        setIsRoleChanging(false);
-        return;
-      }
-
-      setRevokingStudent(null);
-      toast.success(`Revoked SU Admin role for ${student.name}`);
-    } catch {
-      setRoleError("Network error. Please try again.");
-    } finally {
-      setIsRoleChanging(false);
     }
   };
 
@@ -909,37 +837,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                                 Flow
                               </Button>
 
-                              {/* Super Admin Staff Role Actions */}
-                              {isSuperAdmin && (
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setPromotingStudent(student);
-                                      setRoleError(null);
-                                    }}
-                                    className="min-h-[44px] px-2 text-xs font-semibold text-sky-600 dark:text-sky-400 hover:bg-sky-500/10 normal-case"
-                                    title="Make admin"
-                                  >
-                                    <ShieldCheck className="size-3.5 mr-1" />
-                                    Admin
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                      setRevokingStudent(student);
-                                      setRoleError(null);
-                                    }}
-                                    className="min-h-[44px] px-2 text-xs font-semibold text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 normal-case"
-                                    title="Remove admin"
-                                  >
-                                    <ShieldAlert className="size-3.5 mr-1" />
-                                    Revoke
-                                  </Button>
-                                </div>
-                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -1400,111 +1297,6 @@ export function StudentsManager({ role }: StudentsManagerProps) {
         </ModalFooter>
       </Modal>
 
-      {/* 4. Promote Admin Modal */}
-      <Modal
-        isOpen={promotingStudent !== null}
-        onClose={() => {
-          if (!isRoleChanging) setPromotingStudent(null);
-        }}
-        title="Promote Student to SU Admin"
-        icon={<ShieldCheck className="size-5 text-brand" />}
-        maxWidth="md"
-        role="alertdialog"
-      >
-        <ModalBody className="space-y-3">
-          {promotingStudent && (
-            <div className="p-3.5 rounded-xl bg-brand/5 border border-brand/20 text-xs space-y-1.5">
-              <p className="font-bold text-foreground">
-                Target User: {promotingStudent.name}
-              </p>
-              <p className="text-muted-foreground font-mono text-[11px]">
-                {promotingStudent.email}
-              </p>
-              <p className="text-muted-foreground text-[11px] pt-1">
-                <strong>Consequence:</strong> This student will be granted full staff administrative access to the SU Card management console, including card issuance, vendor management, and audit logs.
-              </p>
-            </div>
-          )}
-
-          {roleError && (
-            <Alert variant="destructive" size="sm" description={roleError} />
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={isRoleChanging}
-            onClick={() => setPromotingStudent(null)}
-            className="normal-case font-semibold min-h-[44px]"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="primary"
-            loading={isRoleChanging}
-            loadingText="Promoting…"
-            onClick={handlePromoteAdmin}
-            className="normal-case font-bold min-h-[44px]"
-          >
-            Confirm Promotion
-          </Button>
-        </ModalFooter>
-      </Modal>
-
-      {/* 5. Revoke Admin Modal */}
-      <Modal
-        isOpen={revokingStudent !== null}
-        onClose={() => {
-          if (!isRoleChanging) setRevokingStudent(null);
-        }}
-        title="Revoke SU Admin Privileges"
-        icon={<ShieldAlert className="size-5 text-amber-600" />}
-        maxWidth="md"
-        role="alertdialog"
-      >
-        <ModalBody className="space-y-3">
-          {revokingStudent && (
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs space-y-1.5">
-              <p className="font-bold text-foreground">
-                Target User: {revokingStudent.name}
-              </p>
-              <p className="text-muted-foreground font-mono text-[11px]">
-                {revokingStudent.email}
-              </p>
-              <p className="text-muted-foreground text-[11px] pt-1">
-                <strong>Consequence:</strong> Administrative console access will be revoked immediately. The user will retain their standard student membership and card access.
-              </p>
-            </div>
-          )}
-
-          {roleError && (
-            <Alert variant="destructive" size="sm" description={roleError} />
-          )}
-        </ModalBody>
-        <ModalFooter>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={isRoleChanging}
-            onClick={() => setRevokingStudent(null)}
-            className="normal-case font-semibold min-h-[44px]"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            loading={isRoleChanging}
-            loadingText="Revoking…"
-            onClick={handleRevokeAdmin}
-            className="normal-case font-bold min-h-[44px]"
-          >
-            Confirm Role Removal
-          </Button>
-        </ModalFooter>
-      </Modal>
     </div>
   );
 }

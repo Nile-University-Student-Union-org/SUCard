@@ -1,12 +1,15 @@
 import "server-only";
-import { and, asc, count, eq, gt, ilike, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, ilike, inArray, or, sql } from "drizzle-orm";
+import { after } from "next/server";
 import { db } from "@/lib/db";
-import { auditLog, cardBatches, cards, session, studentProfiles, user } from "@/lib/db/schema";
-import { formatSerial } from "@/lib/cards/token";
-import { claimCard, getStudentHome, StudentError } from "./service";
+import { auditLog, cardBatches, cards, studentProfiles, user } from "@/lib/db/schema";
+import { formatSerial, parseSerial } from "@/lib/cards/token";
+import { claimCard, getStudentHome, StudentError, voidDigitalCardsForPhysicalFlow } from "./service";
 import { parseClaimQr } from "./rules";
 import type { AdminLinkRequest, CardFlow } from "./types";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
+import { enqueueCardVoided } from "@/lib/email/card-voided";
+import { drainOutbox } from "@/lib/email/drain";
 
 type Tx = Parameters<Parameters<typeof db.transaction>[0]>[0];
 async function issueDigital(tx: Tx, userId: string) {
@@ -24,27 +27,38 @@ export async function voidCard(cardId: string, reason: string, actorId: string) 
     await tx.update(cards).set({ status: "void", voidReason: reason, voidedAt: new Date(), voidedBy: actorId }).where(eq(cards.id, cardId));
     await tx.insert(auditLog).values({ actorId, action: "cards.voided", entity: "card", entityId: cardId,
       data: { reason, before: card.status, studentId: card.studentId } });
-    return { count: 1, syncStudentId: card.status === "active" ? card.studentId : null };
+    const notified = card.status === "active" && card.studentId
+      ? await enqueueCardVoided(tx, card.studentId, card.type, reason) : false;
+    return { count: 1, syncStudentId: card.status === "active" ? card.studentId : null, notified };
   });
+  if (result.notified) after(async () => { await drainOutbox(20); });
   if (result.syncStudentId) await syncGoogleWalletForStudent(result.syncStudentId);
   return { count: result.count };
 }
 export async function voidBatch(batchId: string, reason: string, actorId: string) {
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
     const [batch] = await tx.select({ id: cardBatches.id }).from(cardBatches).where(eq(cardBatches.id, batchId));
     if (!batch) throw new StudentError(404, "Batch not found");
-    const affected = await tx.update(cards).set({ status: "void", voidReason: reason, voidedAt: new Date(), voidedBy: actorId })
-      .where(and(eq(cards.batchId, batchId), eq(cards.status, "unassigned"))).returning({ id: cards.id });
+    const affected = await tx.select({ id: cards.id, studentId: cards.studentId, type: cards.type, status: cards.status })
+      .from(cards).where(and(eq(cards.batchId, batchId), inArray(cards.status, ["unassigned", "active"]))).for("update");
+    if (affected.length) await tx.update(cards).set({ status: "void", voidReason: reason, voidedAt: new Date(), voidedBy: actorId })
+      .where(inArray(cards.id, affected.map((card) => card.id)));
+    const students = new Map<string, "digital" | "physical">();
+    for (const card of affected) if (card.status === "active" && card.studentId) students.set(card.studentId, card.type);
+    for (const [studentId, type] of students) await enqueueCardVoided(tx, studentId, type, reason);
     await tx.insert(auditLog).values({ actorId, action: "cards.batch_voided", entity: "card_batch", entityId: batchId,
       data: { reason, count: affected.length } });
-    return { count: affected.length };
+    return { count: affected.length, studentIds: [...students.keys()] };
   });
+  if (result.studentIds.length) after(async () => { await drainOutbox(20); });
+  await Promise.all(result.studentIds.map((id) => syncGoogleWalletForStudent(id)));
+  return { count: result.count };
 }
 export async function lookupCard(input: AdminLinkRequest) {
   const token = "qr" in input && input.qr ? parseClaimQr(input.qr) : null;
-  const serial = "serial" in input ? typeof input.serial === "number" ? input.serial : Number(/^SU-(\d+)$/i.exec(input.serial ?? "")?.[1] ?? NaN) : null;
+  const serial = "serial" in input ? parseSerial(input.serial) : null;
   if ("qr" in input && !token) throw new StudentError(400, "Invalid QR code", "invalid_qr");
-  if (serial !== null && (!Number.isSafeInteger(serial) || serial <= 0)) throw new StudentError(400, "Invalid serial");
+  if ("serial" in input && serial === null) throw new StudentError(400, "Invalid serial");
   const [row] = await db.select({ card: cards, batchLabel: cardBatches.label, name: user.name, email: user.email,
     universityId: studentProfiles.universityId }).from(cards).leftJoin(cardBatches, eq(cards.batchId, cardBatches.id))
     .leftJoin(user, eq(cards.studentId, user.id)).leftJoin(studentProfiles, eq(cards.studentId, studentProfiles.userId))
@@ -69,11 +83,13 @@ export async function searchStudents(q: string, cursor?: string, filters: {statu
     } catch { throw new StudentError(400, "Invalid cursor"); }
   }
   const needle = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+  const serial = parseSerial(q);
   const rows = await db.select({ profile: studentProfiles, name: user.name, email: user.email, card: cards,
     lastRedemptionAt: sql<Date | null>`(select max(se.confirmed_at) from scan_events se where se.student_id = ${studentProfiles.userId} and se.confirmed and not se.voided)` }).from(studentProfiles)
     .innerJoin(user, eq(studentProfiles.userId, user.id))
     .leftJoin(cards, and(eq(cards.studentId, studentProfiles.userId), eq(cards.status, "active"))).where(and(
-      q ? or(ilike(user.name, needle), ilike(user.email, needle), ilike(studentProfiles.universityId, needle)) : undefined,
+      q ? or(ilike(user.name, needle), ilike(user.email, needle), ilike(studentProfiles.universityId, needle),
+        serial !== null ? eq(cards.serialNumber, serial) : undefined) : undefined,
       filters.status ? eq(studentProfiles.status,filters.status) : undefined,
       filters.signedUpFrom ? sql`${studentProfiles.registeredAt} >= (${filters.signedUpFrom}::date::timestamp at time zone 'Africa/Cairo')` : undefined,
       filters.signedUpTo ? sql`${studentProfiles.registeredAt} < ((${filters.signedUpTo}::date + 1)::timestamp at time zone 'Africa/Cairo')` : undefined,
@@ -93,19 +109,22 @@ export async function searchStudents(q: string, cursor?: string, filters: {statu
   return { students, nextCursor: rows.length > 25 && last ? Buffer.from(JSON.stringify({ name: last.name, id: last.profile.userId })).toString("base64url") : null };
 }
 export async function setStudentFlow(userId: string, flow: CardFlow, actorId: string) {
-  await db.transaction(async (tx) => {
+  const notified = await db.transaction(async (tx) => {
     const [profile] = await tx.select().from(studentProfiles).where(eq(studentProfiles.userId, userId)).for("update");
     if (!profile) throw new StudentError(404, "Student not found");
-    const [active] = await tx.select({ id: cards.id }).from(cards).where(and(eq(cards.studentId, userId), eq(cards.status, "active")));
-    if (active) throw new StudentError(409, "Student already has an active card");
-    if (profile.cardFlow === flow) return;
+    if (profile.cardFlow === flow) return false;
+    const voided = flow === "physical" ? await voidDigitalCardsForPhysicalFlow(tx, userId, actorId) : false;
+    if (flow === "digital" && (await tx.select({ id: cards.id }).from(cards).where(and(eq(cards.studentId, userId), eq(cards.status, "active"))).for("update")).length)
+      throw new StudentError(409, "Student already has an active card");
     await tx.update(studentProfiles).set({ cardFlow: flow }).where(eq(studentProfiles.userId, userId));
     if (flow === "digital") await issueDigital(tx, userId);
     await tx.insert(auditLog).values({ actorId, action: "students.flow_changed", entity: "student", entityId: userId,
       data: { before: profile.cardFlow, after: flow } });
+    return voided;
   });
+  if (notified) after(async () => { await drainOutbox(20); });
   const home = await getStudentHome(userId);
-  if (home.card) await syncGoogleWalletForStudent(userId);
+  await syncGoogleWalletForStudent(userId);
   return { student: { profile: home.profile, name: home.name, email: home.email, card: home.card } };
 }
 export async function switchAllPendingToDigital(actorId: string) {
@@ -119,35 +138,5 @@ export async function switchAllPendingToDigital(actorId: string) {
     await tx.insert(auditLog).values({ actorId, action: "students.pending_switched_to_digital", entity: "students", entityId: "bulk",
       data: { count: pending.length } });
     return { count: pending.length };
-  });
-}
-export async function promoteStudent(email: string, actorId: string) {
-  return db.transaction(async (tx) => {
-    const [person] = await tx.select().from(user).where(eq(user.email, email.toLowerCase())).for("update");
-    if (!person || person.role !== "student" || !(await tx.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, person.id))).length)
-      throw new StudentError(400, "Eligible student account not found");
-    await tx.update(user).set({ role: "admin", updatedAt: new Date() }).where(eq(user.id, person.id));
-    await tx.insert(auditLog).values({ actorId, action: "staff.promoted", entity: "staff", entityId: person.id,
-      data: { before: "student", after: "admin", email: person.email } });
-    return { id: person.id, role: "admin" };
-  });
-}
-export async function revokeStaffRole(userId: string, actorId: string) {
-  return db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(7238102)`);
-    const [person] = await tx.select().from(user).where(eq(user.id, userId)).for("update");
-    if (!person || (person.role !== "admin" && person.role !== "super_admin")) throw new StudentError(404, "Staff member not found");
-    if (person.id === actorId) throw new StudentError(400, "You cannot revoke your own role");
-    if (!(await tx.select({ id: studentProfiles.userId }).from(studentProfiles).where(eq(studentProfiles.userId, userId))).length)
-      throw new StudentError(400, "Use Disable for staff without a student account");
-    if (person.role === "super_admin") {
-      const [remaining] = await tx.select({ value: count() }).from(user).where(and(eq(user.role, "super_admin"), sql`${user.disabledAt} is null`));
-      if (remaining.value <= 1 && !person.disabledAt) throw new StudentError(409, "At least one active super admin is required");
-    }
-    await tx.update(user).set({ role: "student", updatedAt: new Date() }).where(eq(user.id, userId));
-    await tx.delete(session).where(eq(session.userId, userId));
-    await tx.insert(auditLog).values({ actorId, action: "staff.role_revoked", entity: "staff", entityId: userId,
-      data: { before: person.role, after: "student" } });
-    return { id: userId, role: "student" };
   });
 }
