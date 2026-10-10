@@ -279,6 +279,11 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     lanyardHandoff.setDetached = (detached) => {
       if (!cardBody.current || cardBody.current.visible === !detached) return;
       cardBody.current.visible = !detached;
+      // Once the card has left, the empty strap reels up out of frame; it drops back in when the card returns.
+      const s = gl.domElement.style;
+      s.transition = "translate 700ms cubic-bezier(0.65,0,0.35,1), opacity 500ms ease";
+      s.translate = detached ? "0 -45%" : "0 0";
+      s.opacity = detached ? "0" : "1";
       invalidate();
     };
     return () => {

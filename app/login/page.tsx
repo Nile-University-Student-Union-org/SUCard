@@ -462,7 +462,7 @@ function LoginContent() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-normal">
-                      Students, sign in with your Nile University Microsoft account (@nu.edu.eg)
+                      Students, sign in with your Nile University Microsoft account
                     </p>
                   </div>
 
