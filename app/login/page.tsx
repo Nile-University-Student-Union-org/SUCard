@@ -461,11 +461,8 @@ function LoginContent() {
                 {/* 1. Student Path (Dominant) */}
                 <div className="space-y-3">
                   <div>
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-brand dark:text-sky-400">
-                      Students
-                    </h3>
-                    <p className="mt-1 text-xs sm:text-sm text-ash dark:text-zinc-400 font-normal">
-                      Use your Nile University Microsoft account (@nu.edu.eg)
+                    <p className="text-xs sm:text-sm text-ash dark:text-zinc-400 font-normal">
+                      Students, sign in with your Nile University Microsoft account (@nu.edu.eg)
                     </p>
                   </div>
 
