@@ -142,10 +142,30 @@ function capture(e: ThreeEvent<PointerEvent>, on: boolean) {
   }
 }
 
+/** Hit-tests client touch coordinates against 3D targets (card and strap meshes) in canvas screen space. */
+export function hitTestLanyard(
+  touch: { clientX: number; clientY: number },
+  rect: { left: number; top: number; width: number; height: number },
+  camera: THREE.Camera,
+  targets: THREE.Object3D[],
+  raycaster = new THREE.Raycaster()
+): boolean {
+  if (rect.width <= 0 || rect.height <= 0) return false;
+  const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+  const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+  if (x < -1 || x > 1 || y < -1 || y > 1) return false;
+
+  raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
+  const hits = raycaster.intersectObjects(targets, true);
+  return hits.length > 0;
+}
+
 function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }) {
-  const { gl } = useThree();
+  const { gl, camera } = useThree();
   const invalidate = useThree((s) => s.invalidate);
   const cardMesh = useRef<THREE.Group>(null);
+  const ribbon = useRef<THREE.Mesh>(null);
+  const ribbonBack = useRef<THREE.Mesh>(null);
   const sim = useMemo(() => {
     const created = new LanyardSim({
       anchor: [0, ANCHOR_Y, 0],
@@ -212,8 +232,8 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     void (async () => {
       await textures.ready;
       if (!live) return;
-      const { scene, camera } = getState();
-      await gl.compileAsync(scene, camera).catch(() => undefined);
+      const { scene, camera: threeCam } = getState();
+      await gl.compileAsync(scene, threeCam).catch(() => undefined);
       for (const texture of [textures.front, textures.back, textures.strap, materials.strapBack.map]) {
         if (!live) return;
         if (texture) gl.initTexture(texture);
@@ -256,7 +276,6 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
 
   const ribbonGeo = useMemo(() => ribbonGeometry(), []);
   useEffect(() => () => ribbonGeo.dispose(), [ribbonGeo]);
-  const ribbon = useRef<THREE.Mesh>(null);
 
   const curve = useMemo(() => {
     // Strap particles (anchor .. one above the hang point), then the strap end tucked into the crimp.
@@ -300,44 +319,73 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     [sim, invalidate],
   );
 
-  // The hero allows vertical page panning (touch-pan-y), so on phones a vertical drag on the card would turn into a
-  // scroll and cancel the grab. Pointer events fire before touch events, so a touch that just grabbed the card is
-  // known here: cancel its scrolling. Touches that miss the card still scroll the page.
+  // Native touch handling:
+  // - Non-passive touchstart raycasts against card and strap. If hit, calls preventDefault so the mobile browser
+  //   never initiates a page scroll/pan gesture for card touches.
+  // - If touch starts anywhere else on the canvas, preventDefault is NOT called, allowing smooth vertical page scrolling.
   useEffect(() => {
     const el = gl.domElement;
-    const hold = (e: TouchEvent) => {
-      if (press.current && e.cancelable) e.preventDefault();
+    const raycaster = new THREE.Raycaster();
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (!prepared || !cardMesh.current || !ribbon.current) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) return;
+
+      const targets = [cardMesh.current, ribbon.current, ribbonBack.current].filter(Boolean) as THREE.Object3D[];
+      let isHit = false;
+      for (let i = 0; i < e.touches.length; i++) {
+        const touch = e.touches[i];
+        if (hitTestLanyard({ clientX: touch.clientX, clientY: touch.clientY }, rect, camera, targets, raycaster)) {
+          isHit = true;
+          break;
+        }
+      }
+      if (isHit && e.cancelable) {
+        e.preventDefault();
+      }
     };
-    el.addEventListener("touchstart", hold, { passive: false });
-    el.addEventListener("touchmove", hold, { passive: false });
+
+    const onTouchMove = (e: TouchEvent) => {
+      if ((dragged || press.current) && e.cancelable) {
+        e.preventDefault();
+      }
+    };
+
+    el.addEventListener("touchstart", onTouchStart, { passive: false });
+    el.addEventListener("touchmove", onTouchMove, { passive: false });
+
     return () => {
-      el.removeEventListener("touchstart", hold);
-      el.removeEventListener("touchmove", hold);
+      el.removeEventListener("touchstart", onTouchStart);
+      el.removeEventListener("touchmove", onTouchMove);
     };
-  }, [gl]);
+  }, [gl, camera, prepared, dragged]);
 
   // Release the drag even if the pointer is let go outside the canvas.
   useEffect(() => {
     if (!dragged) return;
-    const end = (e: Event) => release(e instanceof PointerEvent ? e : undefined);
+    const end = (e: Event) => {
+      if (e instanceof PointerEvent || e instanceof MouseEvent) {
+        release({ clientX: e.clientX, clientY: e.clientY });
+      } else if (typeof TouchEvent !== "undefined" && e instanceof TouchEvent && e.changedTouches?.[0]) {
+        release({ clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY });
+      } else {
+        release();
+      }
+    };
     window.addEventListener("pointerup", end);
     window.addEventListener("pointercancel", end);
+    window.addEventListener("touchend", end);
+    window.addEventListener("touchcancel", end);
     window.addEventListener("blur", end);
     return () => {
       window.removeEventListener("pointerup", end);
       window.removeEventListener("pointercancel", end);
+      window.removeEventListener("touchend", end);
+      window.removeEventListener("touchcancel", end);
       window.removeEventListener("blur", end);
     };
   }, [dragged, release]);
-
-  // While dragging on touch screens, stop the page from scrolling.
-  useEffect(() => {
-    if (!dragged) return;
-    const el = gl.domElement;
-    const block = (e: TouchEvent) => e.preventDefault();
-    el.addEventListener("touchmove", block, { passive: false });
-    return () => el.removeEventListener("touchmove", block);
-  }, [dragged, gl]);
 
   useFrame((state, delta) => {
     const drawnCard = cardMesh.current;
@@ -421,11 +469,19 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
     pos.needsUpdate = true;
     nor.needsUpdate = true;
     uv.needsUpdate = true;
+    geo.computeBoundingSphere();
   });
 
   const grab = (e: ThreeEvent<PointerEvent>) => {
     if (!cardMesh.current) return;
     e.stopPropagation();
+    if (e.nativeEvent && typeof e.nativeEvent.preventDefault === "function") {
+      try {
+        if (e.nativeEvent.cancelable) e.nativeEvent.preventDefault();
+      } catch {
+        // ignore
+      }
+    }
     capture(e, true);
     const local = cardMesh.current.worldToLocal(e.point.clone());
     clock.current.dragZ = e.point.z;
@@ -477,20 +533,47 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
           material={materials.crimp}
         />
       </group>
-      <mesh ref={ribbon} geometry={ribbonGeo} material={materials.strap} frustumCulled={false} />
-      <mesh geometry={ribbonGeo} material={materials.strapBack} frustumCulled={false} />
+      <mesh
+        ref={ribbon}
+        geometry={ribbonGeo}
+        material={materials.strap}
+        frustumCulled={false}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onPointerUp={(e) => {
+          capture(e, false);
+          release(e.nativeEvent);
+        }}
+        onPointerDown={grab}
+      />
+      <mesh
+        ref={ribbonBack}
+        geometry={ribbonGeo}
+        material={materials.strapBack}
+        frustumCulled={false}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        onPointerUp={(e) => {
+          capture(e, false);
+          release(e.nativeEvent);
+        }}
+        onPointerDown={grab}
+      />
     </group>
   );
 }
 
-/** Keeps the card at a similar share of the frame on phones and wide screens. */
+/** Keeps the card at a similar share of the frame on phones and wide screens with generous swing margins. */
 function CameraRig() {
   const get = useThree((s) => s.get);
   const { width, height } = useThree((s) => s.size);
   useEffect(() => {
     const camera = get().camera;
     const aspect = width / Math.max(1, height);
-    camera.position.z = THREE.MathUtils.clamp(11.6 / aspect, 9.5, 12.8);
+    // Smooth distance scaling: keeps the card centered and visually proportioned at rest,
+    // while giving generous frustum width on mobile and wide screens to avoid clipping during drag.
+    const targetZ = aspect < 1 ? 11.6 / Math.pow(aspect, 0.7) : 11.6;
+    camera.position.z = THREE.MathUtils.clamp(targetZ, 10.0, 13.8);
     camera.updateProjectionMatrix();
   }, [get, width, height]);
   return null;

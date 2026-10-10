@@ -7,10 +7,41 @@ import { CAMERA_FOV, LanyardScene } from "./lanyard-scene";
 import { StaticCard } from "./static-card";
 import { LanyardSkeleton } from "./lanyard-skeleton";
 
-/** Fades the 3D area into the page: strap comes in from the top, card swings out at the sides and bottom. */
-const CANVAS_FADE =
-  "linear-gradient(to bottom, transparent 0, #000 72px, #000 calc(100% - 96px), transparent 100%), " +
-  "linear-gradient(to right, transparent 0, #000 64px, #000 calc(100% - 64px), transparent 100%)";
+/**
+ * Premium soft fade:
+ * - Top strap dissolves gradually with a smooth ease-out alpha curve over ~35-40% height.
+ * - Subtle multi-stop fade at the extreme sides and bottom prevents hard clipping during deep drags.
+ * - Multi-stop eased transitions eliminate harsh bands or shelf edges on both light and dark themes.
+ */
+export const CANVAS_FADE =
+  "linear-gradient(to bottom, " +
+  "rgba(0,0,0,0) 0%, " +
+  "rgba(0,0,0,0.015) 4%, " +
+  "rgba(0,0,0,0.06) 8%, " +
+  "rgba(0,0,0,0.15) 13%, " +
+  "rgba(0,0,0,0.28) 18%, " +
+  "rgba(0,0,0,0.48) 24%, " +
+  "rgba(0,0,0,0.72) 30%, " +
+  "rgba(0,0,0,0.90) 35%, " +
+  "rgba(0,0,0,0.98) 38%, " +
+  "#000 40%, " +
+  "#000 92%, " +
+  "rgba(0,0,0,0.92) 94.5%, " +
+  "rgba(0,0,0,0.68) 96.5%, " +
+  "rgba(0,0,0,0.35) 98%, " +
+  "rgba(0,0,0,0.10) 99.2%, " +
+  "rgba(0,0,0,0) 100%), " +
+  "linear-gradient(to right, " +
+  "rgba(0,0,0,0) 0%, " +
+  "rgba(0,0,0,0.12) 1.5%, " +
+  "rgba(0,0,0,0.40) 3%, " +
+  "rgba(0,0,0,0.75) 4.5%, " +
+  "#000 6%, " +
+  "#000 94%, " +
+  "rgba(0,0,0,0.75) 95.5%, " +
+  "rgba(0,0,0,0.40) 97%, " +
+  "rgba(0,0,0,0.12) 98.5%, " +
+  "rgba(0,0,0,0) 100%)";
 
 function checkWebGLSupport(): boolean {
   if (typeof window === "undefined") return false;
@@ -107,7 +138,7 @@ export function LanyardHero() {
           <Canvas
             dpr={[1, 2]}
             frameloop={isFrameloopActive ? "demand" : "never"}
-            camera={{ position: [0, 0, 13], fov: CAMERA_FOV }}
+            camera={{ position: [0, 0, 12], fov: CAMERA_FOV }}
             gl={{
               alpha: true,
               antialias: true,
@@ -124,9 +155,10 @@ export function LanyardHero() {
             }}
             onError={() => setWebGlError(true)}
             aria-hidden="true"
-            className={`w-full h-full transition-opacity duration-400 ease-in-out ${sceneReady ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+            className={`absolute -inset-x-4 sm:-inset-x-8 md:-inset-x-12 -inset-y-4 sm:-inset-y-6 w-auto h-auto transition-opacity duration-400 ease-in-out ${sceneReady ? "opacity-100" : "opacity-0 pointer-events-none"}`}
             style={{
               pointerEvents: "auto",
+              touchAction: "pan-y",
               maskImage: CANVAS_FADE,
               WebkitMaskImage: CANVAS_FADE,
               maskComposite: "intersect",
