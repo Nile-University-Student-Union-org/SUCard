@@ -4,6 +4,7 @@ import React from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { Lock, Info } from "lucide-react";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "cn";
 
 export interface EncodingSectionProps {
@@ -136,19 +137,17 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
         </div>
 
         {config.encoding.version !== null && (
-          <div className="flex items-center gap-2 pt-1">
-            <input
-              type="range"
+          <div className="pt-2">
+            <Slider
+              label="Version Size"
+              showValue
+              valueFormatter={(v) => `v${v} (${17 + v * 4}×${17 + v * 4})`}
               min={1}
               max={40}
+              step={1}
               value={config.encoding.version}
-              onChange={(e) => handleVersionValueChange(Number(e.target.value))}
-              className="flex-1 accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
+              onChange={(val) => handleVersionValueChange(val)}
             />
-            <span className="font-mono font-bold text-foreground w-16 text-right">
-              v{config.encoding.version} ({17 + config.encoding.version * 4}×
-              {17 + config.encoding.version * 4})
-            </span>
           </div>
         )}
       </div>
@@ -207,31 +206,22 @@ export const EncodingSection: React.FC<EncodingSectionProps> = ({
       </div>
 
       {/* Quiet Zone Slider */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="font-bold text-foreground">
-            Quiet Zone Margin
-          </label>
-          <span className="font-mono font-bold text-foreground">
-            {config.encoding.quietZone} modules
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0}
-          max={8}
-          step={1}
-          value={config.encoding.quietZone}
-          onChange={(e) => handleQuietZoneChange(Number(e.target.value))}
-          className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-        />
-        <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-          <span>0 (Risky)</span>
-          <span>2 (Standard)</span>
-          <span>4 (ISO default)</span>
-          <span>8 (Wide)</span>
-        </div>
-      </div>
+      <Slider
+        label="Quiet Zone Margin"
+        showValue
+        valueFormatter={(v) => `${v} modules`}
+        min={0}
+        max={8}
+        step={1}
+        value={config.encoding.quietZone}
+        onChange={(val) => handleQuietZoneChange(val)}
+        ticks={[
+          { value: 0, label: "0 (Risky)" },
+          { value: 2, label: "2 (Standard)" },
+          { value: 4, label: "4 (ISO default)" },
+          { value: 8, label: "8 (Wide)" },
+        ]}
+      />
     </div>
   );
 };

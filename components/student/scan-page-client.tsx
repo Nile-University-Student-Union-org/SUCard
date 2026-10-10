@@ -45,7 +45,7 @@ export function ScanPageClient() {
         <CardContent className="p-6 sm:p-8 pt-2 space-y-6">
           {/* Quick Steps Guide */}
           <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-200/80 dark:border-zinc-700/80 text-left">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 block">
+            <span className="text-xs font-semibold text-ash dark:text-zinc-400 block">
               How to activate
             </span>
             <div className="space-y-2.5 text-xs sm:text-sm text-foreground">

@@ -156,4 +156,10 @@ describe("Component Exports & Rules Compliance", () => {
     expect(datePickerContent).not.toContain(forbidden);
     expect(dateRangePickerContent).not.toContain(forbidden);
   });
+
+  it("supports disabledDates prop in DatePicker", () => {
+    const uiDir = path.resolve(__dirname);
+    const datePickerContent = fs.readFileSync(path.join(uiDir, "date-picker.tsx"), "utf-8");
+    expect(datePickerContent).toContain("disabledDates");
+  });
 });

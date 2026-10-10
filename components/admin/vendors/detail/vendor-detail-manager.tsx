@@ -197,7 +197,7 @@ export function VendorDetailManager({ vendorId }: VendorDetailManagerProps) {
               {/* Status pill */}
               <span
                 className={cn(
-                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border",
+                  "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold border",
                   vendor.status === "active"
                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                     : vendor.status === "paused"

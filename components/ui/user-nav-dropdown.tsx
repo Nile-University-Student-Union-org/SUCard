@@ -296,7 +296,7 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                 <div className="pt-1">
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-bold text-[10px] uppercase tracking-wider border",
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-semibold text-xs border",
                       isSuperAdmin
                         ? "bg-brand/10 text-brand dark:bg-brand/20 dark:text-brand-soft border-brand/30"
                         : user.role === "admin"
@@ -326,7 +326,8 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
             </div>
           </div>
 
-          {/* 2. Menu Navigation Links */}
+          {/* 2. Menu Navigation Links (cashiers and vendor managers have none) */}
+          {(isAdmin || user.role === "student") && (
           <div className="space-y-0.5 pt-1 border-t border-border">
             {activeArea === "admin" ? (
               <>
@@ -350,7 +351,7 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                   <span className="flex-1">Cards management</span>
                 </Link>
               </>
-            ) : (
+            ) : user.role === "student" ? (
               <Link
                 href="/card"
                 onClick={() => setIsOpen(false)}
@@ -360,13 +361,14 @@ export const UserNavDropdown: React.FC<UserNavDropdownProps> = ({
                 <CreditCard className="w-4 h-4 text-brand dark:text-brand-soft group-hover:scale-110 transition-transform duration-200" />
                 <span className="flex-1">My SU Card</span>
               </Link>
-            )}
+            ) : null}
           </div>
+          )}
 
           {/* 3. Switch to Area Section (conditional when >1 area) */}
           {otherAreas.length > 0 && (
             <div className="pt-1 border-t border-border space-y-0.5">
-              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+              <div className="px-3 py-1 text-xs font-semibold text-muted-foreground">
                 Switch to
               </div>
               {otherAreas.map((area) => {

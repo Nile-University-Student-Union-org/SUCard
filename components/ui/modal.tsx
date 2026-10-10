@@ -320,7 +320,7 @@ export const ModalTitle = forwardRef<
       ref={ref}
       id={id || context?.titleId}
       className={cn(
-        "text-xl sm:text-2xl font-black text-eel-dark-blue dark:text-white leading-tight font-heading tracking-wide uppercase",
+        "text-lg sm:text-xl font-semibold text-eel-dark-blue dark:text-white leading-tight font-sans tracking-normal",
         className
       )}
       {...props}

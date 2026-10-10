@@ -19,7 +19,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Calendar,
-  X,
   FileText,
 } from "lucide-react";
 import type { StudentDeal, StudentDealsResponse } from "@/lib/analytics/types";
@@ -33,6 +32,7 @@ import { ToggleChip } from "@/components/ui/toggle-chip";
 import { OverflowScroller } from "@/components/ui/overflow-scroller";
 import { formatCairoDate } from "@/components/ui/analytics-format";
 import { OfferCard } from "@/components/offers/offer-card";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 const CATEGORIES = [
@@ -130,26 +130,16 @@ export function DealsView() {
       {/* Search & Category Filter Section */}
       <div className="space-y-3">
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-ash dark:text-zinc-400 pointer-events-none" />
-          <input
-            type="text"
+        <div>
+          <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by vendor, offer or keyword…"
-            className="w-full h-12 pl-10 pr-12 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-xs transition-colors"
+            leftIcon={<Search className="size-4" />}
+            clearable
+            onClear={() => setSearch("")}
             aria-label="Search student deals"
           />
-          {search && (
-            <button
-              type="button"
-              onClick={() => setSearch("")}
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 min-h-[44px] min-w-[44px] flex items-center justify-center text-ash dark:text-zinc-400 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft rounded-lg transition-colors cursor-pointer"
-              aria-label="Clear search query"
-            >
-              <X className="size-4" />
-            </button>
-          )}
         </div>
 
         {/* Category Chips Scroller */}
@@ -220,7 +210,7 @@ export function DealsView() {
       ) : deals.length === 0 ? (
         <EmptyState
           icon={<Tag />}
-          title="No Deals Found"
+          title="No deals found"
           hint={
             search || category !== "all"
               ? "No student deals matched your current search or filter. Try clearing filters."

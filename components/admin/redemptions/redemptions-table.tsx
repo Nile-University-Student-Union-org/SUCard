@@ -76,7 +76,7 @@ export function RedemptionsTable({
     return (
       <EmptyState
         icon={<Store className="size-6 text-muted-foreground" />}
-        title="NO REDEMPTION RECORDS"
+        title="No redemption records"
         hint="Scans and discount transactions will be logged in this ledger."
       />
     );
@@ -105,7 +105,7 @@ export function RedemptionsTable({
       <div className="hidden lg:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <table className="w-full text-left border-collapse text-xs">
           <thead>
-            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
+            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-semibold text-xs">
               <th className="px-4 py-3.5">Time (Cairo)</th>
               <th className="px-4 py-3.5">Vendor</th>
               <th className="px-4 py-3.5">Cashier</th>
@@ -174,7 +174,7 @@ export function RedemptionsTable({
                   <td className="px-3 py-3.5 whitespace-nowrap">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold uppercase text-[10px] border",
+                        "inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold uppercase text-[10px] border",
                         isValid
                           ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                           : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30"
@@ -261,7 +261,7 @@ export function RedemptionsTable({
 
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-bold uppercase text-[10px] border shrink-0",
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold uppercase text-[10px] border shrink-0",
                     isValid
                       ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                       : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30"

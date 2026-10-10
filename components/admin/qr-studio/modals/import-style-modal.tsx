@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { importStyleSchema } from "@/lib/qr-studio/validation";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { FileDrop } from "@/components/ui/file-drop";
 import { QrSvgPreview } from "../qr-svg-preview";
 import { importStyle } from "../api";
 import { toast } from "sonner";
-import { Upload, FileJson, AlertCircle } from "lucide-react";
+import { Upload, FileJson } from "lucide-react";
 
 export interface ImportStyleModalProps {
   isOpen: boolean;
@@ -24,16 +25,13 @@ export const ImportStyleModal: React.FC<ImportStyleModalProps> = ({
   onStyleImported,
 }) => {
   const router = useRouter();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [styleName, setStyleName] = useState("");
   const [importedConfig, setImportedConfig] = useState<QrStyleConfig | null>(null);
   const [fileName, setFileName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleFileSelect = (file: File) => {
 
     setFileName(file.name);
     setError(null);
@@ -101,39 +99,16 @@ export const ImportStyleModal: React.FC<ImportStyleModalProps> = ({
       <form onSubmit={handleImport}>
         <ModalBody className="space-y-4 text-xs">
           {/* File Picker */}
-          <div className="space-y-2">
-            <label className="font-bold text-foreground block">
-              Select JSON File
-            </label>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept=".json,application/json"
-              onChange={handleFileChange}
-              className="hidden"
-            />
-            <div
-              onClick={() => fileInputRef.current?.click()}
-              className="p-6 rounded-2xl border-2 border-dashed border-slate-300 dark:border-zinc-700 bg-slate-50 dark:bg-zinc-800/50 hover:bg-slate-100 dark:hover:bg-zinc-800 flex flex-col items-center justify-center text-center gap-2 cursor-pointer"
-            >
-              <FileJson className="size-8 text-brand" />
-              <div>
-                <p className="font-bold text-foreground">
-                  {fileName ? fileName : "Click to select or drop .json file"}
-                </p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Compatible with SU Card Style JSON schema (v1)
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {error && (
-            <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-700 dark:text-rose-300 flex items-center gap-2">
-              <AlertCircle className="size-4 shrink-0" />
-              <span>{error}</span>
-            </div>
-          )}
+          <FileDrop
+            label="Select JSON File"
+            accept=".json,application/json"
+            onFileSelect={handleFileSelect}
+            fileName={fileName}
+            icon={<FileJson className="size-5" />}
+            title="Click to select or drop .json file"
+            description="Compatible with SU Card Style JSON schema (v1)"
+            error={error || undefined}
+          />
 
           {/* Validated Preview & Name Edit */}
           {importedConfig && (

@@ -246,7 +246,7 @@ export function AdminDashboardManager() {
       <div className="space-y-3 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800/80 bg-white dark:bg-zinc-900 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 mb-1.5">
+            <span className="block text-xs font-semibold text-ash dark:text-zinc-400 mb-1.5">
               Date Range
             </span>
             <DateRangePicker
@@ -272,7 +272,7 @@ export function AdminDashboardManager() {
         <div className="pt-2 border-t border-slate-100 dark:border-zinc-800/80">
           <div className="flex items-center gap-2">
             <Filter className="size-3.5 text-ash dark:text-zinc-400 shrink-0" />
-            <span className="text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 shrink-0">
+            <span className="text-xs font-semibold text-ash dark:text-zinc-400 shrink-0">
               Category:
             </span>
             <OverflowScroller className="flex-1">
@@ -443,25 +443,6 @@ export function AdminDashboardManager() {
               subText="Used card at least once"
             />
 
-            {/* 4. Active Vendors */}
-            <StatTile
-              label="Active Partners"
-              value={formatNumber(data.kpis.activeVendors)}
-              accent="green"
-              variant="hero"
-              icon={<Store className="size-5" />}
-              subText="Partner stores & cafes"
-            />
-
-            {/* 5. Cards by Type */}
-            <StatTile
-              label="Cards by Type"
-              value={`${formatNumber(data.kpis.cardsByType.digital)} / ${formatNumber(data.kpis.cardsByType.physical)}`}
-              accent="neutral"
-              icon={<CreditCard className="size-4" />}
-              subText="Digital vs Physical cards"
-            />
-
             {/* 6. Physical Inventory */}
             <StatTile
               label="Physical Stock"
@@ -569,7 +550,7 @@ export function AdminDashboardManager() {
                       <div className="hidden md:block w-full overflow-x-auto">
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
-                            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
+                            <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-semibold">
                               <th className="px-4 py-3">#</th>
                               <th
                                 className="px-4 py-3 cursor-pointer hover:text-foreground"
@@ -742,7 +723,7 @@ export function AdminDashboardManager() {
 
                               <div className="grid grid-cols-2 gap-2 text-xs py-1 border-t border-border font-mono">
                                 <div>
-                                  <span className="text-[10px] font-bold uppercase text-muted-foreground font-sans block">
+                                  <span className="text-xs font-semibold text-muted-foreground block">
                                     Redemptions
                                   </span>
                                   <span className="font-bold text-foreground">
@@ -750,7 +731,7 @@ export function AdminDashboardManager() {
                                   </span>
                                 </div>
                                 <div>
-                                  <span className="text-[10px] font-bold uppercase text-muted-foreground font-sans block">
+                                  <span className="text-xs font-semibold text-muted-foreground block">
                                     Students
                                   </span>
                                   <span className="text-muted-foreground">

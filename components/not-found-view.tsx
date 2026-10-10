@@ -9,7 +9,8 @@ import { Button, ButtonLink } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { AmbientBackdrop } from "@/components/ui/ambient-backdrop";
 
-export function NotFoundView() {
+/** `embedded`: rendered inside an area layout that already has its own nav, logo and theme toggle. */
+export function NotFoundView({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
 
   const handleGoBack = () => {
@@ -20,39 +21,8 @@ export function NotFoundView() {
     }
   };
 
-  return (
-    <div className="min-h-[100dvh] bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col justify-between relative isolate overflow-hidden selection:bg-brand selection:text-white">
-      <AmbientBackdrop />
-
-      {/* Top Bar Navigation */}
-      <header className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between relative z-10">
-        <Link
-          href="/"
-          className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
-          aria-label="SU Card Home"
-        >
-          <Image
-            src="/brand/su-logo-color.png"
-            alt="Nile University Student Union"
-            width={160}
-            height={48}
-            className="h-9 w-auto object-contain dark:hidden"
-            priority
-          />
-          <Image
-            src="/brand/su-logo-white@hd.png"
-            alt="Nile University Student Union"
-            width={160}
-            height={48}
-            className="h-9 w-auto object-contain hidden dark:block"
-            priority
-          />
-        </Link>
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
-        </div>
-      </header>
-
+  const hero = (
+    <>
       {/* Centered Main 404 Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 py-10 relative z-10 text-center max-w-2xl mx-auto">
         {/* Large Branded 404 Graphic */}
@@ -146,6 +116,45 @@ export function NotFoundView() {
           </ButtonLink>
         </div>
       </main>
+    </>
+  );
+
+  if (embedded) return hero;
+
+  return (
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-zinc-950 text-foreground flex flex-col justify-between relative isolate overflow-hidden selection:bg-brand selection:text-white">
+      <AmbientBackdrop />
+
+      {/* Top Bar Navigation */}
+      <header className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-5 flex items-center justify-between relative z-10">
+        <Link
+          href="/"
+          className="flex items-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand rounded-lg"
+          aria-label="SU Card Home"
+        >
+          <Image
+            src="/brand/su-logo-color.png"
+            alt="Nile University Student Union"
+            width={160}
+            height={48}
+            className="h-9 w-auto object-contain dark:hidden"
+            priority
+          />
+          <Image
+            src="/brand/su-logo-white@hd.png"
+            alt="Nile University Student Union"
+            width={160}
+            height={48}
+            className="h-9 w-auto object-contain hidden dark:block"
+            priority
+          />
+        </Link>
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+        </div>
+      </header>
+
+      {hero}
 
       {/* Footer */}
       <footer className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 text-center text-xs text-ash dark:text-zinc-500 relative z-10">

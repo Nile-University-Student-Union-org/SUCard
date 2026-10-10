@@ -1,6 +1,6 @@
 import "server-only";
 import { createHash } from "node:crypto";
-import { eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { auditLog, cards, emailOutbox, scanEvents, studentProfiles, user } from "@/lib/db/schema";
 import { getSettings } from "@/lib/settings/service";
@@ -49,6 +49,9 @@ export async function deleteStudent(id:string,confirmEmail:string,actorId:string
     if(person.role!=="student") throw new StudentError(409,"Revoke staff role first");
     if(person.email!==confirmEmail) throw new StudentError(400,"Email confirmation does not match");
     const hash=createHash("sha256").update(person.email).digest("hex");
+    // Active physical cards go back to the pool so the same card can be linked again; digital cards die with the account.
+    await tx.update(cards).set({status:"unassigned",studentId:null,linkedAt:null,linkedBy:null})
+      .where(and(eq(cards.studentId,id),eq(cards.type,"physical"),eq(cards.status,"active")));
     await tx.update(cards).set({status:"void",voidReason:"student_deleted",voidedAt:new Date(),voidedBy:actorId,studentId:null}).where(eq(cards.studentId,id));
     await tx.update(scanEvents).set({studentId:null,studentDeleted:true}).where(eq(scanEvents.studentId,id));
     await deleteStudentOutbox(tx, person.email);

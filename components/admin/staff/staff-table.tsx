@@ -170,7 +170,7 @@ export function StaffTable({
                                   {member.name}
                                 </span>
                                 {isSelf && (
-                                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft border border-brand/25">
+                                  <span className="px-1.5 py-0.5 rounded-md text-[10px] font-semibold bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft border border-brand/25">
                                     You
                                   </span>
                                 )}
@@ -186,7 +186,7 @@ export function StaffTable({
                         <TableCell className="py-3.5">
                           <Badge
                             variant={isSuperAdmin ? "brand" : "outline"}
-                            className="text-[10px] font-bold uppercase tracking-wider"
+                            className="text-[10px] font-semibold"
                           >
                             {isSuperAdmin ? "Super Admin" : "Admin"}
                           </Badge>
@@ -196,7 +196,7 @@ export function StaffTable({
                         <TableCell className="py-3.5">
                           <Badge
                             variant={isActive ? "success" : "destructive"}
-                            className="text-[10px] font-bold uppercase tracking-wider"
+                            className="text-[10px] font-semibold"
                           >
                             {isActive ? "Active" : "Disabled"}
                           </Badge>
@@ -306,7 +306,7 @@ export function StaffTable({
                               {member.name}
                             </span>
                             {isSelf && (
-                              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase bg-brand/10 text-brand dark:text-brand-soft border border-brand/25">
+                              <span className="px-1.5 py-0.5 rounded-md text-[9px] font-semibold bg-brand/10 text-brand dark:text-brand-soft border border-brand/25">
                                 You
                               </span>
                             )}
@@ -320,13 +320,13 @@ export function StaffTable({
                       <div className="flex items-center gap-1.5 shrink-0">
                         <Badge
                           variant={isSuperAdmin ? "brand" : "outline"}
-                          className="text-[9px] font-bold uppercase"
+                          className="text-[9px] font-semibold"
                         >
                           {isSuperAdmin ? "Super" : "Admin"}
                         </Badge>
                         <Badge
                           variant={isActive ? "success" : "destructive"}
-                          className="text-[9px] font-bold uppercase"
+                          className="text-[9px] font-semibold"
                         >
                           {isActive ? "Active" : "Disabled"}
                         </Badge>

@@ -62,7 +62,7 @@ export function BarChart({
     return (
       <div className={cn("w-full space-y-2", className)}>
         {title && (
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <h3 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
             {title}
           </h3>
         )}
@@ -77,7 +77,7 @@ export function BarChart({
     <div className={cn("w-full space-y-3", className)}>
       {title && (
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <h3 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
             {title}
           </h3>
           {description && (

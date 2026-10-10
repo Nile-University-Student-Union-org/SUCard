@@ -265,7 +265,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
 
             {/* Section 1: Identity */}
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 1. Staff Identity
               </h4>
               <Input
@@ -291,7 +291,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
 
             {/* Section 2: Role Selection */}
             <div className="pt-3 border-t border-border space-y-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 2. Permissions & Role *
               </h4>
               <div className="space-y-1.5 text-left">
@@ -324,7 +324,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
             {/* Section 3: Initial Password */}
             <div className="pt-3 border-t border-border space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                   3. Initial Password
                 </h4>
                 <button

@@ -5,17 +5,18 @@ import Image from "next/image";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
+import { FileDrop } from "@/components/ui/file-drop";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Alert } from "@/components/ui/alert";
 import { toast } from "sonner";
 import {
-  Upload,
   Trash2,
   RefreshCw,
-  AlertCircle,
   Check,
 } from "lucide-react";
 import { createOffer, updateOffer, uploadOfferImage, deleteOfferImage } from "../api";
@@ -193,7 +194,6 @@ function VendorOfferForm({
   );
   const [isImageRemoved, setIsImageRemoved] = useState(false);
   const [imageError, setImageError] = useState<string | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [isValidatingImage, setIsValidatingImage] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -246,35 +246,6 @@ function VendorOfferForm({
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    }
-  };
-
-  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      void handleFileSelect(file);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      void handleFileSelect(file);
     }
   };
 
@@ -451,21 +422,21 @@ function VendorOfferForm({
         {/* Live Discount Preview Pill */}
         <div className="p-3.5 rounded-2xl bg-brand/10 dark:bg-brand/20 border border-brand/20 flex items-center justify-between gap-3">
           <div className="space-y-0.5 min-w-0">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand dark:text-brand-soft">
+            <span className="text-[10px] font-semibold text-brand dark:text-brand-soft">
               Live Badge Preview
             </span>
             <p className="text-xs font-semibold text-foreground truncate">
               {title || "Offer title"}
             </p>
           </div>
-          <div className="px-3 py-1 rounded-xl bg-brand text-white dark:text-zinc-950 font-heading text-sm uppercase tracking-wide shrink-0 shadow-xs">
+          <div className="px-3 py-1 rounded-xl bg-brand text-white dark:text-zinc-950 font-sans font-semibold text-xs shrink-0 shadow-xs">
             {previewDiscountLabel}
           </div>
         </div>
 
         {/* Section 1: Title & Description */}
         <div className="space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="font-sans font-semibold text-xs text-muted-foreground">
             1. Offer Title & Description
           </h4>
 
@@ -501,7 +472,7 @@ function VendorOfferForm({
         {/* Section 2: Promo Poster Image (4:5 Portrait) */}
         <div className="pt-3 border-t border-border space-y-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+            <h4 className="font-sans font-semibold text-xs text-muted-foreground">
               2. Promo Poster Image (4:5)
             </h4>
             <span className="text-[11px] font-medium text-muted-foreground">
@@ -509,108 +480,73 @@ function VendorOfferForm({
             </span>
           </div>
 
-          {/* Hidden native file input for camera roll & desktop picker */}
-          <input
+          {/* Promo Poster FileDrop */}
+          <FileDrop
             ref={fileInputRef}
-            type="file"
             accept="image/png,image/jpeg,image/webp"
-            onChange={handleFileInputChange}
-            className="sr-only"
-            tabIndex={-1}
-            aria-hidden="true"
-          />
+            maxSize={2.5 * 1024 * 1024}
+            onFileSelect={handleFileSelect}
+            disabled={isValidatingImage}
+            error={imageError || undefined}
+            title={
+              isValidatingImage
+                ? "Validating image dimensions…"
+                : "Drop 4:5 promo poster here or click to browse"
+            }
+            description="Tap to choose from photo library or camera roll"
+          >
+            {previewUrl && (
+              /* Live 4:5 Preview Card with Replace & Remove */
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl border border-border bg-slate-50 dark:bg-zinc-900/60">
+                <div className="relative w-36 sm:w-44 aspect-[4/5] rounded-xl overflow-hidden bg-slate-950 border border-border shadow-md shrink-0">
+                  <Image
+                    src={previewUrl}
+                    alt="Offer promo preview"
+                    fill
+                    className="object-contain"
+                    unoptimized
+                  />
+                </div>
 
-          {imageError && (
-            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-800 dark:text-rose-200 text-xs font-semibold flex items-start gap-2">
-              <AlertCircle className="size-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
-              <span>{imageError}</span>
-            </div>
-          )}
-
-          {previewUrl ? (
-            /* Live 4:5 Preview Card with Replace & Remove */
-            <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl border border-border bg-slate-50 dark:bg-zinc-900/60">
-              <div className="relative w-36 sm:w-44 aspect-[4/5] rounded-xl overflow-hidden bg-slate-950 border border-border shadow-md shrink-0">
-                <Image
-                  src={previewUrl}
-                  alt="Offer promo preview"
-                  fill
-                  className="object-contain"
-                  unoptimized
-                />
-              </div>
-
-              <div className="space-y-3 flex-1 min-w-0 text-center sm:text-left">
-                <div className="space-y-1">
-                  <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-500/20">
-                    <Check className="size-3.5 stroke-[2.5]" />
-                    <span>Promo image staged</span>
+                <div className="space-y-3 flex-1 min-w-0 text-center sm:text-left">
+                  <div className="space-y-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-xs font-semibold border border-emerald-500/20">
+                      <Check className="size-3.5 stroke-[2.5]" />
+                      <span>Promo image staged</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      4:5 portrait poster ready. Tap replace to choose another file or remove to use the gradient card.
+                    </p>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    4:5 portrait poster ready. Tap replace to choose another file or remove to use the gradient card.
-                  </p>
-                </div>
 
-                <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isValidatingImage}
-                    className="min-h-[44px] text-xs font-bold rounded-xl"
-                  >
-                    <RefreshCw className="size-3.5 mr-1.5" />
-                    <span>Replace image</span>
-                  </Button>
+                  <div className="flex items-center justify-center sm:justify-start gap-2 flex-wrap">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isValidatingImage}
+                      className="min-h-[44px] text-xs font-bold rounded-xl"
+                    >
+                      <RefreshCw className="size-3.5 mr-1.5" />
+                      <span>Replace image</span>
+                    </Button>
 
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleRemoveImage}
-                    className="min-h-[44px] text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
-                  >
-                    <Trash2 className="size-3.5 mr-1.5" />
-                    <span>Remove image</span>
-                  </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveImage}
+                      className="min-h-[44px] text-xs font-semibold text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                    >
+                      <Trash2 className="size-3.5 mr-1.5" />
+                      <span>Remove image</span>
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ) : (
-            /* Drag-and-Drop & Tap-to-Pick Dropzone */
-            <div
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-              onClick={() => fileInputRef.current?.click()}
-              className={cn(
-                "group relative border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2.5 min-h-[140px]",
-                isDragging
-                  ? "border-brand bg-brand/5 dark:bg-brand/10 scale-[0.99]"
-                  : "border-border hover:border-brand/50 hover:bg-muted/30 bg-card"
-              )}
-            >
-              <div className="size-11 rounded-2xl bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
-                {isValidatingImage ? (
-                  <RefreshCw className="size-5 animate-spin" />
-                ) : (
-                  <Upload className="size-5" />
-                )}
-              </div>
-
-              <div className="space-y-0.5">
-                <p className="text-xs sm:text-sm font-bold text-foreground">
-                  {isValidatingImage
-                    ? "Validating image dimensions…"
-                    : "Drop 4:5 promo poster here or click to browse"}
-                </p>
-                <p className="text-[11px] text-muted-foreground font-medium">
-                  Tap to choose from photo library or camera roll
-                </p>
-              </div>
-            </div>
-          )}
+            )}
+          </FileDrop>
 
           {/* Required Spec Text Under Field */}
           <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -620,23 +556,18 @@ function VendorOfferForm({
 
         {/* Section 3: Discount Details */}
         <div className="pt-3 border-t border-border space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="font-sans font-semibold text-xs text-muted-foreground">
             3. Discount Details
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label
-                htmlFor="discount-type"
-                className="text-xs font-bold uppercase tracking-wider"
-              >
-                Discount Type *
-              </Label>
-              <select
+              <Dropdown
                 id="discount-type"
+                label="Discount Type *"
                 value={discountType}
-                onChange={(e) => {
-                  setDiscountType(e.target.value as typeof discountType);
+                onChange={(val) => {
+                  setDiscountType(val as typeof discountType);
                   if (fieldErrors.discountValue || fieldErrors.discountText) {
                     setFieldErrors((prev) => ({
                       ...prev,
@@ -645,13 +576,14 @@ function VendorOfferForm({
                     }));
                   }
                 }}
-                className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
-              >
-                <option value="percent">Percentage (% Off)</option>
-                <option value="fixed">Fixed Amount (EGP Off)</option>
-                <option value="free_item">Free Item / Gift</option>
-                <option value="custom">Custom Text Deal</option>
-              </select>
+                className="w-full"
+                options={[
+                  { value: "percent", label: "Percentage (% Off)" },
+                  { value: "fixed", label: "Fixed Amount (EGP Off)" },
+                  { value: "free_item", label: "Free Item / Gift" },
+                  { value: "custom", label: "Custom Text Deal" },
+                ]}
+              />
             </div>
 
             {discountType === "percent" && (
@@ -734,30 +666,20 @@ function VendorOfferForm({
 
         {/* Section 4: Usage Limits */}
         <div className="pt-3 border-t border-border space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="font-sans font-semibold text-xs text-muted-foreground">
             4. Usage Limits (Per Student)
           </h4>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label
-                htmlFor="limit-period"
-                className="text-xs font-bold uppercase tracking-wider"
-              >
-                Limit Frequency *
-              </Label>
-              <select
+              <Dropdown
                 id="limit-period"
+                label="Limit Frequency *"
                 value={limitPeriod}
-                onChange={(e) => setLimitPeriod(e.target.value as OfferPeriod)}
-                className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
-              >
-                {PERIOD_LABELS.map((p) => (
-                  <option key={p.value} value={p.value}>
-                    {p.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setLimitPeriod(val as OfferPeriod)}
+                className="w-full"
+                options={PERIOD_LABELS}
+              />
             </div>
 
             {limitPeriod !== "unlimited" && (
@@ -789,7 +711,7 @@ function VendorOfferForm({
 
         {/* Section 5: Schedule & Timing */}
         <div className="pt-3 border-t border-border space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="font-sans font-semibold text-xs text-muted-foreground">
             5. Schedule & Active Days/Hours
           </h4>
 
@@ -837,14 +759,13 @@ function VendorOfferForm({
           {/* Active Hours */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Input
+              <TimePicker
                 id="active-from"
                 label="Active From (Time)"
-                type="time"
                 placeholder="08:00"
                 value={activeFrom}
-                onChange={(e) => {
-                  setActiveFrom(e.target.value);
+                onChange={(val) => {
+                  setActiveFrom(val);
                   if (fieldErrors.activeFrom)
                     setFieldErrors((prev) => ({
                       ...prev,
@@ -852,19 +773,18 @@ function VendorOfferForm({
                     }));
                 }}
                 error={fieldErrors.activeFrom}
-                className="h-11 rounded-xl"
+                clearable
               />
             </div>
 
             <div className="space-y-1.5">
-              <Input
+              <TimePicker
                 id="active-to"
                 label="Active To (Time)"
-                type="time"
                 placeholder="12:00"
                 value={activeTo}
-                onChange={(e) => {
-                  setActiveTo(e.target.value);
+                onChange={(val) => {
+                  setActiveTo(val);
                   if (fieldErrors.activeTo)
                     setFieldErrors((prev) => ({
                       ...prev,
@@ -872,7 +792,7 @@ function VendorOfferForm({
                     }));
                 }}
                 error={fieldErrors.activeTo}
-                className="h-11 rounded-xl"
+                clearable
               />
             </div>
           </div>
@@ -909,7 +829,7 @@ function VendorOfferForm({
 
         {/* Section 6: Visibility & Status Toggles */}
         <div className="pt-3 border-t border-border space-y-4">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h4 className="font-sans font-semibold text-xs text-muted-foreground">
             6. Visibility & Terms
           </h4>
 

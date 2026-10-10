@@ -111,7 +111,7 @@ export function VoidRedemptionDialog({
           )}
 
           <div className="space-y-1.5">
-            <Label htmlFor="void-reason" className="text-xs font-bold uppercase tracking-wider">
+            <Label htmlFor="void-reason" className="text-xs font-semibold">
               Reason for Voiding <span className="text-rose-500">*</span>
             </Label>
             <Textarea

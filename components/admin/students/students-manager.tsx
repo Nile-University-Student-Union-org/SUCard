@@ -810,7 +810,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                           <TableCell className="py-3.5">
                             <span
                               className={cn(
-                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold",
                                 student.profile.status === "active"
                                   ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
                                   : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
@@ -839,7 +839,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                                 <span className="font-bold text-foreground">
                                   {student.card.serial}
                                 </span>
-                                <span className="block text-[10px] text-muted-foreground uppercase font-sans">
+                                <span className="block text-[10px] text-muted-foreground font-sans capitalize">
                                   {student.card.type}
                                 </span>
                               </div>
@@ -984,7 +984,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                         </div>
                         <span
                           className={cn(
-                            "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0",
+                            "inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold shrink-0",
                             student.profile.status === "active"
                               ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
                               : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20"
@@ -996,7 +996,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
 
                       <div className="grid grid-cols-2 gap-2 text-xs py-1 border-t border-b border-slate-100 dark:border-zinc-800">
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                          <span className="text-[10px] font-semibold text-muted-foreground block">
                             ID
                           </span>
                           <span className="font-mono font-bold text-foreground">
@@ -1004,7 +1004,7 @@ export function StudentsManager({ role }: StudentsManagerProps) {
                           </span>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground block">
+                          <span className="text-[10px] font-semibold text-muted-foreground block">
                             Card
                           </span>
                           <span className="font-mono font-bold text-foreground">

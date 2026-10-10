@@ -5,6 +5,7 @@ import { ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { AlertDialog } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCairoDate } from "./utils";
 import type { StudentAdminGrant } from "@/lib/staff/student-admin-service";
@@ -75,10 +76,17 @@ export function StudentAdmins() {
     </CardHeader>
     <CardContent className="space-y-5 p-5">
       <div className="space-y-2">
-        <label htmlFor="student-admin-ids" className="text-sm font-bold">University IDs</label>
-        <textarea id="student-admin-ids" value={ids} onChange={(event) => { setIds(event.target.value); setMatches(null); }}
-          placeholder="Enter 9-digit IDs, separated by commas or new lines" rows={3}
-          className="w-full rounded-xl border border-border bg-background p-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand" />
+        <Textarea
+          id="student-admin-ids"
+          label="University IDs"
+          value={ids}
+          onChange={(event) => {
+            setIds(event.target.value);
+            setMatches(null);
+          }}
+          placeholder="Enter 9-digit IDs, separated by commas or new lines"
+          rows={3}
+        />
         <Button type="button" variant="outline" onClick={preview} disabled={busy || !ids.trim()}>Check IDs</Button>
       </div>
       {matches && <div className="space-y-3 rounded-xl border border-border p-4">

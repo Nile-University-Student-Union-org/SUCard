@@ -367,8 +367,8 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <CheckCircle2 className="size-10 text-emerald-400" />
             </div>
             <div className="space-y-1.5">
-              <h2 className="font-heading text-3xl uppercase tracking-wider text-white">
-                CARD LINKED!
+              <h2 className="font-sans font-semibold text-2xl sm:text-3xl text-white">
+                Card linked!
               </h2>
               <p className="text-sm text-zinc-300 font-medium max-w-xs mx-auto">
                 Your physical membership card is now active and ready to use.
@@ -395,8 +395,8 @@ export function CardScanner({ isOpen, onClose, onSuccess }: CardScannerProps) {
               <ShieldAlert className="size-7" />
             </div>
             <div className="space-y-2">
-              <h3 className="font-heading text-2xl uppercase tracking-wider text-white">
-                Camera Unavailable
+              <h3 className="font-sans font-semibold text-xl text-white">
+                Camera unavailable
               </h3>
               <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed max-w-xs mx-auto font-medium">
                 {permissionError}

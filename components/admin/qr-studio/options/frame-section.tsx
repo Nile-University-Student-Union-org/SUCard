@@ -4,6 +4,8 @@ import React from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { ColorInput } from "./color-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 
 export interface FrameSectionProps {
   config: QrStyleConfig;
@@ -107,46 +109,31 @@ export const FrameSection: React.FC<FrameSectionProps> = ({ config, onChange }) 
           />
 
           {/* Frame Width */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-foreground">
-                Border Stroke Width
-              </label>
-              <span className="font-mono font-bold text-foreground">
-                {frame.width.toFixed(1)} px
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0.5}
-              max={4}
-              step={0.5}
-              value={frame.width}
-              onChange={(e) => handleWidthChange(parseFloat(e.target.value))}
-              className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-            />
-          </div>
+          <Slider
+            label="Border Stroke Width"
+            showValue
+            valueFormatter={(v) => `${v.toFixed(1)} px`}
+            min={0.5}
+            max={4}
+            step={0.5}
+            value={frame.width}
+            onChange={(val) => handleWidthChange(val)}
+          />
         </>
       )}
 
       {/* CTA Label */}
       <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-zinc-800">
-        <div className="space-y-1">
-          <label className="font-bold text-foreground block">
-            Call-to-Action Label
-          </label>
-          <input
-            type="text"
-            value={frame.label}
-            onChange={(e) => handleLabelChange(e.target.value)}
-            placeholder="e.g. SCAN TO REDEEM"
-            maxLength={24}
-            className="w-full min-h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent"
-          />
-          <span className="text-[10px] text-muted-foreground block text-right font-mono">
-            {frame.label.length}/24 chars
-          </span>
-        </div>
+        <Input
+          label="Call-to-Action Label"
+          type="text"
+          value={frame.label}
+          onChange={(e) => handleLabelChange(e.target.value)}
+          placeholder="e.g. SCAN TO REDEEM"
+          maxLength={24}
+          helperText={`${frame.label.length}/24 chars`}
+          className="font-bold text-xs"
+        />
 
         {frame.label.length > 0 && (
           <>

@@ -5,7 +5,7 @@ import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
-import { Plus, Layers, Palette, Download, CheckCircle2, FileCode, ImageIcon } from "lucide-react";
+import { Plus, Layers, Download, CheckCircle2, FileCode, ImageIcon } from "lucide-react";
 import { BATCH_LABEL_MAX, BATCH_COUNT_MAX, type Batch } from "@/lib/cards/types";
 import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { listStyles } from "@/components/admin/qr-studio/api";
@@ -13,6 +13,7 @@ import { createBatch, getBatchExportUrl } from "./api";
 import { formatNumber, formatBatchNumber } from "./utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
 import {
   Card,
   CardContent,
@@ -42,7 +43,6 @@ const generateSchema = z.object({
 
 type GenerateFormValues = z.infer<typeof generateSchema>;
 
-const QUICK_PICK_COUNTS = [100, 500, 1000, 5000];
 
 interface GenerateBatchPanelProps {
   onBatchCreated: (newBatch: Batch) => void;
@@ -77,7 +77,6 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
   });
 
   const currentLabel = useWatch({ control, name: "label" }) || "";
-  const currentCount = useWatch({ control, name: "count" }) ?? 1000;
 
   useEffect(() => {
     let active = true;
@@ -213,7 +212,7 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
 
               {/* Direct Export Actions */}
               <div className="pt-2 border-t border-emerald-500/20 flex flex-wrap items-center gap-2.5">
-                <span className="text-[11px] font-bold text-emerald-900 dark:text-emerald-200 uppercase tracking-wide">
+                <span className="text-xs font-semibold text-emerald-900 dark:text-emerald-200">
                   Immediate Export:
                 </span>
                 <Button
@@ -273,28 +272,20 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
 
               {/* QR Style Picker */}
               <div className="md:col-span-3 space-y-1.5">
-                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Palette className="size-3.5 text-brand" />
-                  <span>QR Style Version</span>
-                </label>
-                <div className="relative">
-                  <select
-                    value={selectedStyleId}
-                    onChange={(e) => {
-                      setSelectedStyleId(e.target.value);
-                      setValue("qrStyleVersionId", e.target.value);
-                    }}
-                    disabled={isSubmitting || publishedStyles.length === 0}
-                    className="w-full min-h-[44px] rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
-                  >
-                    {publishedStyles.map((s) => (
-                      <option key={s.id} value={s.latestVersion!.id}>
-                        {s.name} (v{s.latestVersion!.version})
-                        {s.isDefaultPrint ? " — Default Print" : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Dropdown
+                  label="QR Style Version"
+                  value={selectedStyleId}
+                  onChange={(val) => {
+                    setSelectedStyleId(val);
+                    setValue("qrStyleVersionId", val);
+                  }}
+                  disabled={isSubmitting || publishedStyles.length === 0}
+                  className="w-full"
+                  options={publishedStyles.map((s) => ({
+                    value: s.latestVersion!.id,
+                    label: `${s.name} (v${s.latestVersion!.version})${s.isDefaultPrint ? " — Default Print" : ""}`,
+                  }))}
+                />
                 {selectedStyle && (
                   <p className="text-[11px] text-muted-foreground font-mono">
                     {selectedStyle.latestVersion?.config.modules.shape} dots &bull;{" "}
@@ -318,34 +309,11 @@ export function GenerateBatchPanel({ onBatchCreated, onOpenDownloadDialog }: Gen
                   {...register("count", { valueAsNumber: true })}
                 />
 
-                {/* Quick-pick Chips */}
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-[11px] font-semibold text-ash dark:text-zinc-400 mr-1 select-none">Quick:</span>
-                  {QUICK_PICK_COUNTS.map((chipCount) => (
-                    <button
-                      key={chipCount}
-                      type="button"
-                      onClick={() => setValue("count", chipCount, { shouldValidate: true })}
-                      disabled={isSubmitting}
-                      className={`text-xs px-2.5 min-h-[32px] rounded-lg border font-semibold transition-all cursor-pointer select-none active:scale-95 ${
-                        currentCount === chipCount
-                          ? "bg-brand text-white border-brand shadow-xs"
-                          : "bg-white dark:bg-zinc-800 text-charcoal dark:text-zinc-200 border-slate-200 dark:border-zinc-700 hover:border-brand/40"
-                      }`}
-                    >
-                      {formatNumber(chipCount)}
-                    </button>
-                  ))}
-                </div>
               </div>
             </div>
 
             {/* Action Bar */}
-            <div className="pt-3 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100 dark:border-zinc-800">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Layers className="size-4 text-brand dark:text-brand-soft shrink-0" />
-                <span>Cards are generated with unique cryptographic QR tokens and rendered in the selected QR style version.</span>
-              </div>
+            <div className="pt-3 flex justify-end border-t border-slate-100 dark:border-zinc-800">
               <Button
                 type="submit"
                 variant="primary"

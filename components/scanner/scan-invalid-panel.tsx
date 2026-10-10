@@ -188,7 +188,7 @@ export function ScanInvalidPanel({
 
       {/* Top Bar */}
       <header className="flex items-center justify-between p-4 sm:p-6 border-b border-white/15 bg-black/20 pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/20 text-rose-200 border border-rose-400/30 text-xs font-bold uppercase tracking-wider">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-rose-400/20 text-rose-200 border border-rose-400/30 text-xs font-semibold">
           {details.icon === "wifi" ? (
             <WifiOff className="size-4" />
           ) : (

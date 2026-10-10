@@ -6,13 +6,11 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Link from "next/link";
-import { User, Mail, CreditCard, AlertCircle } from "lucide-react";
+import { User, Mail, CreditCard } from "lucide-react";
 import { UNIVERSITY_ID_REGEX } from "@/lib/student/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Alert } from "@/components/ui/alert";
-import { Checkbox } from "@/components/ui/checkbox";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
 
 const welcomeSchema = z.object({
@@ -20,7 +18,6 @@ const welcomeSchema = z.object({
     .string()
     .trim()
     .regex(UNIVERSITY_ID_REGEX, "University ID must be exactly 9 digits (e.g. 231001000)"),
-  acceptPrivacy: z.literal(true, { error: "Please accept the SU Card privacy notice" }),
 });
 
 type WelcomeFormValues = z.infer<typeof welcomeSchema>;
@@ -43,7 +40,6 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
     resolver: zodResolver(welcomeSchema),
     defaultValues: {
       universityId: "",
-      acceptPrivacy: undefined,
     },
   });
 
@@ -58,7 +54,7 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
           "Content-Type": "application/json",
           Accept: "application/json",
         },
-        body: JSON.stringify({ universityId: values.universityId.trim(), acceptPrivacy: values.acceptPrivacy }),
+        body: JSON.stringify({ universityId: values.universityId.trim(), acceptPrivacy: true }),
       });
 
       const data = await res.json().catch(() => ({}));
@@ -102,12 +98,9 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
 
           {/* Read-Only Microsoft Account Details */}
           <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
-                Verified Account
-              </span>
+            <div className="flex items-center">
               <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold border border-emerald-500/20">
-                Microsoft Student
+                Verified Nile University Student
               </span>
             </div>
 
@@ -143,38 +136,6 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
               />
             </div>
 
-            {/* Privacy Acceptance Checkbox */}
-            <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 min-h-[44px] flex items-center">
-              <Checkbox
-                id="acceptPrivacy"
-                disabled={isLoading}
-                {...register("acceptPrivacy")}
-                label={
-                  <span className="text-xs sm:text-sm font-medium text-foreground">
-                    I agree to the{" "}
-                    <Link
-                      href="/privacy"
-                      target="_blank"
-                      className="text-brand dark:text-brand-soft underline font-bold hover:text-brand-dark transition-colors"
-                    >
-                      SU Card privacy notice
-                    </Link>
-                    .
-                  </span>
-                }
-                error={errors.acceptPrivacy?.message}
-              />
-            </div>
-
-            {/* Identity & Next Step Explanation */}
-            <Alert
-              variant="info"
-              size="sm"
-              icon={<AlertCircle className="size-4 text-sky-600 dark:text-sky-400" />}
-              title="Identity on card"
-              description="Your name and student ID will appear on your card and cannot be changed later. After setup, you can access your digital card or link a physical card from the SU office."
-            />
-
             {/* Submit Action */}
             <div className="pt-2">
               <Button
@@ -187,6 +148,13 @@ export function WelcomeForm({ name, email }: WelcomeFormProps) {
               >
                 Continue
               </Button>
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                By continuing you agree to the{" "}
+                <Link href="/privacy" target="_blank" className="text-brand dark:text-brand-soft underline underline-offset-2">
+                  SU Card privacy notice
+                </Link>
+                .
+              </p>
             </div>
           </form>
         </CardContent>

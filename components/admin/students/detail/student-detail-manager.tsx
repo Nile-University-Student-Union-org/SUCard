@@ -485,7 +485,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               {/* Status Badge */}
               <span
                 className={cn(
-                  "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border",
+                  "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border",
                   student.profile.status === "active"
                     ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                     : "bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30"
@@ -497,7 +497,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               {/* Flow Badge */}
               <Badge
                 variant={student.profile.cardFlow === "digital" ? "brand" : "secondary"}
-                className="text-[10px] uppercase font-bold"
+                className="text-xs font-semibold"
               >
                 {student.profile.cardFlow} Flow
               </Badge>
@@ -587,7 +587,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             <div className="flex items-center gap-2">
               <CreditCard className="size-5 text-brand dark:text-brand-soft" />
               <CardTitle className="text-lg text-foreground">
-                MEMBERSHIP CARDS
+                Membership cards
               </CardTitle>
             </div>
             {!activeCard && (
@@ -614,7 +614,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               <div className="p-4 rounded-xl border-2 border-brand/30 dark:border-brand-soft/30 bg-brand/5 dark:bg-brand/10 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-brand dark:text-brand-soft block">
+                    <span className="text-[10px] font-semibold text-brand dark:text-brand-soft block">
                       Active Card
                     </span>
                     <span className="font-mono text-lg font-bold text-foreground">
@@ -656,7 +656,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             {/* Past Cards History */}
             {student.cards.filter((c) => c.status !== "active").length > 0 && (
               <div className="space-y-2 pt-2">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+                <p className="text-[11px] font-semibold text-ash dark:text-zinc-400">
                   Previous Cards History
                 </p>
                 <div className="space-y-2">
@@ -696,7 +696,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             <div className="flex items-center gap-2">
               <Wallet className="size-5 text-sky-600 dark:text-sky-400" />
               <CardTitle className="text-lg text-foreground">
-                WALLET PASSES
+                Wallet passes
               </CardTitle>
             </div>
             <Badge variant="secondary" className="text-xs font-mono font-bold">
@@ -744,7 +744,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
           <div className="flex items-center gap-2">
             <Receipt className="size-5 text-brand dark:text-brand-soft" />
             <CardTitle className="text-lg text-foreground">
-              REDEMPTION HISTORY
+              Redemption history
             </CardTitle>
           </div>
           <span className="text-xs font-mono text-muted-foreground font-bold">
@@ -763,7 +763,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
               <div className="hidden md:block w-full overflow-x-auto">
                 <table className="w-full text-left border-collapse text-xs">
                   <thead>
-                    <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
+                    <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold text-xs">
                       <th className="px-4 py-3">Vendor</th>
                       <th className="px-4 py-3">Offer Claimed</th>
                       <th className="px-4 py-3 text-right">Bill Amount</th>
@@ -839,7 +839,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
             <Trash2 className="size-5 text-rose-600 dark:text-rose-400" />
             <div>
               <CardTitle className="text-base sm:text-lg text-rose-900 dark:text-rose-200">
-                DANGER ZONE
+                Danger zone
               </CardTitle>
               <CardDescription className="text-xs text-rose-700/80 dark:text-rose-400/80 mt-0.5">
                 Permanent student account deletion (M8-6c)
@@ -851,7 +851,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
         <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="text-xs text-muted-foreground space-y-1 max-w-xl">
             <p className="font-semibold text-foreground">
-              Deleting this student permanently removes their profile and voids their card.
+              Deleting this student permanently removes their profile. Their physical card is freed so it can be linked again.
             </p>
             <p>
               Their past redemptions are preserved anonymously so partner vendor statistics and financial totals remain intact.
@@ -1015,7 +1015,7 @@ export function StudentDetailManager({ studentId }: StudentDetailManagerProps) {
                 <p><strong>Consequences:</strong></p>
                 <ul className="list-disc pl-4 space-y-0.5">
                   <li>The student&apos;s personal profile and credentials are permanently erased.</li>
-                  <li>Their active card is immediately cancelled and cannot be linked again.</li>
+                  <li>Their physical card is unlinked and can be linked again (to them after they sign up again, or to someone else). Digital cards are cancelled.</li>
                   <li>Past redemption records are kept anonymously for partner vendor statistics.</li>
                 </ul>
               </div>

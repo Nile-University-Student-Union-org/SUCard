@@ -231,14 +231,15 @@ export function StylesLibraryView() {
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-72">
-          <Search className="size-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <input
-            type="text"
+        <div className="w-full sm:w-72">
+          <Input
             placeholder="Search styles by name…"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 pl-9 pr-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
+            leftIcon={<Search className="size-4" />}
+            clearable
+            onClear={() => setSearchQuery("")}
+            inputSize="sm"
           />
         </div>
       </div>
@@ -322,7 +323,7 @@ export function StylesLibraryView() {
                   <div className="absolute top-3 left-3 flex flex-col gap-1 items-start">
                     <span
                       className={cn(
-                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider font-mono shadow-xs",
+                        "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase font-mono shadow-xs",
                         style.status === "published"
                           ? "bg-emerald-500 text-white"
                           : style.status === "draft"
@@ -334,13 +335,13 @@ export function StylesLibraryView() {
                     </span>
 
                     {style.isDefaultPrint && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0F3056] text-white shadow-xs border border-white/20">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#0F3056] text-white shadow-xs border border-white/20">
                         Default Print
                       </span>
                     )}
 
                     {style.isDefaultWeb && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#018BCE] text-white shadow-xs">
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#018BCE] text-white shadow-xs">
                         Default Web
                       </span>
                     )}

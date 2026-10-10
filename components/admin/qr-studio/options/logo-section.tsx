@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { ColorInput } from "./color-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react";
 import { cn } from "cn";
 
@@ -136,29 +137,22 @@ export const LogoSection: React.FC<LogoSectionProps> = ({ config, onChange }) =>
       {logo.type === "nusu" && (
         <>
           {/* Size % Slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-foreground">
-                Logo Size (% of QR Width)
-              </label>
-              <span className="font-mono font-bold text-foreground">
-                {logo.sizePercent}% (Max 25%)
-              </span>
-            </div>
-            <input
-              type="range"
+          <div className="space-y-1">
+            <Slider
+              label="Logo Size (% of QR Width)"
+              showValue
+              valueFormatter={(v) => `${v}% (Max 25%)`}
               min={5}
               max={25}
               step={1}
               value={logo.sizePercent}
-              onChange={(e) => handleSizePercentChange(Number(e.target.value))}
-              className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
+              onChange={(val) => handleSizePercentChange(val)}
+              ticks={[
+                { value: 5, label: "5% (Subtle)" },
+                { value: 16, label: "16% (Balanced)" },
+                { value: 25, label: "25% (Hard Maximum)" },
+              ]}
             />
-            <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-              <span>5% (Subtle)</span>
-              <span>16% (Balanced)</span>
-              <span>25% (Hard Maximum)</span>
-            </div>
             <p className="text-[11px] text-muted-foreground flex items-center gap-1 mt-1">
               <Info className="size-3 text-brand shrink-0" />
               <span>Hard capped at 25% to guarantee camera scannability within QR Reed-Solomon recovery capacity.</span>
@@ -166,25 +160,16 @@ export const LogoSection: React.FC<LogoSectionProps> = ({ config, onChange }) =>
           </div>
 
           {/* Padding Slider */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <label className="font-bold text-foreground">
-                Logo Module Margin (Padding)
-              </label>
-              <span className="font-mono font-bold text-foreground">
-                {logo.padding} modules
-              </span>
-            </div>
-            <input
-              type="range"
-              min={0}
-              max={5}
-              step={0.5}
-              value={logo.padding}
-              onChange={(e) => handlePaddingChange(parseFloat(e.target.value))}
-              className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-            />
-          </div>
+          <Slider
+            label="Logo Module Margin (Padding)"
+            showValue
+            valueFormatter={(v) => `${v} modules`}
+            min={0}
+            max={5}
+            step={0.5}
+            value={logo.padding}
+            onChange={(val) => handlePaddingChange(val)}
+          />
 
           {/* Background Plate Shape */}
           <div className="space-y-2">

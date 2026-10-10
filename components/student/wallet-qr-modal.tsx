@@ -238,14 +238,14 @@ export function WalletQrModal({ saveUrl, onClose }: WalletQrModalProps) {
         {/* Content Container (24-28px rhythm) */}
         <div className="p-6 sm:p-7 flex flex-col items-center text-center relative z-10">
           {/* Eyebrow */}
-          <span className="text-[11px] font-bold tracking-widest text-[#018BCE] uppercase">
-            GOOGLE WALLET
+          <span className="text-[11px] font-semibold text-[#018BCE]">
+            Google Wallet
           </span>
 
           {/* Title */}
           <h2
             id={titleId}
-            className="font-heading text-[26px] uppercase text-slate-900 dark:text-white leading-tight mt-1.5"
+            className="font-sans font-semibold text-xl sm:text-2xl text-slate-900 dark:text-white leading-tight mt-1.5"
           >
             Add your card to your phone
           </h2>

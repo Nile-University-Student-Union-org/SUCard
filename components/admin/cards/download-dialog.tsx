@@ -84,7 +84,7 @@ export function DownloadDialog({ batch, open, onOpenChange }: DownloadDialogProp
 
         {/* Format Options */}
         <div className="space-y-3 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-slate-50/60 dark:bg-zinc-800/40 p-3.5">
-          <p className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <p className="text-xs font-semibold text-ash dark:text-zinc-400">
             Export Formats
           </p>
 

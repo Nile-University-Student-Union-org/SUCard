@@ -57,8 +57,8 @@ export function EmptyState({
       <div className={cn("space-y-1 max-w-md mx-auto", compact && "space-y-0.5")}>
         <h3
           className={cn(
-            "font-heading uppercase tracking-wider text-charcoal dark:text-white leading-tight",
-            compact ? "text-base sm:text-lg" : "text-lg sm:text-xl md:text-2xl"
+            "font-sans font-semibold text-charcoal dark:text-white leading-tight tracking-normal",
+            compact ? "text-sm sm:text-base" : "text-base sm:text-lg"
           )}
         >
           {title}

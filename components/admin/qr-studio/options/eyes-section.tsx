@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { ColorInput } from "./color-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "cn";
 
 export interface EyesSectionProps {
@@ -150,30 +151,21 @@ export const EyesSection: React.FC<EyesSectionProps> = ({ config, onChange }) =>
 
       {/* Frame Radius (when rounded) */}
       {currentEye.frameShape === "rounded" && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-foreground">
-              Frame Corner Radius
-            </label>
-            <span className="font-mono font-bold text-foreground">
-              {currentEye.frameRadius.toFixed(1)}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={0}
-            max={3.5}
-            step={0.1}
-            value={currentEye.frameRadius}
-            onChange={(e) =>
-              updateEye((eye) => ({
-                ...eye,
-                frameRadius: parseFloat(e.target.value),
-              }))
-            }
-            className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-          />
-        </div>
+        <Slider
+          label="Frame Corner Radius"
+          showValue
+          valueFormatter={(v) => v.toFixed(1)}
+          min={0}
+          max={3.5}
+          step={0.1}
+          value={currentEye.frameRadius}
+          onChange={(val) =>
+            updateEye((eye) => ({
+              ...eye,
+              frameRadius: val,
+            }))
+          }
+        />
       )}
 
       {/* Frame Color */}

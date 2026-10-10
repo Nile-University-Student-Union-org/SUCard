@@ -81,8 +81,8 @@ export function ScannerViewfinder({
           </div>
 
           <div className="space-y-2">
-            <h2 className="font-heading text-2xl sm:text-3xl uppercase tracking-wider text-white">
-              Camera Access Required
+            <h2 className="font-sans font-semibold text-xl sm:text-2xl text-white">
+              Camera access required
             </h2>
             <p className="text-sm text-slate-300 leading-relaxed font-medium break-words [overflow-wrap:anywhere]">
               {permissionError}
@@ -102,7 +102,7 @@ export function ScannerViewfinder({
             variant="primary"
             size="lg"
             onClick={startCamera}
-            className="w-full font-heading text-base uppercase tracking-wider min-h-[48px] h-13"
+            className="w-full font-sans font-semibold text-base min-h-[48px] h-13"
           >
             <RotateCcw className="size-4 mr-2" />
             <span>Try again</span>
@@ -145,7 +145,7 @@ export function ScannerViewfinder({
         {isValidating && (
           <div className="p-4 rounded-2xl bg-black/85 backdrop-blur-md flex flex-col items-center gap-2 border border-white/20 motion-safe:animate-in motion-safe:fade-in-0 motion-safe:zoom-in-95 duration-150">
             <div className="size-8 rounded-full border-3 border-sky-400 border-t-transparent motion-safe:animate-spin" />
-            <span className="text-xs font-bold text-white uppercase tracking-wider">
+            <span className="text-xs font-semibold text-white">
               Checking card…
             </span>
           </div>

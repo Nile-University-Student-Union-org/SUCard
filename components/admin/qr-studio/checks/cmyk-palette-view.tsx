@@ -80,7 +80,7 @@ export const CmykPaletteView: React.FC<{ config: QrStyleConfig }> = ({ config })
 
   return (
     <div className="space-y-3 text-xs">
-      <div className="flex items-center gap-1.5 text-muted-foreground font-bold uppercase tracking-wider text-[10px]">
+      <div className="flex items-center gap-1.5 text-muted-foreground font-semibold text-xs">
         <Printer className="size-3.5 text-brand" />
         <span>Print Shop CMYK Values (Approximate)</span>
       </div>

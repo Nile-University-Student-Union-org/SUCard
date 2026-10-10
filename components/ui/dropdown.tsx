@@ -187,7 +187,7 @@ export const Dropdown: React.FC<DropdownRootProps> = ({
           }}
           className={`inline-flex min-w-0 max-w-full min-h-[44px] items-center justify-between gap-2.5 px-3.5 py-2.5 rounded-[12px] bg-white dark:bg-zinc-900
                      border-2 ${error ? "border-destructive focus:border-destructive text-destructive" : "border-slate-300 dark:border-zinc-700 text-charcoal dark:text-zinc-200 hover:border-brand/50 dark:hover:border-brand-soft/50"}
-                     text-sm font-medium
+                     text-sm font-medium ${isFullWidth ? "w-full" : ""}
                      focus:outline-none focus:border-brand dark:focus:border-brand-soft focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft
                      transition-[transform,border-color,background-color,box-shadow,color] duration-140 active:scale-[0.98] motion-reduce:transition-none motion-reduce:transform-none cursor-pointer shadow-xs
                      disabled:opacity-50 disabled:pointer-events-none select-none ${buttonClassName}`}
@@ -514,7 +514,7 @@ export const DropdownLabel: React.FC<{ children: ReactNode; className?: string }
   className = "",
 }) => (
   <div
-    className={`px-3 py-1.5 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-zinc-400 select-none ${className}`}
+    className={`px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-zinc-400 select-none ${className}`}
   >
     {children}
   </div>

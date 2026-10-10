@@ -145,8 +145,8 @@ export const PinInput: React.FC<PinInputProps> = ({
               disabled={disabled}
               className={cn(
                 length > 4
-                  ? "w-11 sm:w-13 h-13 sm:h-16 text-center text-xl sm:text-2xl font-heading uppercase rounded-xl"
-                  : "w-12 sm:w-16 h-14 sm:h-20 text-center text-2xl sm:text-3xl font-heading uppercase rounded-2xl",
+                  ? "w-11 sm:w-13 h-13 sm:h-16 text-center text-xl sm:text-2xl rounded-xl"
+                  : "w-12 sm:w-16 h-14 sm:h-20 text-center text-2xl sm:text-3xl rounded-2xl",
                 "border-2 outline-none transition-[border-color,background-color,box-shadow,transform] duration-200 select-none cursor-text shadow-xs font-sans font-semibold tabular-nums motion-reduce:transition-none motion-reduce:transform-none",
                 "bg-white dark:bg-zinc-900 text-charcoal dark:text-white",
                 // Empty & Unfocused

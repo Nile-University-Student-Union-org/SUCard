@@ -134,8 +134,8 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
       {/* Header Bar */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-heading text-xl uppercase tracking-wide text-foreground">
-            DISCOUNT OFFERS
+          <h3 className="font-sans font-semibold text-xl text-foreground">
+            Discount offers
           </h3>
           <p className="text-xs text-muted-foreground font-medium">
             Active deals, percentage discounts, item limits, and redemption rules.
@@ -228,7 +228,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                       className="group relative aspect-[4/5] w-14 sm:w-16 overflow-hidden rounded-xl bg-slate-100 dark:bg-zinc-800/80 border-2 border-dashed border-slate-300 dark:border-zinc-700 flex flex-col items-center justify-center gap-1 p-1 text-center shrink-0 hover:border-brand/60 hover:bg-brand/5 dark:hover:bg-brand/10 transition-colors cursor-pointer"
                     >
                       <ImageIcon className="size-4 text-muted-foreground group-hover:text-brand dark:group-hover:text-brand-soft transition-colors" />
-                      <span className="text-[9px] font-bold text-muted-foreground group-hover:text-brand dark:group-hover:text-brand-soft uppercase leading-tight">
+                      <span className="text-[9px] font-semibold text-muted-foreground group-hover:text-brand dark:group-hover:text-brand-soft leading-tight">
                         No image
                       </span>
                     </button>
@@ -237,7 +237,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                   {/* Offer Details & Badges */}
                   <div className="min-w-0 space-y-2 flex-1">
                     <div className="flex items-center gap-2.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand text-white font-heading text-sm uppercase tracking-wide shadow-xs">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-brand text-white font-sans font-semibold text-xs shadow-xs">
                         <Tag className="size-3.5" />
                         <span>{discountLabel}</span>
                       </span>
@@ -249,7 +249,7 @@ export function VendorOffersTab({ vendorId }: VendorOffersTabProps) {
                       {/* Status Pill */}
                       <span
                         className={cn(
-                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border",
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border",
                           offer.status === "active"
                             ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                             : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"

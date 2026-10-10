@@ -85,13 +85,13 @@ export const ChecksPanel: React.FC<ChecksPanelProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="size-4 text-brand" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <h3 className="font-sans font-semibold text-xs text-foreground">
               Scan-Safety Validation
             </h3>
           </div>
           <span
             className={cn(
-              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-black uppercase font-mono tracking-wide",
+              "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold font-mono",
               checks.overall === "ok"
                 ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
                 : checks.overall === "warn"
@@ -271,7 +271,7 @@ export const ChecksPanel: React.FC<ChecksPanelProps> = ({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Scan className="size-4 text-sky-500" />
-            <h3 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <h3 className="font-sans font-semibold text-xs text-foreground">
               Live Scannability Score
             </h3>
           </div>

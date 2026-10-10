@@ -24,7 +24,7 @@ export const TableHeader = React.forwardRef<
   <thead
     ref={ref}
     className={cn(
-      "sticky top-0 z-10 border-b border-slate-200 dark:border-zinc-800 bg-slate-50/95 dark:bg-zinc-900/95 backdrop-blur-xs text-stone-600 dark:text-zinc-300 font-bold uppercase text-[11px] tracking-wider",
+      "sticky top-0 z-10 border-b border-slate-200 dark:border-zinc-800 bg-slate-50/95 dark:bg-zinc-900/95 backdrop-blur-xs text-stone-600 dark:text-zinc-300 font-semibold text-xs",
       className
     )}
     {...props}
@@ -81,7 +81,7 @@ export const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-11 px-4 text-left align-middle font-bold text-stone-600 dark:text-zinc-300 text-xs uppercase tracking-wider [&:has([role=checkbox])]:pr-0",
+      "h-11 px-4 text-left align-middle font-semibold text-stone-600 dark:text-zinc-300 text-xs [&:has([role=checkbox])]:pr-0",
       className
     )}
     {...props}

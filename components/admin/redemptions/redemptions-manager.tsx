@@ -8,6 +8,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dropdown } from "@/components/ui/dropdown";
 import { PageHeader } from "@/components/ui/page-header";
 import { ToggleChip } from "@/components/ui/toggle-chip";
 import { StatStrip } from "@/components/ui/stat-strip";
@@ -210,7 +211,7 @@ export function RedemptionsManager() {
 
       {/* Filters Bar with Programmatic Labels */}
       <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-xs space-y-3">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground">
           <Filter className="size-3.5" />
           <span>Filter Ledger</span>
         </div>
@@ -218,54 +219,39 @@ export function RedemptionsManager() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Vendor Filter */}
           <div className="space-y-1.5">
-            <label
-              htmlFor="redemptions-vendor-select"
-              className="block text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400"
-            >
-              Partner Vendor
-            </label>
-            <select
+            <Dropdown
               id="redemptions-vendor-select"
+              label="Partner Vendor"
               value={selectedVendorId}
-              onChange={(e) => setSelectedVendorId(e.target.value)}
-              className="w-full min-h-[44px] h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
-            >
-              <option value="">All Partner Vendors</option>
-              {vendors.map((v) => (
-                <option key={v.id} value={v.id}>
-                  {v.name} ({v.category})
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedVendorId(val)}
+              className="w-full"
+              options={[
+                { value: "", label: "All Partner Vendors" },
+                ...vendors.map((v) => ({
+                  value: v.id,
+                  label: `${v.name} (${v.category})`,
+                })),
+              ]}
+            />
           </div>
 
           {/* Result Filter */}
           <div className="space-y-1.5">
-            <label
-              htmlFor="redemptions-result-select"
-              className="block text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400"
-            >
-              Scan Result
-            </label>
-            <select
+            <Dropdown
               id="redemptions-result-select"
+              label="Scan Result"
               value={selectedResult}
-              onChange={(e) => setSelectedResult(e.target.value)}
-              className="w-full min-h-[44px] h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand cursor-pointer"
-            >
-              {RESULT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedResult(val)}
+              className="w-full"
+              options={RESULT_OPTIONS}
+            />
           </div>
 
           {/* Confirmed Only Toggle */}
           <div className="space-y-1.5">
             <span
               id="redemptions-confirmed-label"
-              className="block text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400"
+              className="block text-xs font-semibold text-ash dark:text-zinc-400"
             >
               Confirmation Status
             </span>

@@ -165,7 +165,7 @@ export function AreaChart({
     <div className={cn("w-full relative select-none", className)}>
       {title && (
         <div className="mb-2 flex items-baseline justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <h3 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
             {title}
           </h3>
           {description && (

@@ -135,7 +135,7 @@ export function ScanSuccessPanel({
 
       {/* Top Header Bar */}
       <header className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/95 backdrop-blur-md pt-[max(0.75rem,env(safe-area-inset-top))]">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-semibold">
           <ShieldCheck className="size-4" />
           <span>Discount Applied</span>
         </div>
@@ -198,8 +198,8 @@ export function ScanSuccessPanel({
         >
           {/* Applied Offer Banner */}
           <div className="space-y-1">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground block">
-              Applied Offer
+            <span className="text-xs font-semibold text-muted-foreground block">
+              Applied offer
             </span>
             <div className="flex items-baseline gap-2 flex-wrap">
               <span className="font-heading text-2xl sm:text-3xl text-emerald-600 dark:text-emerald-400 leading-none tracking-wide">

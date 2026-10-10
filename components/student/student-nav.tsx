@@ -704,7 +704,7 @@ export function StudentNav({ user, areas = [], className }: StudentNavProps) {
                       </div>
                       <span
                         className={cn(
-                          "px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 border",
+                          "px-2 py-0.5 rounded text-xs font-semibold shrink-0 border",
                           isDark
                             ? "bg-white/15 text-white border-white/20"
                             : "bg-[#0F3056]/10 text-[#0F3056] border-[#0F3056]/20"

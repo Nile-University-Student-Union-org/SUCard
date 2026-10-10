@@ -143,13 +143,13 @@ export const PasswordStrengthMeter: React.FC<PasswordStrengthMeterProps> = ({
       {/* Header: Label + Strength Gauge Bar + Dynamic Status Badge */}
       <div className="space-y-1.5 sm:space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 select-none">
+          <span className="text-xs font-semibold text-ash dark:text-zinc-400 select-none">
             Password Strength
           </span>
 
           <span
             className={cn(
-              "inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-black uppercase tracking-wider border transition-all duration-200 select-none",
+              "inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-md text-xs font-semibold border transition-all duration-200 select-none",
               badgeBg
             )}
           >

@@ -229,7 +229,7 @@ export function HistoryView() {
       ) : redemptions.length === 0 ? (
         <EmptyState
           icon={<Receipt />}
-          title="No Redemptions Yet"
+          title="No redemptions yet"
           hint="No discounts redeemed yet. Show your card QR code at partner spots around campus to start saving!"
           action={
             <div className="flex flex-col sm:flex-row justify-center items-center gap-3 pt-1 w-full">
@@ -258,7 +258,7 @@ export function HistoryView() {
             <section key={group.dayLabel} className="space-y-3">
               {/* Day Header */}
               <div className="flex items-center justify-between px-1">
-                <h2 className="text-xs sm:text-sm font-bold text-foreground uppercase tracking-wider">
+                <h2 className="text-xs sm:text-sm font-semibold text-foreground">
                   {group.dayLabel}
                 </h2>
                 <span className="text-xs text-muted-foreground font-medium">

@@ -428,7 +428,7 @@ export function VendorPortalManager() {
           {/* Date Range Picker Bar */}
           <div className="p-4 sm:p-5 rounded-2xl border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400 mb-1.5">
+              <span className="block text-xs font-semibold text-ash dark:text-zinc-400 mb-1.5">
                 Time Range
               </span>
               <DateRangePicker
@@ -586,7 +586,7 @@ export function VendorPortalManager() {
               <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
                 <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800">
                   <CardTitle className="text-lg sm:text-xl text-foreground">
-                    REDEMPTION TRAFFIC
+                    Redemption traffic
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Daily confirmed scans at your stores
@@ -610,7 +610,7 @@ export function VendorPortalManager() {
                 <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
                   <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800">
                     <CardTitle className="text-base sm:text-lg text-foreground">
-                      BY OFFER
+                      By offer
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="p-4 sm:p-5">
@@ -630,7 +630,7 @@ export function VendorPortalManager() {
               <Card className="border-2 border-slate-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs">
                 <CardHeader className="p-4 sm:p-5 border-b border-slate-100 dark:border-zinc-800">
                   <CardTitle className="text-base sm:text-lg text-foreground">
-                    PEAK ACTIVITY DISTRIBUTION
+                    Peak activity distribution
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Busiest hours and days (Cairo time)
@@ -683,7 +683,7 @@ export function VendorPortalManager() {
           ) : offers.length === 0 ? (
             <EmptyState
               icon={<Tag className="size-6 text-muted-foreground" />}
-              title="NO ACTIVE OFFERS"
+              title="No active offers"
               hint="Your store does not have any active discount offers configured."
             />
           ) : (
@@ -725,7 +725,7 @@ export function VendorPortalManager() {
 
                       <span
                         className={cn(
-                          "px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase shrink-0 border",
+                          "px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase shrink-0 border",
                           offer.status === "active"
                             ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20"
                             : "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20"
@@ -744,7 +744,7 @@ export function VendorPortalManager() {
 
                       <div className="grid grid-cols-2 gap-2 text-muted-foreground pt-1">
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
+                          <span className="text-xs font-semibold text-ash dark:text-zinc-400 block">
                             Per-Student Limit
                           </span>
                           <span className="font-bold text-foreground font-mono">
@@ -755,7 +755,7 @@ export function VendorPortalManager() {
                         </div>
 
                         <div>
-                          <span className="text-[10px] font-bold uppercase text-ash dark:text-zinc-400 block">
+                          <span className="text-xs font-semibold text-ash dark:text-zinc-400 block">
                             Schedule
                           </span>
                           <span className="text-foreground">
@@ -826,7 +826,7 @@ export function VendorPortalManager() {
           ) : cashiers.length === 0 ? (
             <EmptyState
               icon={<Users className="size-6 text-muted-foreground" />}
-              title="NO CASHIERS YET"
+              title="No cashiers yet"
               hint="Add cashier accounts so your staff can log in to the scanner web app."
               action={
                 <Button
@@ -847,7 +847,7 @@ export function VendorPortalManager() {
                 <div className="hidden md:block w-full overflow-x-auto">
                   <table className="w-full text-left border-collapse text-xs">
                     <thead>
-                      <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-bold uppercase tracking-wider">
+                      <tr className="sticky top-0 z-10 border-b border-border bg-muted/90 backdrop-blur-xs text-muted-foreground font-semibold text-xs">
                         <th className="px-4 py-3">Cashier</th>
                         <th className="px-4 py-3">Status</th>
                         <th className="px-4 py-3 text-right">Actions</th>
@@ -867,7 +867,7 @@ export function VendorPortalManager() {
                           <td className="px-4 py-3.5">
                             <span
                               className={cn(
-                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase",
+                                "inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase",
                                 cashier.status === "active"
                                   ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20"
                                   : "bg-zinc-500/10 text-zinc-600 dark:text-zinc-400 border border-zinc-500/20"

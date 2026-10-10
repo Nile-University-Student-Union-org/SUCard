@@ -13,14 +13,22 @@ import {
   Loader2,
 } from "lucide-react";
 import type { StudentHomeResponse } from "@/lib/student/types";
+import { cairoDate, officeStatus, upcomingExceptions, weekSummary } from "@/lib/settings/office-hours";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert } from "@/components/ui/alert";
 import { StatusState } from "@/components/ui/status-state";
+import { cn } from "@/lib/utils";
 import { CardScanner } from "./card-scanner";
 import { WalletQrModal } from "./wallet-qr-modal";
 
 const emptySubscribe = () => () => {};
+
+function exceptionLabel(exception: StudentHomeResponse["office"]["schedule"]["exceptions"][number]): string {
+  const day = new Date(`${exception.date}T12:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+  const hours = exception.closed ? "Closed" : `${exception.open}–${exception.close}`;
+  return `${hours} ${day}${exception.note ? `: ${exception.note}` : ""}`;
+}
 
 /**
  * Official Google Wallet brand mark — multicolour geometric wallet icon
@@ -60,6 +68,16 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
   } | null>(null);
 
   const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
+  const officeSchedule = home.office.schedule;
+  const officeNow = mounted ? new Date() : null;
+  const status = officeNow ? officeStatus(officeSchedule, officeNow) : null;
+  const nextException = officeNow ? upcomingExceptions(officeSchedule, officeNow, 1)[0] : undefined;
+  const exceptionWithin14Days = nextException && officeNow
+    ? (Date.parse(`${nextException.date}T12:00:00Z`) - Date.parse(`${cairoDate(officeNow)}T12:00:00Z`)) / 86_400_000 <= 14
+    : false;
+  const upcomingExceptionLabel = nextException && exceptionWithin14Days
+    ? exceptionLabel(nextException)
+    : null;
 
   const isIos = mounted
     ? /iPhone|iPad|iPod/i.test(navigator.userAgent)
@@ -150,22 +168,54 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           layout="panel"
           variant="destructive"
           icon={<ShieldAlert className="size-8 text-rose-600 dark:text-rose-400" />}
-          title="CARD SUSPENDED"
+          title="Card suspended"
           description={
             home.profile.suspendReason ||
             "Your SU Card has been suspended. Please contact the Nile University Student Union office."
           }
         >
-          <div className="w-full max-w-sm mx-auto p-4 rounded-2xl bg-muted/60 border border-border text-left space-y-2 mt-4">
-            <div className="flex items-center gap-2 text-xs font-bold text-foreground">
-              <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0" />
-              <span>{home.office.location}</span>
+            {/* Office Info Card */}
+            <div className="w-full max-w-sm mx-auto p-4 rounded-2xl bg-muted/60 border border-border text-left space-y-3 mt-4">
+              <div className="flex items-start gap-2.5 text-xs font-bold text-foreground">
+                <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
+                <span className="leading-snug">{home.office.location}</span>
+              </div>
+
+              {/* Today Status with subtle dot */}
+              <div className="flex items-center gap-2 text-xs font-medium">
+                <span
+                  className={cn(
+                    "size-2 rounded-full shrink-0",
+                    status?.openNow
+                      ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                      : "bg-slate-400 dark:bg-zinc-500 ring-2 ring-slate-400/20"
+                  )}
+                  aria-hidden="true"
+                />
+                <span className={status?.openNow ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-muted-foreground"}>
+                  {status?.todayLabel ?? weekSummary(officeSchedule)}
+                </span>
+                {status?.nextOpen && !status.openNow && (
+                  <span className="text-muted-foreground/80 text-[11px]">
+                    · {status.nextOpen}
+                  </span>
+                )}
+              </div>
+
+              {/* Week summary */}
+              <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                <Clock className="size-3.5 text-ash dark:text-zinc-400 shrink-0 mt-0.5" />
+                <span className="leading-tight">{weekSummary(officeSchedule)}</span>
+              </div>
+
+              {/* Next upcoming exception within 14 days */}
+              {upcomingExceptionLabel && (
+                <div className="flex items-start gap-2 p-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+                  <Calendar className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <span className="font-medium leading-tight">{upcomingExceptionLabel}</span>
+                </div>
+              )}
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium">
-              <Clock className="size-4 text-ash dark:text-zinc-400 shrink-0" />
-              <span>{home.office.hours}</span>
-            </div>
-          </div>
         </StatusState>
       </div>
     );
@@ -192,18 +242,50 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
 
             {/* Office Info Card */}
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80 space-y-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
-                Pickup Location &amp; Hours
+              <span className="text-xs font-semibold text-ash dark:text-zinc-400 block">
+                Pickup location &amp; hours
               </span>
-              <div className="space-y-2 text-xs sm:text-sm">
-                <div className="flex items-center gap-2.5 text-foreground font-bold">
-                  <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0" />
-                  <span>{home.office.location}</span>
+
+              <div className="space-y-2.5 text-xs sm:text-sm">
+                <div className="flex items-start gap-2.5 text-foreground font-bold">
+                  <MapPin className="size-4 text-brand dark:text-brand-soft shrink-0 mt-0.5" />
+                  <span className="leading-snug">{home.office.location}</span>
                 </div>
-                <div className="flex items-center gap-2.5 text-muted-foreground font-medium">
-                  <Clock className="size-4 text-ash dark:text-zinc-400 shrink-0" />
-                  <span>{home.office.hours}</span>
+
+                {/* Today status with subtle indicator dot */}
+                <div className="flex items-center gap-2 font-medium">
+                  <span
+                    className={cn(
+                      "size-2 rounded-full shrink-0",
+                      status?.openNow
+                        ? "bg-emerald-500 ring-2 ring-emerald-500/20"
+                        : "bg-slate-400 dark:bg-zinc-500 ring-2 ring-slate-400/20"
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span className={status?.openNow ? "text-emerald-700 dark:text-emerald-400 font-semibold" : "text-muted-foreground"}>
+                    {status?.todayLabel ?? weekSummary(officeSchedule)}
+                  </span>
+                  {status?.nextOpen && !status.openNow && (
+                    <span className="text-muted-foreground/80 text-xs hidden sm:inline">
+                      · {status.nextOpen}
+                    </span>
+                  )}
                 </div>
+
+                {/* Week summary */}
+                <div className="flex items-start gap-2 text-xs text-muted-foreground">
+                  <Clock className="size-3.5 text-ash dark:text-zinc-400 shrink-0 mt-0.5" />
+                  <span className="leading-tight">{weekSummary(officeSchedule)}</span>
+                </div>
+
+                {/* Upcoming Exception Alert */}
+                {upcomingExceptionLabel && (
+                  <div className="flex items-start gap-2 p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-xs text-amber-900 dark:text-amber-200">
+                    <Calendar className="size-3.5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                    <span className="font-medium leading-tight">{upcomingExceptionLabel}</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -245,7 +327,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
           layout="panel"
           variant="brand"
           icon={<RotateCcw className="size-8 text-brand dark:text-brand-soft animate-spin" />}
-          title="YOUR CARD IS BEING PREPARED"
+          title="Your card is being prepared"
           description="Your digital membership card is being issued. Please refresh in a moment."
           actions={
             <Button
@@ -319,7 +401,7 @@ export function StudentCardView({ home, qrSvg }: StudentCardViewProps) {
             )}
           </div>
 
-          <p className="text-[11px] font-bold uppercase tracking-wider text-sky-100 text-center mt-3 drop-shadow-xs">
+          <p className="text-xs font-semibold text-sky-100 text-center mt-3 drop-shadow-xs">
             Show this at partner stores
           </p>
         </div>

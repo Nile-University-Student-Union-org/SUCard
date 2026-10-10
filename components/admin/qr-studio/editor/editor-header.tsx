@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { QrStyleDto } from "@/lib/qr-studio/types";
 import type { CheckResult } from "@/lib/qr-style/checks";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
   Dropdown,
@@ -96,7 +97,7 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                 onSubmit={handleNameSubmit}
                 className="flex items-center gap-1.5 min-w-0"
               >
-                <input
+                <Input
                   type="text"
                   aria-label="Style name"
                   value={nameValue}
@@ -107,16 +108,17 @@ export const EditorHeader: React.FC<EditorHeaderProps> = ({
                     }
                   }}
                   maxLength={80}
-                  className="min-w-0 max-w-[min(55vw,16rem)] h-8 rounded-md border border-brand px-2 text-xs font-semibold text-foreground bg-white dark:bg-zinc-800 focus:outline-none"
+                  className="min-w-0 max-w-[min(55vw,16rem)] h-8 min-h-0 text-xs font-semibold py-1 px-2.5 rounded-lg"
                   autoFocus
                 />
-                <button
+                <Button
                   type="submit"
-                  className="size-8 flex items-center justify-center rounded bg-brand text-white cursor-pointer"
+                  size="sm"
+                  className="size-8 min-h-0 p-0 rounded-lg shrink-0 flex items-center justify-center"
                   aria-label="Save style name"
                 >
                   <Check className="size-3.5" />
-                </button>
+                </Button>
               </form>
             ) : (
               <div className="flex items-center gap-1.5 group min-w-0">

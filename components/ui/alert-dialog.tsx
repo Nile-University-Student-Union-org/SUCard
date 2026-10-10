@@ -109,7 +109,7 @@ export const AlertDialog: React.FC<AlertDialogProps> = ({
 
         {/* Text Details */}
         <div className="flex-1 space-y-1.5 min-w-0">
-          <h3 className="text-lg font-black text-eel-dark-blue dark:text-white leading-snug [overflow-wrap:anywhere]">
+          <h3 className="font-sans font-semibold text-base sm:text-lg text-eel-dark-blue dark:text-white leading-snug [overflow-wrap:anywhere]">
             {title}
           </h3>
           {description && (

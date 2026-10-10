@@ -3,6 +3,7 @@
 import React from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { SegmentedControl } from "@/components/ui/segmented-control";
+import { Slider } from "@/components/ui/slider";
 import { Info } from "lucide-react";
 
 export interface OutputSectionProps {
@@ -38,30 +39,21 @@ export const OutputSection: React.FC<OutputSectionProps> = ({ config, onChange }
   return (
     <div className="space-y-5 text-xs">
       {/* Print Size mm Slider */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="font-bold text-foreground">
-            Target Print Size
-          </label>
-          <span className="font-mono font-bold text-foreground">
-            {output.printSizeMm} mm ({((output.printSizeMm / 25.4)).toFixed(2)} in)
-          </span>
-        </div>
-        <input
-          type="range"
-          min={10}
-          max={100}
-          step={1}
-          value={output.printSizeMm}
-          onChange={(e) => handlePrintSizeChange(Number(e.target.value))}
-          className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-        />
-        <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-          <span>15 mm (Minimum)</span>
-          <span>25 mm (NUSU Card Standard)</span>
-          <span>50 mm (Poster)</span>
-        </div>
-      </div>
+      <Slider
+        label="Target Print Size"
+        showValue
+        valueFormatter={(v) => `${v} mm (${(v / 25.4).toFixed(2)} in)`}
+        min={10}
+        max={100}
+        step={1}
+        value={output.printSizeMm}
+        onChange={(val) => handlePrintSizeChange(val)}
+        ticks={[
+          { value: 15, label: "15 mm (Minimum)" },
+          { value: 25, label: "25 mm (NUSU Card Standard)" },
+          { value: 50, label: "50 mm (Poster)" },
+        ]}
+      />
 
       {/* Raster DPI */}
       <div className="space-y-2">

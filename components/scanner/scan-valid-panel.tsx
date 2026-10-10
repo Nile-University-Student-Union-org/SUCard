@@ -146,7 +146,7 @@ export function ScanValidPanel({
         <header className="flex items-center justify-between px-4 py-3 sm:px-6 sm:py-4 border-b border-border bg-card/95 backdrop-blur-md shrink-0 pt-[max(0.75rem,env(safe-area-inset-top))]">
           <div
             id="valid-card-badge"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-bold uppercase tracking-wider"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30 text-xs font-semibold"
           >
             <Check className="size-3.5 stroke-[3]" />
             <span>Valid SU Card</span>
@@ -189,7 +189,7 @@ export function ScanValidPanel({
           {/* Offers Selection Radiogroup */}
           <div className="space-y-2.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <label className="block text-xs font-semibold text-muted-foreground">
                 {offers.length > 1 ? "Select applicable discount" : "Applicable discount"}
               </label>
               <span className="text-[11px] font-semibold text-muted-foreground">

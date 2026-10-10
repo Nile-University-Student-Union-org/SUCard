@@ -210,7 +210,7 @@ export function ChooseTiles({ areas, userName }: ChooseTilesProps) {
                     <Icon className="size-7" />
                   </div>
                   <div className="min-w-0 space-y-1">
-                    <h2 className="font-heading text-xl uppercase tracking-wider text-charcoal dark:text-white group-hover:text-brand dark:group-hover:text-brand-soft transition-colors truncate">
+                    <h2 className="font-sans font-semibold text-lg text-charcoal dark:text-white group-hover:text-brand dark:group-hover:text-brand-soft transition-colors truncate">
                       {area.label}
                     </h2>
                     <p className="text-xs text-ash dark:text-zinc-400 font-medium line-clamp-2 leading-relaxed">

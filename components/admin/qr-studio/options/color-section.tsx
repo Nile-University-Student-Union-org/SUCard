@@ -6,6 +6,8 @@ import { ColorInput } from "./color-input";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
 import { cn } from "cn";
 
 export interface ColorSectionProps {
@@ -212,25 +214,16 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
         <div className="space-y-4 p-3.5 rounded-xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700/80">
           {/* Gradient Angle (if linear) */}
           {paint.type === "linear" && (
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="font-bold text-foreground">
-                  Gradient Angle
-                </label>
-                <span className="font-mono font-bold text-foreground">
-                  {paint.angle}°
-                </span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={360}
-                step={5}
-                value={paint.angle}
-                onChange={(e) => handleAngleChange(Number(e.target.value))}
-                className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-              />
-            </div>
+            <Slider
+              label="Gradient Angle"
+              showValue
+              valueFormatter={(v) => `${v}°`}
+              min={0}
+              max={360}
+              step={5}
+              value={paint.angle}
+              onChange={(val) => handleAngleChange(val)}
+            />
           )}
 
           {/* Gradient Stops */}
@@ -269,7 +262,7 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
                   </div>
                   {idx > 0 && idx < paint.stops.length - 1 && (
                     <div className="w-16">
-                      <input
+                      <Input
                         type="number"
                         min={0.01}
                         max={0.99}
@@ -278,7 +271,8 @@ export const ColorSection: React.FC<ColorSectionProps> = ({ config, onChange }) 
                         onChange={(e) =>
                           handleStopOffsetChange(idx, parseFloat(e.target.value))
                         }
-                        className="w-full min-h-11 rounded-lg border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-1 font-mono text-center text-xs font-bold"
+                        className="font-mono text-center text-xs font-bold px-1"
+                        aria-label={`Stop #${idx + 1} offset`}
                       />
                     </div>
                   )}

@@ -23,6 +23,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusState } from "@/components/ui/status-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
 import { Alert } from "@/components/ui/alert";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import {
@@ -458,7 +459,6 @@ export function BatchesTable({
               {batches.map((batch) => {
                 const isHighlighted = highlightedBatchId === batch.id;
                 const stats = batch.stats || { unassigned: batch.count, active: 0, void: 0 };
-                const isDraft = batch.printStatus === "draft";
                 const statusInfo = PRINT_STATUS_MAP[batch.printStatus] || PRINT_STATUS_MAP.draft;
 
                 return (
@@ -521,42 +521,9 @@ export function BatchesTable({
                       )}
                     </div>
 
-                    {/* Prominent Next Action on Mobile */}
-                    {statusInfo.next && (
-                      <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
-                        <Button
-                          variant="surface"
-                          size="sm"
-                          onClick={() => {
-                            setStatusBatch(batch);
-                            setStatusNote(batch.printStatusNote || "");
-                          }}
-                          className="w-full min-h-[44px] text-xs font-bold normal-case text-brand dark:text-brand-soft border-brand/30 flex items-center justify-center gap-1.5"
-                        >
-                          <span>{statusInfo.nextActionText}</span>
-                          <ArrowRight className="size-3.5" />
-                        </Button>
-                      </div>
-                    )}
-
                     {/* Mobile Secondary Action Row */}
                     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-zinc-800">
                       <div className="flex flex-wrap items-center gap-2 w-full">
-                        {isDraft && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setRestyleBatch(batch);
-                              setRestyleVersionId(batch.styleVersion?.id || "");
-                            }}
-                            className="min-h-[44px] flex-1 text-xs font-bold normal-case"
-                          >
-                            <Palette className="size-3.5 mr-1 text-brand" />
-                            Restyle
-                          </Button>
-                        )}
-
                         <Button
                           variant="outline"
                           size="sm"
@@ -633,22 +600,14 @@ export function BatchesTable({
               </div>
             )}
 
-            <div className="space-y-1">
-              <label className="font-bold text-foreground block">
-                Status Note / Printing Vendor Reference (Optional)
-              </label>
-              <input
-                type="text"
-                placeholder="e.g. Sent to Al-Ahram print house / Invoice #402"
-                value={statusNote}
-                onChange={(e) => setStatusNote(e.target.value)}
-                maxLength={500}
-                className="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-medium text-foreground focus:outline-none focus:ring-2 focus:ring-brand"
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Recorded in the permanent audit trail along with the transition timestamp.
-              </p>
-            </div>
+            <Input
+              label="Status Note / Printing Vendor Reference (Optional)"
+              placeholder="e.g. Sent to Al-Ahram print house / Invoice #402"
+              value={statusNote}
+              onChange={(e) => setStatusNote(e.target.value)}
+              maxLength={500}
+              helperText="Recorded in the permanent audit trail along with the transition timestamp."
+            />
           </ModalBody>
           <ModalFooter>
             <Button
@@ -694,24 +653,17 @@ export function BatchesTable({
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="font-bold text-foreground block">
-                Select Published QR Style
-              </label>
-              <select
-                value={restyleVersionId}
-                onChange={(e) => setRestyleVersionId(e.target.value)}
-                disabled={isRestyling || publishedStyles.length === 0}
-                className="w-full min-h-[44px] rounded-xl border-2 border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
-              >
-                {publishedStyles.map((s) => (
-                  <option key={s.id} value={s.latestVersion!.id}>
-                    {s.name} (v{s.latestVersion!.version})
-                    {s.isDefaultPrint ? " — Default Print" : ""}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Dropdown
+              label="Select Published QR Style"
+              value={restyleVersionId}
+              onChange={(val) => setRestyleVersionId(val)}
+              disabled={isRestyling || publishedStyles.length === 0}
+              className="w-full"
+              options={publishedStyles.map((s) => ({
+                value: s.latestVersion!.id,
+                label: `${s.name} (v${s.latestVersion!.version})${s.isDefaultPrint ? " — Default Print" : ""}`,
+              }))}
+            />
           </ModalBody>
           <ModalFooter>
             <Button

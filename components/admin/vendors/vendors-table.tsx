@@ -117,7 +117,7 @@ export function VendorsTable({
       <div className="hidden md:block rounded-2xl border border-border bg-card overflow-hidden shadow-xs">
         <table className="w-full text-left border-collapse text-sm">
           <thead className="sticky top-0 z-10 bg-slate-50/95 dark:bg-zinc-900/95 backdrop-blur-xs">
-            <tr className="border-b border-border text-muted-foreground text-xs font-bold uppercase tracking-wider">
+            <tr className="border-b border-border text-muted-foreground text-xs font-semibold">
               <th className="px-5 py-3.5">Vendor</th>
               <th className="px-4 py-3.5">Category</th>
               <th className="px-4 py-3.5">Status</th>
@@ -182,7 +182,7 @@ export function VendorsTable({
                   <td className="px-4 py-4">
                     <span
                       className={cn(
-                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider border",
+                        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border",
                         vendor.status === "active"
                           ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                           : vendor.status === "paused"
@@ -292,7 +292,7 @@ export function VendorsTable({
 
                 <span
                   className={cn(
-                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0",
+                    "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border shrink-0",
                     vendor.status === "active"
                       ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30"
                       : vendor.status === "paused"

@@ -136,8 +136,8 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
       {/* Header bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h3 className="font-heading text-xl uppercase tracking-wide text-foreground">
-            STAFF ACCOUNTS
+          <h3 className="font-sans font-semibold text-xl text-foreground">
+            Staff accounts
           </h3>
           <p className="text-xs text-muted-foreground font-medium">
             Cashiers and vendor managers for this vendor.
@@ -213,7 +213,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                   {/* Role badge */}
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider border",
+                      "inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border",
                       acc.role === "cashier"
                         ? "bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30"
                         : "bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 border-indigo-500/30"
@@ -225,7 +225,7 @@ export function VendorAccountsTab({ vendorId }: VendorAccountsTabProps) {
                   {/* Status Badge */}
                   <span
                     className={cn(
-                      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase",
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold uppercase",
                       acc.status === "active"
                         ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                         : "bg-rose-500/10 text-rose-700 dark:text-rose-300"

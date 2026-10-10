@@ -28,6 +28,7 @@ export interface DatePickerProps {
   placeholder?: string;
   minDate?: string; // "YYYY-MM-DD"
   maxDate?: string; // "YYYY-MM-DD"
+  disabledDates?: string[]; // Array of "YYYY-MM-DD" strings to disable
   disabled?: boolean;
   clearable?: boolean;
   required?: boolean;
@@ -134,6 +135,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
   placeholder = "Select date...",
   minDate,
   maxDate,
+  disabledDates,
   disabled = false,
   clearable = true,
   required = false,
@@ -312,9 +314,15 @@ export const DatePicker: React.FC<DatePickerProps> = ({
       ) {
         return true;
       }
+      if (disabledDates && disabledDates.length > 0) {
+        const iso = formatISODate(d);
+        if (disabledDates.includes(iso)) {
+          return true;
+        }
+      }
       return false;
     },
-    [minParsed, maxParsed],
+    [minParsed, maxParsed, disabledDates],
   );
 
   const daysInGrid = useMemo(() => {
@@ -555,7 +563,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   }
                   aria-label={`Month view: ${MONTH_NAMES[viewMonth]}`}
                   className={cn(
-                    "px-2 py-1 rounded-[8px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer font-sans",
+                    "px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-all cursor-pointer font-sans",
                     viewMode === "months"
                       ? "bg-brand text-white shadow-xs"
                       : "text-charcoal dark:text-white hover:bg-slate-100 dark:hover:bg-zinc-800",
@@ -571,7 +579,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   }
                   aria-label={`Year view: ${viewYear}`}
                   className={cn(
-                    "px-2 py-1 rounded-[8px] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer font-sans",
+                    "px-2.5 py-1 rounded-[8px] text-xs font-semibold transition-all cursor-pointer font-sans",
                     viewMode === "years"
                       ? "bg-brand text-white shadow-xs"
                       : "text-charcoal dark:text-white hover:bg-slate-100 dark:hover:bg-zinc-800",
@@ -600,7 +608,7 @@ export const DatePicker: React.FC<DatePickerProps> = ({
                   {WEEKDAY_NAMES.map((d) => (
                     <span
                       key={d}
-                      className="text-[10px] font-black uppercase text-ash dark:text-zinc-500 py-1"
+                      className="text-[10px] font-semibold text-ash dark:text-zinc-500 py-1"
                     >
                       {d}
                     </span>

@@ -97,7 +97,7 @@ export const OptionsSidebar: React.FC<OptionsSidebarProps> = ({
                 <div className="size-7 rounded-lg bg-brand/10 dark:bg-brand/20 text-brand dark:text-brand-soft flex items-center justify-center shrink-0">
                   <Icon className="size-3.5" />
                 </div>
-                <span className="font-bold text-xs uppercase tracking-wider text-foreground group-hover:text-brand break-words">
+                <span className="font-semibold text-xs text-foreground group-hover:text-brand break-words">
                   {sec.title}
                 </span>
               </button>

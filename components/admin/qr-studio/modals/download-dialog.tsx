@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SegmentedControl } from "@/components/ui/segmented-control";
 import { downloadPreviewFile } from "../api";
 import { toast } from "sonner";
@@ -117,17 +118,14 @@ export const DownloadDialog: React.FC<DownloadDialogProps> = ({
               />
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer pt-1">
-              <input
-                type="checkbox"
+            <div className="pt-1">
+              <Checkbox
+                id="transparent-bg"
                 checked={transparent}
-                onChange={(e) => setTransparent(e.target.checked)}
-                className="size-4 rounded accent-brand"
+                onCheckedChange={(checked) => setTransparent(checked)}
+                label="Transparent background"
               />
-              <span className="font-semibold text-foreground">
-                Transparent background
-              </span>
-            </label>
+            </div>
           </div>
         )}
       </ModalBody>

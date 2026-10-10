@@ -84,7 +84,7 @@ export function StatStrip({
           >
             {/* Top row: Label & optional badge */}
             <div className="flex items-center justify-between gap-2 min-w-0">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-ash dark:text-zinc-400 truncate">
+              <span className="text-[11px] font-semibold text-ash dark:text-zinc-400 truncate">
                 {item.label}
               </span>
               {item.badge && <div className="shrink-0">{item.badge}</div>}

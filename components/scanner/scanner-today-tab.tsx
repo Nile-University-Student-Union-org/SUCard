@@ -76,8 +76,8 @@ export function ScannerTodayTab() {
       {/* Top Title & Refresh Button */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="font-heading text-xl sm:text-2xl uppercase tracking-wide text-foreground truncate">
-            TODAY&apos;S REDEMPTIONS
+          <h2 className="font-sans font-semibold text-xl sm:text-2xl text-foreground truncate">
+            Today&apos;s redemptions
           </h2>
           <p className="text-xs text-muted-foreground font-medium truncate">
             Recorded for this vendor today
@@ -102,7 +102,7 @@ export function ScannerTodayTab() {
       {/* KPI Stats Tiles */}
       <div className="grid grid-cols-2 gap-3">
         <StatTile
-          label="DISCOUNTS GIVEN"
+          label="Discounts given"
           value={
             isInitialLoading ? (
               <Skeleton className="h-8 w-16" />
@@ -136,7 +136,7 @@ export function ScannerTodayTab() {
         />
 
         <StatTile
-          label="TOTAL BILL (EGP)"
+          label="Total bill (EGP)"
           value={
             isInitialLoading ? (
               <Skeleton className="h-8 w-24" />
@@ -173,7 +173,7 @@ export function ScannerTodayTab() {
       {/* List Section */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h3 className="font-sans font-semibold text-xs text-muted-foreground">
             Recent Scans {data ? `(${data.redemptions.length})` : ""}
           </h3>
           {isStaleData && (

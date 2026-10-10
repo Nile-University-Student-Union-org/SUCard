@@ -79,14 +79,14 @@ export const StatusState: React.FC<StatusStateProps> = ({
         {eyebrow && (
           <p
             className={cn(
-              "text-xs font-bold uppercase tracking-wider",
+              "text-xs font-semibold normal-case tracking-normal",
               variantEyebrowStyles[variant]
             )}
           >
             {eyebrow}
           </p>
         )}
-        <h2 className="text-2xl sm:text-3xl font-black text-charcoal dark:text-white tracking-tight">
+        <h2 className="font-sans font-semibold text-xl sm:text-2xl text-charcoal dark:text-white tracking-tight">
           {title}
         </h2>
         {description && (

@@ -39,15 +39,16 @@ export const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "group font-sans rounded-2xl border-2 border-border bg-card text-card-foreground shadow-2xl p-4 text-sm font-semibold max-w-[calc(100vw-32px)] sm:max-w-md w-full",
+            "group font-sans rounded-2xl border-2 border-border bg-card text-card-foreground shadow-2xl p-4 pr-11 text-sm font-semibold max-w-[calc(100vw-32px)] sm:max-w-md w-full",
           description:
             "text-xs text-muted-foreground font-medium mt-0.5 [overflow-wrap:anywhere]",
           actionButton:
             "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold text-white dark:text-midnight bg-brand hover:brightness-110 active:scale-[0.97] transition-[transform,background-color,color] duration-140 cursor-pointer",
           cancelButton:
             "min-h-[44px] min-w-[44px] px-4 py-2 rounded-xl text-xs font-bold bg-muted text-foreground hover:bg-muted/80 active:scale-[0.97] transition-[transform,background-color,color] duration-140 cursor-pointer",
+          // Small corner dismiss inside the toast; hover-reveal on mouse devices, always shown on touch.
           closeButton:
-            "!min-h-[44px] !min-w-[44px] !w-11 !h-11 !rounded-xl !bg-card !border-2 !border-border !text-foreground hover:!bg-muted hover:!border-border active:!scale-[0.97] transition-[transform,background-color,color] duration-140 !cursor-pointer",
+            "!left-auto !right-2 !top-2 !translate-x-0 !translate-y-0 !size-7 !rounded-full !border-0 !bg-transparent !text-current opacity-60 hover:opacity-100 hover:!bg-black/5 dark:hover:!bg-white/10 focus-visible:opacity-100 focus-visible:!ring-2 focus-visible:!ring-ring/40 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-60 transition-[opacity,background-color] duration-150 !cursor-pointer [&>svg]:size-3.5",
         },
       }}
       {...props}

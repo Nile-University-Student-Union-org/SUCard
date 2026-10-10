@@ -48,7 +48,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
       <button
         type="button"
         onClick={handleBack}
-        className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-[12px] text-xs font-bold uppercase tracking-wider
+        className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] rounded-[12px] text-xs font-semibold
                    border-2 border-slate-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm
                    text-charcoal dark:text-zinc-200 hover:border-brand/40 dark:hover:border-brand-soft/40 
                    hover:text-brand dark:hover:text-brand-soft active:scale-[0.98] transition-all cursor-pointer select-none

@@ -13,6 +13,7 @@ import {
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
 import { Label } from "@/components/ui/label";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -209,12 +210,12 @@ function VendorAccountForm({
           {/* Account & Credentials Card */}
           <div className="p-4 rounded-2xl border border-border bg-card space-y-3">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <span className="text-xs font-semibold text-muted-foreground">
                 Account Details
               </span>
               <Badge
                 variant={isCashier ? "warning" : "brand"}
-                className="text-[10px] font-bold uppercase"
+                className="text-xs font-semibold"
               >
                 {isCashier ? "Cashier" : "Vendor Manager"}
               </Badge>
@@ -332,31 +333,27 @@ function VendorAccountForm({
         <div className="space-y-3">
           <div className="flex items-center gap-2 pb-1 border-b border-border">
             <Shield className="size-4 text-brand dark:text-brand-soft" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <h4 className="font-sans font-semibold text-xs text-foreground">
               1. Account Role & Access
             </h4>
           </div>
 
           <div className="space-y-1.5">
-            <Label
-              htmlFor="account-role"
-              className="text-xs font-semibold text-foreground"
-            >
-              Role Type <span className="text-rose-500">*</span>
-            </Label>
-            <select
+            <Dropdown
               id="account-role"
+              label="Role Type *"
               disabled={!!editingAccount}
               value={role}
-              onChange={(e) => {
-                const newRole = e.target.value as "cashier" | "vendor_manager";
+              onChange={(val) => {
+                const newRole = val as "cashier" | "vendor_manager";
                 setRole(newRole);
               }}
-              className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand disabled:opacity-60"
-            >
-              <option value="cashier">Cashier (Scanner App Access at /scan)</option>
-              <option value="vendor_manager">Vendor Manager (Stats & Analytics)</option>
-            </select>
+              className="w-full"
+              options={[
+                { value: "cashier", label: "Cashier (Scanner App Access at /scan)" },
+                { value: "vendor_manager", label: "Vendor Manager (Stats & Analytics)" },
+              ]}
+            />
             <p className="text-[11px] text-muted-foreground leading-normal">
               {role === "cashier"
                 ? "Cashiers log in to the /scan app to validate student cards and record bill redemptions."
@@ -369,7 +366,7 @@ function VendorAccountForm({
         <div className="space-y-3 pt-1">
           <div className="flex items-center gap-2 pb-1 border-b border-border">
             <UserCheck className="size-4 text-brand dark:text-brand-soft" />
-            <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+            <h4 className="font-sans font-semibold text-xs text-foreground">
               2. Staff Member Details
             </h4>
           </div>
@@ -435,23 +432,19 @@ function VendorAccountForm({
           {/* Status for Edit */}
           {editingAccount && (
             <div className="space-y-1.5">
-              <Label
-                htmlFor="account-status"
-                className="text-xs font-semibold text-foreground"
-              >
-                Account Status
-              </Label>
-              <select
+              <Dropdown
                 id="account-status"
+                label="Account Status"
                 value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value as "active" | "disabled")
+                onChange={(val) =>
+                  setStatus(val as "active" | "disabled")
                 }
-                className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-              >
-                <option value="active">Active (Access Allowed)</option>
-                <option value="disabled">Disabled (Access Blocked)</option>
-              </select>
+                className="w-full"
+                options={[
+                  { value: "active", label: "Active (Access Allowed)" },
+                  { value: "disabled", label: "Disabled (Access Blocked)" },
+                ]}
+              />
             </div>
           )}
         </div>
@@ -461,7 +454,7 @@ function VendorAccountForm({
           <div className="space-y-3 pt-1">
             <div className="flex items-center gap-2 pb-1 border-b border-border">
               <ArrowRight className="size-4 text-brand dark:text-brand-soft" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <h4 className="font-sans font-semibold text-xs text-foreground">
                 3. Initial Password
               </h4>
             </div>

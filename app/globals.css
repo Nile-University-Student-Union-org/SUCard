@@ -643,7 +643,7 @@
 }
 /* Anton has a single weight: never fake-bold it, and give it brand letter spacing.
    Unlayered on purpose so it wins over font-bold / tracking-* utilities. */
-h1, h2, h3, h4, h5, h6,
+h1:not(.font-sans), h2:not(.font-sans), h3:not(.font-sans), h4:not(.font-sans), h5:not(.font-sans), h6:not(.font-sans),
 .font-heading {
   font-weight: 400;
   font-synthesis-weight: none;
@@ -686,6 +686,14 @@ html[data-theme-transition="active"]::view-transition-group(root) {
 
 html[data-theme-transition="active"]::view-transition-new(root) {
   clip-path: var(--theme-transition-clip-from, none);
+}
+
+/* The new view is live, so element colour transitions (navbar, cards) would fade on their own
+   inside the circle. Freeze them so the whole page, navbar included, flips only with the reveal. */
+html[data-theme-transition="active"] *,
+html[data-theme-transition="active"] *::before,
+html[data-theme-transition="active"] *::after {
+  transition: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {

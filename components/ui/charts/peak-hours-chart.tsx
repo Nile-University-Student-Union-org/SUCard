@@ -78,7 +78,7 @@ export function PeakHoursChart({
     return (
       <div className={cn("space-y-2", className)}>
         {title && (
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <h3 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
             {title}
           </h3>
         )}
@@ -96,7 +96,7 @@ export function PeakHoursChart({
     <div className={cn("space-y-4 select-none", className)}>
       {title && (
         <div className="flex items-baseline justify-between">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+          <h3 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
             {title}
           </h3>
           {description && (
@@ -126,7 +126,7 @@ export function PeakHoursChart({
 
       {/* 24-Hour Bar Column Distribution */}
       <div className="space-y-1.5">
-        <p className="text-[11px] font-bold text-ash dark:text-zinc-400 uppercase tracking-wider">
+        <p className="text-[11px] font-semibold text-ash dark:text-zinc-400">
           Time of Day (7 AM – 11 PM Cairo)
         </p>
 
@@ -181,7 +181,7 @@ export function PeakHoursChart({
       {/* Days of Week (if available) */}
       {daysMap.length > 0 && (
         <div className="space-y-1.5 pt-2">
-          <p className="text-[11px] font-bold text-ash dark:text-zinc-400 uppercase tracking-wider">
+          <p className="text-[11px] font-semibold text-ash dark:text-zinc-400">
             Day of Week
           </p>
           <div className="grid grid-cols-7 gap-1.5">
@@ -199,7 +199,7 @@ export function PeakHoursChart({
                 >
                   <p
                     className={cn(
-                      "text-[10px] font-bold uppercase",
+                      "text-xs font-semibold",
                       isPeakDay ? "text-brand dark:text-brand-soft" : "text-muted-foreground"
                     )}
                   >

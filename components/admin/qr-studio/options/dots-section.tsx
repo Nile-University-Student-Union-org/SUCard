@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { QrStyleConfig } from "@/lib/qr-style/config";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "cn";
 
 export interface DotsSectionProps {
@@ -121,50 +122,34 @@ export const DotsSection: React.FC<DotsSectionProps> = ({ config, onChange }) =>
       </div>
 
       {/* Module Scale Slider */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <label className="font-bold text-foreground">
-            Module Scale (Dot Gap)
-          </label>
-          <span className="font-mono font-bold text-foreground">
-            {Math.round(config.modules.scale * 100)}%
-          </span>
-        </div>
-        <input
-          type="range"
-          min={0.5}
-          max={1.0}
-          step={0.02}
-          value={config.modules.scale}
-          onChange={(e) => handleScaleChange(parseFloat(e.target.value))}
-          className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
-        />
-        <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-          <span>50% (Open)</span>
-          <span>84% (NUSU Default)</span>
-          <span>100% (Solid)</span>
-        </div>
-      </div>
+      <Slider
+        label="Module Scale (Dot Gap)"
+        showValue
+        valueFormatter={(v) => `${Math.round(v * 100)}%`}
+        min={0.5}
+        max={1.0}
+        step={0.02}
+        value={config.modules.scale}
+        onChange={(val) => handleScaleChange(val)}
+        ticks={[
+          { value: 0.5, label: "50% (Open)" },
+          { value: 0.84, label: "84% (NUSU Default)" },
+          { value: 1.0, label: "100% (Solid)" },
+        ]}
+      />
 
       {/* Corner Radius Slider (when rounded shape is active) */}
       {config.modules.shape === "rounded" && (
-        <div className="space-y-2 pt-1 border-t border-slate-100 dark:border-zinc-800">
-          <div className="flex items-center justify-between">
-            <label className="font-bold text-foreground">
-              Corner Curvature Radius
-            </label>
-            <span className="font-mono font-bold text-foreground">
-              {config.modules.radius.toFixed(2)}
-            </span>
-          </div>
-          <input
-            type="range"
+        <div className="pt-2 border-t border-slate-100 dark:border-zinc-800">
+          <Slider
+            label="Corner Curvature Radius"
+            showValue
+            valueFormatter={(v) => v.toFixed(2)}
             min={0.0}
             max={0.5}
             step={0.05}
             value={config.modules.radius}
-            onChange={(e) => handleRadiusChange(parseFloat(e.target.value))}
-            className="w-full accent-brand h-2 bg-slate-200 dark:bg-zinc-700 rounded-lg cursor-pointer"
+            onChange={(val) => handleRadiusChange(val)}
           />
         </div>
       )}

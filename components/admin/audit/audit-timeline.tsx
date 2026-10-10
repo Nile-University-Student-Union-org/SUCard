@@ -98,7 +98,7 @@ export function AuditTimeline({
       <div className="p-8">
         <EmptyState
           icon={<History className="size-6 text-muted-foreground" />}
-          title="NO AUDIT EVENTS FOUND"
+          title="No audit events found"
           hint="No administrative activities matched your filter criteria."
         />
       </div>
@@ -113,7 +113,7 @@ export function AuditTimeline({
         <section key={group.dayLabel} className="space-y-3">
           {/* Day Group Sticky Header */}
           <div className="sticky top-16 z-10 py-1.5 bg-background/95 backdrop-blur-md">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 text-xs font-bold text-charcoal dark:text-zinc-200 uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-200/80 dark:bg-zinc-800 border border-slate-300 dark:border-zinc-700 text-xs font-semibold text-charcoal dark:text-zinc-200">
               <span>{group.dayLabel}</span>
               <span className="text-ash dark:text-zinc-400 font-normal">&bull;</span>
               <span className="text-ash dark:text-zinc-400 font-normal">
@@ -149,7 +149,7 @@ export function AuditTimeline({
                           </span>
                           <Badge
                             variant={actionBadge.variant}
-                            className="text-[10px] font-bold uppercase tracking-wider"
+                            className="text-xs font-semibold"
                           >
                             {actionBadge.label}
                           </Badge>
@@ -185,7 +185,7 @@ export function AuditTimeline({
 
                   {/* Entity Tag / Data footer pill */}
                   <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-slate-100 dark:border-zinc-800/80 text-[11px] text-ash dark:text-zinc-400 font-mono">
-                    <span className="inline-flex items-center gap-1 font-bold text-[10px] uppercase tracking-wider bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
+                    <span className="inline-flex items-center gap-1 font-semibold text-xs bg-slate-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-md">
                       <Layers className="size-3 shrink-0" />
                       {entry.entity}
                     </span>

@@ -6,6 +6,7 @@ import type { QrStyleDto } from "@/lib/qr-studio/types";
 import { QrSvgPreview } from "../qr-svg-preview";
 import { listStyles } from "../api";
 import { ArrowLeftRight, SplitSquareVertical } from "lucide-react";
+import { Dropdown } from "@/components/ui/dropdown";
 
 export interface CompareViewProps {
   currentConfig: QrStyleConfig;
@@ -136,8 +137,8 @@ export const CompareView: React.FC<CompareViewProps> = ({
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs">
         <div className="flex items-center gap-2">
           <SplitSquareVertical className="size-5 text-brand" />
-          <h3 className="font-heading text-base uppercase text-foreground">
-            SIDE-BY-SIDE A/B COMPARISON
+          <h3 className="font-sans font-semibold text-base text-foreground">
+            Side-by-side A/B comparison
           </h3>
         </div>
 
@@ -145,18 +146,16 @@ export const CompareView: React.FC<CompareViewProps> = ({
           <span className="text-xs font-bold text-ash dark:text-zinc-400 whitespace-nowrap">
             Compare with:
           </span>
-          <select
+          <Dropdown
             value={selectedStyleId}
-            onChange={(e) => handleStyleSelect(e.target.value)}
+            onChange={(val) => handleStyleSelect(val)}
             disabled={isLoading || styles.length === 0}
-            className="flex-1 sm:w-56 min-h-11 rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-brand cursor-pointer"
-          >
-            {styles.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name} ({s.latestVersion ? `v${s.latestVersion.version}` : "Draft"})
-              </option>
-            ))}
-          </select>
+            className="flex-1 sm:w-56"
+            options={styles.map((s) => ({
+              value: s.id,
+              label: `${s.name} (${s.latestVersion ? `v${s.latestVersion.version}` : "Draft"})`,
+            }))}
+          />
         </div>
       </div>
 
@@ -166,10 +165,10 @@ export const CompareView: React.FC<CompareViewProps> = ({
         <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-brand/50 shadow-md flex flex-col items-center space-y-4">
           <div className="flex items-center justify-between w-full border-b border-slate-100 dark:border-zinc-800 pb-2">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-brand text-white">
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-brand text-white">
                 STYLE A (CURRENT)
               </span>
-              <h4 className="font-heading text-lg text-foreground mt-1 truncate">
+              <h4 className="font-sans font-semibold text-lg text-foreground mt-1 truncate">
                 {currentName}
               </h4>
             </div>
@@ -187,10 +186,10 @@ export const CompareView: React.FC<CompareViewProps> = ({
         <div className="p-5 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-md flex flex-col items-center space-y-4">
           <div className="flex items-center justify-between w-full border-b border-slate-100 dark:border-zinc-800 pb-2">
             <div>
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200 dark:bg-zinc-800 text-charcoal dark:text-zinc-200">
+              <span className="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-zinc-800 text-charcoal dark:text-zinc-200">
                 STYLE B (REFERENCE)
               </span>
-              <h4 className="font-heading text-lg text-foreground mt-1 truncate">
+              <h4 className="font-sans font-semibold text-lg text-foreground mt-1 truncate">
                 {compareName || "Reference Style"}
               </h4>
             </div>
@@ -213,8 +212,8 @@ export const CompareView: React.FC<CompareViewProps> = ({
 
       {/* Difference Breakdown Table */}
       <div className="p-4 rounded-2xl bg-white dark:bg-zinc-900 border-2 border-slate-200 dark:border-zinc-800 shadow-xs space-y-3">
-        <h4 className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
-          Configuration Differences ({diffs.length})
+        <h4 className="font-sans font-semibold text-xs text-ash dark:text-zinc-400">
+          Configuration differences ({diffs.length})
         </h4>
 
         {diffs.length === 0 ? (

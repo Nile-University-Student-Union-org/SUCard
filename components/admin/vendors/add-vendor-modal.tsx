@@ -6,6 +6,7 @@ import { Plus, Check, Tag, Users, ArrowRight, Store, AlertCircle } from "lucide-
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -173,7 +174,7 @@ export function AddVendorModal({
 
             {/* Next Steps Grid */}
             <div className="space-y-2.5">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 Next Steps for Partner Setup
               </h4>
 
@@ -251,7 +252,7 @@ export function AddVendorModal({
 
             {/* Section 1: Basic Info */}
             <div className="space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 1. Basic Information
               </h4>
 
@@ -273,44 +274,36 @@ export function AddVendorModal({
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="vendor-category" className="text-xs font-bold uppercase tracking-wider">
-                    Category *
-                  </Label>
-                  <select
+                  <Dropdown
                     id="vendor-category"
+                    label="Category *"
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as VendorCategory)}
-                    className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
-                  >
-                    {CATEGORIES.map((cat) => (
-                      <option key={cat.value} value={cat.value}>
-                        {cat.label}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setCategory(val as VendorCategory)}
+                    className="w-full"
+                    options={CATEGORIES}
+                  />
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="vendor-status" className="text-xs font-bold uppercase tracking-wider">
-                    Initial Status *
-                  </Label>
-                  <select
+                  <Dropdown
                     id="vendor-status"
+                    label="Initial Status *"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as VendorStatus)}
-                    className="w-full h-11 px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand min-h-[44px]"
-                  >
-                    <option value="active">Active (Scans Allowed)</option>
-                    <option value="paused">Paused (Scans Suspended)</option>
-                    <option value="ended">Ended (Terminated)</option>
-                  </select>
+                    onChange={(val) => setStatus(val as VendorStatus)}
+                    className="w-full"
+                    options={[
+                      { value: "active", label: "Active (Scans Allowed)" },
+                      { value: "paused", label: "Paused (Scans Suspended)" },
+                      { value: "ended", label: "Ended (Terminated)" },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
 
             {/* Section 2: Location & Contact */}
             <div className="pt-3 border-t border-border space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 2. Contact & Location
               </h4>
 
@@ -368,7 +361,7 @@ export function AddVendorModal({
 
             {/* Section 3: Contract & Notes */}
             <div className="pt-3 border-t border-border space-y-4">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              <h4 className="font-sans font-semibold text-xs text-muted-foreground">
                 3. Contract Period & Internal Notes
               </h4>
 

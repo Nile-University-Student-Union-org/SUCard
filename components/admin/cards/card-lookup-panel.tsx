@@ -162,7 +162,7 @@ export function CardLookupPanel() {
               <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
                 <Layers className="size-4 text-ash dark:text-zinc-400 shrink-0" />
                 <div className="min-w-0">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                  <span className="text-xs font-semibold text-muted-foreground block">
                     Batch
                   </span>
                   <span className="font-semibold text-foreground truncate block">
@@ -175,7 +175,7 @@ export function CardLookupPanel() {
               <div className="flex items-center gap-2.5 p-3 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200/60 dark:border-zinc-800">
                 <User className="size-4 text-ash dark:text-zinc-400 shrink-0" />
                 <div className="min-w-0 flex-1">
-                  <span className="text-[10px] uppercase font-bold text-muted-foreground block">
+                  <span className="text-xs font-semibold text-muted-foreground block">
                     Card Holder
                   </span>
                   {result.student ? (

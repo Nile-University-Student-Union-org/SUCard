@@ -165,7 +165,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
           return (
             <div key={group.label || "default"} className="space-y-1">
               {group.label && (
-                <div className="px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-white/40">
+                <div className="px-3 py-1.5 text-xs font-semibold text-white/50">
                   {group.label}
                 </div>
               )}
@@ -186,7 +186,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
                       </div>
                       <Badge
                         variant="secondary"
-                        className="h-4.5 px-1.5 text-[9px] bg-white/10 text-white/50 border-none font-medium uppercase"
+                        className="h-4.5 px-1.5 text-[10px] bg-white/10 text-white/50 border-none font-semibold"
                       >
                         Soon
                       </Badge>
@@ -233,7 +233,7 @@ export function AdminSidebar({ role = "admin", onCloseMobile, isMobile = false }
           className="h-4 w-auto object-contain shrink-0"
         />
         <div className="min-w-0 space-y-0.5">
-          <p className="text-[11px] font-bold text-white/80 uppercase tracking-wide truncate">
+          <p className="text-xs font-semibold text-white/80 truncate">
             Nile University SU
           </p>
           <p className="text-[10px] leading-tight text-white/45 truncate">

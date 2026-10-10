@@ -159,7 +159,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
       <div className="p-4 sm:p-5 rounded-2xl border border-border bg-card shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1.5">
-            <span className="block text-[10px] font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+            <span className="block text-[10px] font-semibold text-ash dark:text-zinc-400">
               Filter Insights Range
             </span>
             {isUpdating && (
@@ -301,7 +301,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
       <Card className="border border-border bg-card shadow-xs">
         <CardHeader className="p-4 sm:p-5 border-b border-border">
           <CardTitle className="text-lg sm:text-xl text-foreground">
-            REDEMPTION TREND
+            Redemption trend
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
             Confirmed student scans over the selected period
@@ -326,7 +326,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
       <Card className="border border-border bg-card shadow-xs">
         <CardHeader className="p-4 sm:p-5 border-b border-border">
           <CardTitle className="text-base sm:text-lg text-foreground">
-            REDEMPTIONS BY OFFER
+            Redemptions by offer
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 sm:p-5">
@@ -346,7 +346,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
       <Card className="border border-border bg-card shadow-xs">
         <CardHeader className="p-4 sm:p-5 border-b border-border">
           <CardTitle className="text-base sm:text-lg text-foreground">
-            PEAK ACTIVITY
+            Peak activity
           </CardTitle>
           <p className="text-xs text-muted-foreground mt-0.5">
             Hourly and day-of-week traffic distribution in Africa/Cairo time
@@ -366,7 +366,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
           <CardHeader className="p-4 sm:p-5 border-b border-border flex flex-row items-center justify-between">
             <div>
               <CardTitle className="text-base sm:text-lg text-foreground">
-                RECENT REDEMPTIONS
+                Recent redemptions
               </CardTitle>
               <p className="text-xs text-muted-foreground mt-0.5">
                 Latest 20 confirmed student scans at this vendor
@@ -382,7 +382,7 @@ export function VendorInsightsTab({ vendorId }: VendorInsightsTabProps) {
             <div className="hidden md:block w-full overflow-x-auto">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="border-b border-border bg-muted/40 text-muted-foreground font-bold uppercase tracking-wider">
+                  <tr className="border-b border-border bg-muted/40 text-muted-foreground font-semibold text-xs">
                     <th className="px-4 py-3">Student</th>
                     <th className="px-4 py-3">ID</th>
                     <th className="px-4 py-3">Offer</th>

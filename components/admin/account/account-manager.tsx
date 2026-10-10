@@ -226,7 +226,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 <span className="font-bold text-ash dark:text-zinc-400">Role:</span>
                 <Badge
                   variant={isSuperAdmin ? "brand" : "outline"}
-                  className="text-[10px] font-bold uppercase tracking-wider"
+                  className="text-[10px] font-semibold"
                 >
                   {isSuperAdmin ? (
                     <>
@@ -276,7 +276,7 @@ export function AccountManager({ user }: AccountManagerProps) {
 
                 <Badge
                   variant={isMicrosoftLogin ? "brand" : "success"}
-                  className="text-[10px] font-bold uppercase tracking-wider"
+                  className="text-[10px] font-semibold"
                 >
                   {isMicrosoftLogin ? "via Microsoft" : "On"}
                 </Badge>
@@ -325,7 +325,7 @@ export function AccountManager({ user }: AccountManagerProps) {
                 </div>
                 <div>
                   <CardTitle className="text-xl sm:text-2xl text-foreground">
-                    CHANGE PASSWORD
+                    Change password
                   </CardTitle>
                   <CardDescription className="text-xs text-muted-foreground">
                     Update your password to keep your administrator account secure.
@@ -436,7 +436,7 @@ export function AccountManager({ user }: AccountManagerProps) {
 
               <div className="p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/60 border border-slate-200 dark:border-zinc-700 space-y-3">
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <span className="text-xs font-bold uppercase tracking-wider text-ash dark:text-zinc-400">
+                  <span className="text-xs font-semibold text-ash dark:text-zinc-400">
                     Backup Codes ({generatedCodes.length})
                   </span>
                   <div className="flex items-center gap-2">

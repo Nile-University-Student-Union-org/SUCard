@@ -13,6 +13,8 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dropdown } from "@/components/ui/dropdown";
+import { FileDrop } from "@/components/ui/file-drop";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,10 +71,7 @@ export function VendorOverviewTab({
   // Save states
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleLogoFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const handleLogoFileSelect = async (file: File) => {
     if (file.size > 512 * 1024) {
       setLogoError("Logo file must be at most 512 KB");
       return;
@@ -97,7 +96,6 @@ export function VendorOverviewTab({
       );
     } finally {
       setIsUploadingLogo(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   };
 
@@ -176,7 +174,7 @@ export function VendorOverviewTab({
       <div className="space-y-6">
         {/* Logo Card */}
         <div className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h3 className="font-sans font-semibold text-xs text-muted-foreground">
             Vendor Logo
           </h3>
 
@@ -207,26 +205,26 @@ export function VendorOverviewTab({
               </p>
             </div>
 
-            <input
+            <FileDrop
               ref={fileInputRef}
-              type="file"
               accept="image/png,image/jpeg,image/webp"
-              onChange={handleLogoFileChange}
-              className="hidden"
-            />
-
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              loading={isUploadingLogo}
-              loadingText="Uploading…"
-              onClick={() => fileInputRef.current?.click()}
-              className="normal-case font-bold h-11 min-h-[44px] px-4 rounded-xl border-border"
+              maxSize={512 * 1024}
+              onFileSelect={handleLogoFileSelect}
+              disabled={isUploadingLogo}
             >
-              <Upload className="size-4 mr-1.5" />
-              <span>{logoPreview ? "Change logo" : "Upload logo"}</span>
-            </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                loading={isUploadingLogo}
+                loadingText="Uploading…"
+                onClick={() => fileInputRef.current?.click()}
+                className="normal-case font-bold h-11 min-h-[44px] px-4 rounded-xl border-border"
+              >
+                <Upload className="size-4 mr-1.5" />
+                <span>{logoPreview ? "Change logo" : "Upload logo"}</span>
+              </Button>
+            </FileDrop>
           </div>
 
           {logoError && (
@@ -236,24 +234,23 @@ export function VendorOverviewTab({
 
         {/* Status Alert Info */}
         <div className="p-5 rounded-2xl border border-border bg-card shadow-xs space-y-3">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          <h3 className="font-sans font-semibold text-xs text-muted-foreground">
             Vendor Status
           </h3>
 
           <div className="space-y-2">
-            <Label htmlFor="status-select" className="text-xs font-semibold">
-              Current Operating Status
-            </Label>
-            <select
+            <Dropdown
               id="status-select"
+              label="Current Operating Status"
               value={status}
-              onChange={(e) => handleStatusChangeAttempt(e.target.value as VendorStatus)}
-              className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-            >
-              <option value="active">Active (Scans Allowed)</option>
-              <option value="paused">Paused (Scans Suspended)</option>
-              <option value="ended">Ended (Contract Terminated)</option>
-            </select>
+              onChange={(val) => handleStatusChangeAttempt(val as VendorStatus)}
+              className="w-full"
+              options={[
+                { value: "active", label: "Active (Scans Allowed)" },
+                { value: "paused", label: "Paused (Scans Suspended)" },
+                { value: "ended", label: "Ended (Contract Terminated)" },
+              ]}
+            />
           </div>
 
           {status !== "active" && (
@@ -278,8 +275,8 @@ export function VendorOverviewTab({
         >
           <div className="flex items-center justify-between pb-3 border-b border-border">
             <div>
-              <h3 className="font-heading text-xl uppercase tracking-wide text-foreground">
-                OVERVIEW & DETAILS
+              <h3 className="font-sans font-semibold text-xl text-foreground">
+                Overview & details
               </h3>
               <p className="text-xs text-muted-foreground">
                 Update store branding, partner details, and contract information.
@@ -300,7 +297,7 @@ export function VendorOverviewTab({
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-1 border-b border-border">
               <Building2 className="size-4 text-brand dark:text-brand-soft" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <h4 className="font-sans font-semibold text-xs text-foreground">
                 1. Basic Store Information
               </h4>
             </div>
@@ -330,21 +327,14 @@ export function VendorOverviewTab({
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="v-category" className="text-xs font-semibold text-foreground">
-                  Category <span className="text-rose-500">*</span>
-                </Label>
-                <select
+                <Dropdown
                   id="v-category"
+                  label="Category *"
                   value={category}
-                  onChange={(e) => setCategory(e.target.value as VendorCategory)}
-                  className="w-full h-11 min-h-[44px] px-3.5 rounded-xl border border-input bg-background text-foreground text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand"
-                >
-                  {CATEGORIES.map((cat) => (
-                    <option key={cat.value} value={cat.value}>
-                      {cat.label}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setCategory(val as VendorCategory)}
+                  className="w-full"
+                  options={CATEGORIES}
+                />
               </div>
 
               <div className="space-y-1.5">
@@ -366,7 +356,7 @@ export function VendorOverviewTab({
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2 pb-1 border-b border-border">
               <Phone className="size-4 text-brand dark:text-brand-soft" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <h4 className="font-sans font-semibold text-xs text-foreground">
                 2. Contact Information
               </h4>
             </div>
@@ -429,7 +419,7 @@ export function VendorOverviewTab({
           <div className="space-y-4 pt-2">
             <div className="flex items-center gap-2 pb-1 border-b border-border">
               <Calendar className="size-4 text-brand dark:text-brand-soft" />
-              <h4 className="text-xs font-bold uppercase tracking-wider text-foreground">
+              <h4 className="font-sans font-semibold text-xs text-foreground">
                 3. Contract Period & Internal Notes
               </h4>
             </div>

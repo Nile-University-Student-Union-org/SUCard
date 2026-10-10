@@ -79,13 +79,13 @@ export const AuthFeedback: React.FC<AuthFeedbackProps> = ({
           </span>
 
           {typeof attemptsRemaining === "number" && attemptsRemaining > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-200/80 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-200/80 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800">
               {attemptsRemaining} {attemptsRemaining === 1 ? "attempt" : "attempts"} left
             </span>
           )}
 
           {typeof lockoutMinutes === "number" && lockoutMinutes > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-200/80 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-200/80 dark:bg-rose-900/60 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-800">
               Lockout: {lockoutMinutes}m
             </span>
           )}
