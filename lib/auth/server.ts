@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { APIError, createAuthMiddleware } from "better-auth/api";
+import { APIError, createAuthMiddleware, getSessionFromCtx } from "better-auth/api";
+import { symmetricDecrypt } from "better-auth/crypto";
 import { STAFF_PASSWORD_MIN, STAFF_PASSWORD_MAX } from "@/lib/staff/types";
 import { getSettings } from "@/lib/settings/service";
 import { matchesStudentEmail } from "@/lib/student/rules";
@@ -15,6 +16,20 @@ import { clearPasswordFailures, isPasswordLocked, recordPasswordFailure } from "
 
 const microsoftEnv = z.object({ MICROSOFT_TENANT_ID: z.uuid(), MICROSOFT_CLIENT_ID: z.uuid(), MICROSOFT_CLIENT_SECRET: z.string().min(1) })
   .safeParse(process.env);
+
+type AuthHookContext = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0];
+async function devTotpCode(ctx: AuthHookContext): Promise<string | null> {
+  let userId = (await getSessionFromCtx(ctx).catch(() => null))?.user.id;
+  if (!userId) {
+    const pending = await ctx.getSignedCookie(ctx.context.createAuthCookie("two_factor").name, ctx.context.secret);
+    userId = pending ? (await ctx.context.internalAdapter.findVerificationValue(pending))?.value : undefined;
+  }
+  if (!userId) return null;
+  const [row] = await db.select({ secret: schema.twoFactor.secret }).from(schema.twoFactor).where(eq(schema.twoFactor.userId, userId));
+  if (!row) return null;
+  const secret = await symmetricDecrypt({ key: ctx.context.secretConfig, data: row.secret });
+  return (await auth.api.generateTOTP({ body: { secret } })).code;
+}
 
 export const auth = betterAuth({
   appName: "SU Card",
@@ -43,6 +58,12 @@ export const auth = betterAuth({
     const input = ctx as typeof ctx & { path?: string };
     if (input.path === "/update-user" || input.path === "/change-email")
       throw new APIError("FORBIDDEN", { message: "Name and email are managed by SU or Microsoft" });
+    // Local dev only: "123456" is swapped for the user's real current TOTP code.
+    if (process.env.NODE_ENV === "development" && input.path === "/two-factor/verify-totp"
+      && (ctx.body as { code?: unknown } | undefined)?.code === "123456") {
+      const code = await devTotpCode(ctx);
+      if (code) return { context: { body: { ...(ctx.body as unknown as Record<string, unknown>), code } } };
+    }
     if (input.path === "/request-password-reset") {
       // Pattern match only (not account lookup), so this reveals nothing about who has an account.
       const email = z.string().max(320).safeParse((ctx.body as { email?: unknown } | undefined)?.email);
