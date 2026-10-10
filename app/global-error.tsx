@@ -18,7 +18,7 @@ export default function GlobalError({
 
   return (
     <html lang="en" className="h-full">
-      <body className="min-h-full flex flex-col items-center justify-center bg-[#081424] text-white p-6 font-sans antialiased text-center">
+      <body className="min-h-full flex flex-col items-center justify-center bg-[#050C17] text-white p-6 font-sans antialiased text-center">
         <div className="max-w-md w-full space-y-6">
           <div className="flex justify-center">
             <Image
