@@ -744,10 +744,6 @@ html[data-theme-transition="active"] *::after {
   0%, 100% { opacity: 0.55; }
   50% { opacity: 1; }
 }
-@keyframes scan-beam {
-  0% { top: -14cqw; }
-  100% { top: 100%; }
-}
 @keyframes phone-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }

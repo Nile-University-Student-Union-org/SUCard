@@ -475,13 +475,6 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
   const grab = (e: ThreeEvent<PointerEvent>) => {
     if (!cardMesh.current) return;
     e.stopPropagation();
-    if (e.nativeEvent && typeof e.nativeEvent.preventDefault === "function") {
-      try {
-        if (e.nativeEvent.cancelable) e.nativeEvent.preventDefault();
-      } catch {
-        // ignore
-      }
-    }
     capture(e, true);
     const local = cardMesh.current.worldToLocal(e.point.clone());
     clock.current.dragZ = e.point.z;
