@@ -78,20 +78,9 @@ export function AppNav({
   const [clickedIndex, setClickedIndex] = useState<number | null>(null);
   const linkRefs = useRef<(HTMLAnchorElement | HTMLButtonElement | null)[]>([]);
 
-  const [isSheenActive, setIsSheenActive] = useState(false);
-  const [sheenKey, setSheenKey] = useState(0);
-  const sheenTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const isDark = mounted ? resolvedTheme === "dark" : false;
 
-  const triggerSheen = () => {
-    if (sheenTimerRef.current) clearTimeout(sheenTimerRef.current);
-    setSheenKey((k) => k + 1);
-    setIsSheenActive(true);
-    sheenTimerRef.current = setTimeout(() => {
-      setIsSheenActive(false);
-    }, 900);
-  };
 
   const [prevPathname, setPrevPathname] = useState(pathname);
   if (prevPathname !== pathname) {
@@ -99,26 +88,9 @@ export function AppNav({
     setMobileOpen(false);
   }
 
-  // Pre-warm the GPU clip-path pipeline and listen for theme mutation
+  // Pre-warm the GPU clip-path pipeline so the first theme toggle doesn't stutter
   useEffect(() => {
     prewarmThemePipeline();
-
-    let initial = true;
-    const observer = new MutationObserver(() => {
-      if (!initial) {
-        triggerSheen();
-      }
-      initial = false;
-    });
-
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => {
-      observer.disconnect();
-    };
   }, []);
 
   // Scroll detection
@@ -130,7 +102,6 @@ export function AppNav({
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => {
       window.removeEventListener("scroll", handleScroll);
-      if (sheenTimerRef.current) clearTimeout(sheenTimerRef.current);
     };
   }, []);
 
@@ -179,7 +150,6 @@ export function AppNav({
   };
 
   const handleToggleTheme = (e: React.MouseEvent<HTMLButtonElement>) => {
-    triggerSheen();
     const nextTheme = isDark ? "light" : "dark";
     executeThemeTransition(nextTheme, setTheme, e);
   };
@@ -358,31 +328,6 @@ export function AppNav({
             mobileOpen ? "rounded-3xl shadow-2xl" : "rounded-[28px] sm:rounded-full"
           )}
         >
-          {/* Specular Caustic Glass Refraction Sweep */}
-          {isSheenActive && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit] z-20"
-            >
-              <div
-                key={`sheen-${sheenKey}`}
-                className="absolute inset-0 w-full h-full su-animate-specular-sweep pointer-events-none"
-                style={{
-                  background: isDark
-                    ? "linear-gradient(108deg, transparent 0%, transparent 40%, rgba(1,139,206,0.2) 45%, rgba(45,177,250,0.75) 48.8%, rgba(255,255,255,0.98) 49.85%, #ffffff 50%, rgba(255,255,255,0.98) 50.15%, rgba(45,177,250,0.75) 51.2%, rgba(229,168,35,0.3) 55%, transparent 60%, transparent 100%)"
-                    : "linear-gradient(108deg, transparent 0%, transparent 40%, rgba(229,168,35,0.25) 45%, rgba(229,168,35,0.85) 48.8%, rgba(255,255,255,0.98) 49.85%, #ffffff 50%, rgba(255,255,255,0.98) 50.15%, rgba(45,177,250,0.7) 51.2%, rgba(1,139,206,0.2) 55%, transparent 60%, transparent 100%)",
-                }}
-              />
-              <div
-                key={`rim-${sheenKey}`}
-                className="absolute inset-0 rounded-[inherit] su-animate-rim-flash pointer-events-none"
-                style={{
-                  boxShadow: "inset 0 1.5px 2px 0 rgba(255,255,255,0.65)",
-                }}
-              />
-            </div>
-          )}
-
           {/* Main Bar Container */}
           <div className="flex items-center justify-between gap-2.5 sm:gap-4 p-1.5 sm:p-2">
             {/* Brand + Context Slot */}
@@ -589,8 +534,7 @@ export function AppNav({
                     size={15}
                     strokeWidth={2.2}
                     className={cn(
-                      "transition-transform duration-300 group-hover/theme:rotate-45 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.45)]",
-                      isSheenActive && "su-animate-icon-pop"
+                      "transition-transform duration-300 group-hover/theme:rotate-45 text-amber-300 drop-shadow-[0_0_8px_rgba(252,211,77,0.45)]"
                     )}
                   />
                 ) : (
@@ -599,7 +543,6 @@ export function AppNav({
                     strokeWidth={2.2}
                     className={cn(
                       "transition-transform duration-300 group-hover/theme:-rotate-12",
-                      isSheenActive && "su-animate-icon-pop",
                       "text-[#0F3056] group-hover/theme:text-[#018BCE]"
                     )}
                   />
