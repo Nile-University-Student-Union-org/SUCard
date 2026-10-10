@@ -8,6 +8,8 @@ import { emailTemplate } from "@/lib/email/templates";
 import { StudentError } from "@/lib/student/service";
 import { syncGoogleWalletForStudent } from "@/lib/wallet/google";
 import { deleteStudentOutbox } from "./delete-student-outbox";
+import { after } from "next/server";
+import { drainOutbox } from "@/lib/email/drain";
 
 export async function correctStudent(id:string, patch:{name?:string;universityId?:string},actorId:string){
   await db.transaction(async tx=>{
@@ -36,6 +38,7 @@ export async function setStudentSuspension(ids:string[], action:"suspend"|"react
     }
     return records.map(r=>r.id);
   });
+  if (action === "suspend") after(async () => { await drainOutbox(20); });
   await Promise.all(changed.map(id=>syncGoogleWalletForStudent(id)));
   return {count:changed.length};
 }
