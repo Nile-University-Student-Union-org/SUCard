@@ -70,37 +70,6 @@ export function ScannerHeader({
     },
   ];
 
-  // Desktop Vendor Context line/chip next to NUSU brand
-  const brandContext = (
-    <div className="flex items-center gap-2 pl-2.5 border-l border-slate-300/40 dark:border-white/15 max-w-[150px] lg:max-w-[210px] min-w-0 select-none">
-      {vendorLogoUrl ? (
-        <Image
-          src={vendorLogoUrl}
-          alt={vendorName}
-          width={22}
-          height={22}
-          className="size-5.5 rounded-md object-contain shrink-0 bg-white/60 dark:bg-slate-900/60 p-0.5 border border-border/40"
-          unoptimized
-        />
-      ) : (
-        <div className="size-5.5 rounded-md bg-[#0F3056]/10 dark:bg-white/10 flex items-center justify-center text-[#0F3056] dark:text-sky-300 shrink-0 font-bold text-[10px]">
-          {getVendorInitials(vendorName)}
-        </div>
-      )}
-      <div className="flex flex-col min-w-0 leading-tight">
-        <span className="font-bold text-xs text-foreground truncate">
-          {vendorName}
-        </span>
-        {showBranch && (
-          <span className="text-[10px] font-medium text-muted-foreground truncate flex items-center gap-0.5">
-            <MapPin className="size-2.5 shrink-0 opacity-70" />
-            <span className="truncate">{branchText}</span>
-          </span>
-        )}
-      </div>
-    </div>
-  );
-
   // Mobile Vendor Context card shown in the expanded drawer
   const mobileBrandContext = (
     <div className="p-2.5 rounded-xl flex items-center justify-between gap-2.5 bg-black/[0.03] dark:bg-white/5 border border-black/[0.06] dark:border-white/10">
@@ -218,7 +187,6 @@ export function ScannerHeader({
       items={navItems}
       homeHref="/scan"
       brandSubtitle="Student Union"
-      brandContext={brandContext}
       mobileBrandContext={mobileBrandContext}
       user={user}
       areas={areas}
