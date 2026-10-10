@@ -158,7 +158,7 @@ function ForgotPasswordContent() {
                 type="email"
                 label="Email address"
                 autoComplete="email"
-                placeholder="name@nu.edu.eg"
+                placeholder="someone@example.com"
                 disabled={isLoading}
                 leftIcon={<Mail className="size-4" />}
                 error={errors.email?.message}

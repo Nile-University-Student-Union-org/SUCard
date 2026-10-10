@@ -57,20 +57,20 @@ export function MicrosoftSignInButton({
         type="button"
         onClick={handleClick}
         disabled={disabled || isLoading}
-        aria-label="Sign in with Microsoft"
+        aria-label="Continue with Microsoft"
         className={cn(
-          "w-full h-12 min-h-[48px] px-4 rounded-xl",
+          "w-full h-14 min-h-[56px] px-5 rounded-xl",
           // Light theme: solid navy brand with subtle inner highlight and brand shadow
           "bg-[#0F3056] text-white border border-[#173e6d]",
-          "shadow-[inset_0_1px_0_rgba(255,255,255,0.18),0_4px_14px_rgba(15,48,86,0.22)]",
-          "hover:bg-[#153e6d] hover:border-[#1d4f8b] hover:shadow-lg hover:shadow-[#0F3056]/25 hover:-translate-y-0.5",
+          "shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_16px_rgba(15,48,86,0.28)]",
+          "hover:bg-[#153e6d] hover:border-[#1d4f8b] hover:shadow-xl hover:shadow-[#0F3056]/30 hover:-translate-y-0.5",
           // Dark theme: white button with near-black text (Microsoft dark theme convention)
           "dark:bg-white dark:text-[#0A1E38] dark:border-transparent",
-          "dark:shadow-[0_4px_14px_rgba(0,0,0,0.3)] dark:hover:bg-slate-100 dark:hover:shadow-white/10 dark:hover:-translate-y-0.5",
+          "dark:shadow-[0_4px_16px_rgba(0,0,0,0.45)] dark:hover:bg-slate-100 dark:hover:shadow-white/10 dark:hover:-translate-y-0.5",
           // Interactions & Focus
-          "active:scale-[0.99] active:translate-y-0 dark:active:translate-y-0 transition-all duration-150",
+          "active:scale-[0.99] active:translate-y-0 dark:active:translate-y-0 transition-all duration-150 ease-out",
           "motion-reduce:transition-none motion-reduce:transform-none motion-reduce:hover:translate-none motion-reduce:active:scale-100",
-          "flex items-center justify-center gap-3 font-semibold text-sm select-none",
+          "flex items-center justify-center gap-3.5 font-bold text-base select-none",
           "focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#0F3056] dark:focus-visible:ring-sky-400 dark:focus-visible:ring-offset-zinc-900",
           "cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0 disabled:hover:shadow-none disabled:active:scale-100"
         )}
@@ -78,8 +78,8 @@ export function MicrosoftSignInButton({
         {isLoading ? (
           <Loader2 className="size-5 animate-spin motion-reduce:animate-none text-white dark:text-[#0A1E38]" />
         ) : (
-          <span className="size-6 rounded-md bg-white flex items-center justify-center shadow-xs shrink-0">
-            <MicrosoftLogo className="size-4" />
+          <span className="size-7 rounded-lg bg-white flex items-center justify-center shadow-xs shrink-0">
+            <MicrosoftLogo className="size-4.5" />
           </span>
         )}
         <span className="truncate">Continue with Microsoft</span>

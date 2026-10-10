@@ -282,7 +282,7 @@ export function AddStaffModal({ isOpen, onClose, onStaffAdded }: AddStaffModalPr
                 id="staff-email"
                 type="email"
                 label="Staff Email *"
-                placeholder="name@nu.edu.eg"
+                placeholder="someone@example.com"
                 disabled={isSubmitting}
                 error={errors.email?.message}
                 {...register("email")}

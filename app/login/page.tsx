@@ -7,7 +7,16 @@ import { useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Mail, ArrowLeft, Info, AlertTriangle, KeyRound, ShieldCheck } from "lucide-react";
+import {
+  Mail,
+  ArrowLeft,
+  Info,
+  AlertTriangle,
+  KeyRound,
+  ShieldCheck,
+  ChevronDown,
+} from "lucide-react";
+import { cn } from "cn";
 import { CARD_ART } from "@/components/landing/card-art";
 import { signIn, authClient } from "@/lib/auth/client";
 import { AuthFeedback } from "@/components/ui/auth-feedback";
@@ -39,6 +48,8 @@ const URL_ERROR_MESSAGES: Record<string, string> = {
   no_access: "Your account doesn't have access to SU Card yet.",
 };
 
+const STAFF_LOGIN_STORAGE_KEY = "su_staff_login_expanded";
+
 function LoginContent() {
   const searchParams = useSearchParams();
   const urlError = searchParams.get("error");
@@ -53,12 +64,44 @@ function LoginContent() {
   const [isVerifyingTwoFactor, setIsVerifyingTwoFactor] = useState(false);
   const [twoFactorPinError, setTwoFactorPinError] = useState(false);
 
+  // Staff login disclosure state (quiet secondary path)
+  const staffParam = searchParams.get("staff");
+  const isStaffQuery = staffParam === "1" || staffParam === "true";
+  const isStaffError = urlError === "not_student";
+  const hasStaffContext = isStaffQuery || isStaffError;
+
+  const [userToggledStaff, setUserToggledStaff] = useState<boolean | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem(STAFF_LOGIN_STORAGE_KEY);
+        if (saved !== null) {
+          return saved === "true";
+        }
+      } catch {
+        // ignore storage access restrictions
+      }
+    }
+    return null;
+  });
+
   const [authError, setAuthError] = useState<{
     variant: "error" | "lockout" | "warning";
     message: string;
   } | null>(null);
   const [microsoftInfo, setMicrosoftInfo] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  const isStaffOpen = userToggledStaff !== null ? userToggledStaff : hasStaffContext;
+
+  const toggleStaffOpen = () => {
+    const next = !isStaffOpen;
+    setUserToggledStaff(next);
+    try {
+      localStorage.setItem(STAFF_LOGIN_STORAGE_KEY, String(next));
+    } catch {
+      // ignore storage access restrictions
+    }
+  };
 
   const {
     register,
@@ -76,6 +119,7 @@ function LoginContent() {
     setIsLoading(true);
     setAuthError(null);
     setMicrosoftInfo(null);
+    setUserToggledStaff(true);
 
     try {
       const res = await signIn.email({
@@ -225,6 +269,7 @@ function LoginContent() {
 
   const handleStartOver = () => {
     setStep("credentials");
+    setUserToggledStaff(true);
     setTotpCode("");
     setBackupCode("");
     setAuthError(null);
@@ -413,8 +458,17 @@ function LoginContent() {
                   </div>
                 )}
 
-                {/* Primary Action: Microsoft Sign In */}
-                <div className="mb-6">
+                {/* 1. Student Path (Dominant) */}
+                <div className="space-y-3">
+                  <div>
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-brand dark:text-sky-400">
+                      Students
+                    </h3>
+                    <p className="mt-1 text-xs sm:text-sm text-ash dark:text-zinc-400 font-normal">
+                      Use your Nile University Microsoft account (@nu.edu.eg)
+                    </p>
+                  </div>
+
                   <MicrosoftSignInButton
                     disabled={isLoading}
                     onSignInError={(msg) => {
@@ -424,67 +478,93 @@ function LoginContent() {
                   />
                 </div>
 
-                {/* "or" Divider */}
-                <div className="relative my-6 text-center">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-200 dark:border-zinc-800" />
-                  </div>
-                  <div className="relative flex justify-center text-xs tracking-wider">
-                    <span className="bg-white dark:bg-zinc-900 px-3 text-ash dark:text-zinc-500 font-bold uppercase text-[11px]">
-                      or sign in with email
+                {/* 2. Staff Path (Secondary & Collapsed by Default) */}
+                <div className="pt-5 mt-6 border-t border-slate-200/80 dark:border-zinc-800/80">
+                  <button
+                    type="button"
+                    onClick={toggleStaffOpen}
+                    aria-expanded={isStaffOpen}
+                    aria-controls="staff-sign-in-section"
+                    className="w-full flex items-center justify-between py-2.5 px-3 -mx-1 rounded-xl text-xs font-semibold text-slate-600 dark:text-zinc-400 hover:text-charcoal dark:hover:text-zinc-200 hover:bg-slate-100/80 dark:hover:bg-zinc-800/60 transition-colors cursor-pointer group focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft min-h-[44px]"
+                  >
+                    <span className="text-left">
+                      Staff, vendor or cashier?{" "}
+                      <span className="font-bold text-slate-700 dark:text-zinc-300 underline decoration-slate-300 dark:decoration-zinc-600 underline-offset-2 group-hover:decoration-current">
+                        Sign in with email
+                      </span>
                     </span>
-                  </div>
-                </div>
-
-                {/* Email + Password Form */}
-                <form onSubmit={handleSubmit(onSubmitCredentials)} className="space-y-4" noValidate>
-                  <Input
-                    id="email"
-                    type="email"
-                    label="Email address"
-                    autoComplete="email"
-                    placeholder="name@nu.edu.eg"
-                    disabled={isLoading}
-                    leftIcon={<Mail className="size-4" />}
-                    error={errors.email?.message}
-                    {...register("email")}
-                  />
-
-                  <div className="space-y-1.5">
-                    <Input
-                      id="password"
-                      type="password"
-                      label="Password"
-                      autoComplete="current-password"
-                      placeholder="••••••••••••"
-                      disabled={isLoading}
-                      showPasswordToggle
-                      error={errors.password?.message}
-                      {...register("password")}
+                    <ChevronDown
+                      className={cn(
+                        "size-4 shrink-0 text-slate-400 dark:text-zinc-500 transition-transform duration-200 motion-reduce:transition-none ml-2",
+                        isStaffOpen && "rotate-180 text-charcoal dark:text-zinc-300"
+                      )}
+                      aria-hidden="true"
                     />
+                  </button>
 
-                    <div className="flex justify-end">
-                      <Link
-                        href="/forgot-password"
-                        className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] inline-flex items-center px-1 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
-                      >
-                        Forgot password?
-                      </Link>
+                  <div
+                    id="staff-sign-in-section"
+                    aria-hidden={!isStaffOpen}
+                    className={cn(
+                      "grid transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none",
+                      isStaffOpen ? "grid-rows-[1fr] opacity-100 mt-4" : "grid-rows-[0fr] opacity-0"
+                    )}
+                  >
+                    <div className="overflow-hidden" inert={!isStaffOpen}>
+                      {/* Email + Password Form */}
+                      <form onSubmit={handleSubmit(onSubmitCredentials)} className="space-y-4 pt-1" noValidate>
+                        <Input
+                          id="email"
+                          type="email"
+                          label="Email address"
+                          autoComplete="email"
+                          placeholder="someone@example.com"
+                          disabled={isLoading || !isStaffOpen}
+                          leftIcon={<Mail className="size-4" />}
+                          error={errors.email?.message}
+                          {...register("email")}
+                        />
+
+                        <div className="space-y-1.5">
+                          <Input
+                            id="password"
+                            type="password"
+                            label="Password"
+                            autoComplete="current-password"
+                            placeholder="••••••••••••"
+                            disabled={isLoading || !isStaffOpen}
+                            showPasswordToggle
+                            error={errors.password?.message}
+                            {...register("password")}
+                          />
+
+                          <div className="flex justify-end">
+                            <Link
+                              href="/forgot-password"
+                              tabIndex={isStaffOpen ? 0 : -1}
+                              className="text-xs font-semibold text-brand dark:text-brand-soft hover:underline min-h-[44px] inline-flex items-center px-1 rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand dark:focus-visible:ring-brand-soft"
+                            >
+                              Forgot password?
+                            </Link>
+                          </div>
+                        </div>
+
+                        <div className="pt-1">
+                          <AuthSubmitButton
+                            isLoading={isLoading}
+                            loadingLabel="Signing in…"
+                            variant="secondary"
+                            size="lg"
+                            tabIndex={isStaffOpen ? 0 : -1}
+                            className="w-full text-sm font-bold min-h-[48px]"
+                          >
+                            Sign in
+                          </AuthSubmitButton>
+                        </div>
+                      </form>
                     </div>
                   </div>
-
-                  <div className="pt-1">
-                    <AuthSubmitButton
-                      isLoading={isLoading}
-                      loadingLabel="Signing in…"
-                      variant="primary"
-                      size="lg"
-                      className="w-full text-sm font-bold min-h-[48px]"
-                    >
-                      Sign in
-                    </AuthSubmitButton>
-                  </div>
-                </form>
+                </div>
               </>
             ) : (
               /* Step 2: TWO-STEP VERIFICATION */
@@ -665,21 +745,13 @@ function LoginSkeleton() {
             <div className="space-y-2">
               <div className="h-8 w-32 rounded-lg bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
             </div>
-            <div className="h-12 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-            <div className="h-px w-full bg-slate-200 dark:bg-zinc-800 my-2" />
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <div className="h-3.5 w-24 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-                <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-              </div>
-              <div className="space-y-1.5">
-                <div className="h-3.5 w-20 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-                <div className="h-11 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-                <div className="flex justify-end">
-                  <div className="h-3.5 w-28 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
-                </div>
-              </div>
-              <div className="h-12 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none pt-1" />
+            <div className="space-y-2">
+              <div className="h-3.5 w-20 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+              <div className="h-3.5 w-64 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            </div>
+            <div className="h-14 w-full rounded-xl bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
+            <div className="pt-4 border-t border-slate-200 dark:border-zinc-800">
+              <div className="h-4 w-56 rounded bg-slate-200 dark:bg-zinc-800 animate-pulse motion-reduce:animate-none" />
             </div>
           </Card>
         </main>
