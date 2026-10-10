@@ -383,31 +383,38 @@ export const DropdownContent: React.FC<DropdownContentProps> = ({
   const { isOpen, align, placement, menuId } = useDropdown();
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // The panel is position: fixed so a scrolling/clipping ancestor (e.g. a table wrapper) can neither
+  // clip it nor grow a scrollbar for it. Coordinates follow the trigger wrapper while open.
   useLayoutEffect(() => {
     const panel = panelRef.current;
-    const anchor = panel?.offsetParent;
-    if (!panel || !(anchor instanceof HTMLElement)) return;
-    if (align !== "center") {
-      panel.style.removeProperty("left");
-      return;
-    }
-    const updateLeft = () => {
-      const rect = anchor.getBoundingClientRect();
-      const left = rect.left + (anchor.clientWidth - panel.offsetWidth) / 2;
-      panel.style.left = `${Math.round(left) - rect.left}px`;
+    const anchor = panel?.parentElement;
+    if (!panel || !anchor || !isOpen) return;
+    const place = () => {
+      const a = anchor.getBoundingClientRect();
+      const w = panel.offsetWidth;
+      const h = panel.offsetHeight;
+      let left = align === "right" ? a.right - w : align === "center" ? a.left + (a.width - w) / 2 : a.left;
+      left = Math.max(16, Math.min(left, window.innerWidth - w - 16));
+      const top = placement === "top" ? a.top - 8 - h : a.bottom + 8;
+      panel.style.left = `${left}px`;
+      panel.style.top = `${top}px`;
+      // A transformed ancestor becomes the containing block for fixed elements; correct for its offset.
+      const r = panel.getBoundingClientRect();
+      if (Math.abs(r.left - left) > 0.5 || Math.abs(r.top - top) > 0.5) {
+        panel.style.left = `${2 * left - r.left}px`;
+        panel.style.top = `${2 * top - r.top}px`;
+      }
     };
-    updateLeft();
-    const observer = new ResizeObserver(updateLeft);
-    observer.observe(anchor);
-    observer.observe(panel);
-    return () => observer.disconnect();
-  }, [align, isOpen]);
+    place();
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [align, placement, isOpen]);
 
-  const alignClass = align === "right" ? "right-0" : "left-0";
-  const placementClass =
-    placement === "top"
-      ? "bottom-full mb-2 origin-bottom"
-      : "top-full mt-2 origin-top";
+  const placementClass = placement === "top" ? "origin-bottom" : "origin-top";
 
   return (
     <div
@@ -431,16 +438,16 @@ export const DropdownContent: React.FC<DropdownContentProps> = ({
         items[next]?.focus();
       }}
       className={`
-        absolute z-50 ${minWidth} max-w-[calc(100vw-32px)] ${alignClass} ${placementClass}
+        fixed z-50 ${minWidth} max-w-[calc(100vw-32px)] ${placementClass}
         max-h-[70dvh] overflow-y-auto overscroll-contain rounded-[14px] p-1.5
         bg-white/95 dark:bg-zinc-900/90 backdrop-blur-md backdrop-saturate-150
         border-2 border-slate-300 dark:border-zinc-800
         shadow-xl shadow-slate-900/5 dark:shadow-black/50
-        transition-[transform,opacity] motion-reduce:transition-none motion-reduce:transform-none
+        transition-[transform,opacity,visibility] motion-reduce:transition-none motion-reduce:transform-none
         ${
           isOpen
             ? "opacity-100 transform-none pointer-events-auto duration-180 ease-out"
-            : `opacity-0 scale-95 pointer-events-none duration-120 ease-in ${
+            : `invisible opacity-0 scale-95 pointer-events-none duration-120 ease-in ${
                 placement === "top" ? "translate-y-2" : "-translate-y-2"
               }`
         }
