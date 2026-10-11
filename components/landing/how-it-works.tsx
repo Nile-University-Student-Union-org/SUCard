@@ -150,46 +150,105 @@ export function HowItWorks() {
     if (!track || !sticky || !travel || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const handoff = createHandoff(track, travel);
 
+    const rests = [0, ...STEPS.map((item) => item.at)];
     let raf = 0;
     let top = 0;
     let span = 1;
     let last = -1;
+    let shown = 0; // eased toward the scroll target so wheel notches glide instead of jump
+    let prev = 0;
+    let idle = 0;
+    let touching = false;
 
     const measure = () => {
       top = track.getBoundingClientRect().top + window.scrollY;
       span = Math.max(1, track.offsetHeight - sticky.offsetHeight);
     };
-    const update = () => {
-      raf = 0;
+    const target = () => Math.min(1, Math.max(0, (window.scrollY - top) / span));
+    const render = () => {
+      if (shown === last) return;
+      last = shown;
+      track.style.setProperty("--p", shown.toFixed(4));
+      setStep(stepAt(shown));
+    };
+    const frame = (now: number) => {
+      // The flying card tracks the raw scroll, or it would lag the page.
       handoff(window.scrollY, top);
-      const p = Math.min(1, Math.max(0, (window.scrollY - top) / span));
-      if (p === last) return;
-      last = p;
-      track.style.setProperty("--p", p.toFixed(4));
-      setStep(stepAt(p));
+      const p = target();
+      const dt = Math.min(64, Math.max(0, now - prev));
+      prev = now;
+      shown += (p - shown) * (1 - Math.exp(-dt / 90));
+      if (Math.abs(p - shown) < 0.0005) shown = p;
+      render();
+      raf = shown === p ? 0 : requestAnimationFrame(frame);
     };
     const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(update);
+      if (raf) return;
+      prev = performance.now();
+      raf = requestAnimationFrame(frame);
     };
+    // Layout shifts jump straight to the new progress rather than animating.
     const remeasure = () => {
       measure();
+      shown = target();
       last = -1;
       schedule();
     };
 
+    // Once scrolling rests near a moment, settle onto it.
+    const snapToRest = () => {
+      const p = target();
+      if (touching || p <= 0 || p >= 1) return;
+      const rest = rests.reduce((a, b) => (Math.abs(b - p) < Math.abs(a - p) ? b : a));
+      const d = Math.abs(rest - p);
+      if (d > 0.01 && d <= 0.12) window.scrollTo({ top: top + rest * span, behavior: "smooth" });
+    };
+    const cancelSnap = () => clearTimeout(idle);
+    const armSnap = () => {
+      clearTimeout(idle);
+      idle = window.setTimeout(snapToRest, 180);
+    };
+    const onScroll = () => {
+      schedule();
+      armSnap();
+    };
+    const onTouchStart = () => {
+      touching = true;
+      cancelSnap();
+    };
+    const onTouchEnd = () => {
+      touching = false;
+      armSnap();
+    };
+
     measure();
-    update();
-    window.addEventListener("scroll", schedule, { passive: true });
+    shown = target();
+    handoff(window.scrollY, top);
+    render();
+    window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", remeasure);
+    window.addEventListener("wheel", cancelSnap, { passive: true });
+    window.addEventListener("keydown", cancelSnap);
+    window.addEventListener("pointerdown", cancelSnap);
+    window.addEventListener("touchstart", onTouchStart, { passive: true });
+    window.addEventListener("touchend", onTouchEnd, { passive: true });
+    window.addEventListener("touchcancel", onTouchEnd, { passive: true });
     // Content above (the hero loads late) shifts the track, so watch the whole page height.
     const observer = new ResizeObserver(remeasure);
     observer.observe(document.body);
 
     return () => {
       cancelAnimationFrame(raf);
+      cancelSnap();
       observer.disconnect();
-      window.removeEventListener("scroll", schedule);
+      window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", remeasure);
+      window.removeEventListener("wheel", cancelSnap);
+      window.removeEventListener("keydown", cancelSnap);
+      window.removeEventListener("pointerdown", cancelSnap);
+      window.removeEventListener("touchstart", onTouchStart);
+      window.removeEventListener("touchend", onTouchEnd);
+      window.removeEventListener("touchcancel", onTouchEnd);
       lanyardHandoff.setDetached?.(false);
     };
   }, []);
@@ -205,7 +264,7 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="relative border-t border-border/70">
       {/* Scroll-driven version */}
-      <div ref={trackRef} className="relative h-[270svh] md:h-[320svh] motion-reduce:hidden" style={{ "--p": 0 } as CSSProperties}>
+      <div ref={trackRef} className="relative h-[360svh] md:h-[420svh] motion-reduce:hidden" style={{ "--p": 0 } as CSSProperties}>
         <div ref={stickyRef} className="sticky top-0 h-svh overflow-hidden">
           <div className="mx-auto flex h-full max-w-6xl flex-col px-4 pb-5 pt-[max(1.25rem,4svh)] sm:px-6 md:grid md:grid-cols-[minmax(0,25rem)_minmax(0,1fr)] md:items-center md:gap-12 md:py-0 lg:gap-20 lg:px-8">
             <div className="contents md:block">
