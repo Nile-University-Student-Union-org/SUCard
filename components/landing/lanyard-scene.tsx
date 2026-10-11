@@ -286,6 +286,8 @@ function Band({ onGrab, onReady }: { onGrab?: () => void; onReady?: () => void }
       s.opacity = detached ? "0" : "1";
       invalidate();
     };
+    // The page may already be scrolled past the hero; let the scroll engine re-sync the card now.
+    if (prepared) window.dispatchEvent(new Event("scroll"));
     return () => {
       lanyardHandoff.probe = null;
       lanyardHandoff.setDetached = null;

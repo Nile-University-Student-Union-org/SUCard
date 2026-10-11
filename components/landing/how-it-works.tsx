@@ -56,11 +56,12 @@ function createHandoff(track: HTMLElement, travel: HTMLElement) {
   let mode = "";
 
   const setMode = (next: "attached" | "travel" | "landed" | "none") => {
+    // Synced on every call: the hero scene may register after the mode was already set.
+    if (next !== "travel") lanyardHandoff.setDetached?.(next === "landed");
     if (next === mode) return;
     mode = next;
     track.dataset.handoff = next;
     travel.style.display = next === "travel" ? "block" : "none";
-    if (next !== "travel") lanyardHandoff.setDetached?.(next === "landed");
   };
 
   return (scrollY: number, landAt: number) => {
